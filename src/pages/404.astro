@@ -1,0 +1,40 @@
+---
+/**
+ * Pàgina d'error única per a tot el domini: l'amfitrió estàtic la serveix
+ * sense saber la llengua, per tant es mostra en les dues.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ui } from '../i18n/ui';
+import { langCodes, languages, localize } from '../i18n/utils';
+---
+
+<BaseLayout lang="ca" title={`${ui.ca['404.title']} · ${ui.fr['404.title']}`} noindex>
+  <section class="wrap notfound">
+    {
+      langCodes.map((code) => (
+        <div lang={languages[code].htmlLang} class="notfound__block">
+          <h1>{ui[code]['404.title']}</h1>
+          <p>{ui[code]['404.body']}</p>
+          <p><a href={localize(code)}>{ui[code]['404.home']}</a></p>
+        </div>
+      ))
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  .notfound {
+    padding-block: var(--space-24);
+    display: grid;
+    gap: var(--space-16);
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  }
+
+  .notfound h1 {
+    font-size: var(--step-3);
+  }
+
+  .notfound__block > * + * {
+    margin-top: var(--space-4);
+  }
+</style>

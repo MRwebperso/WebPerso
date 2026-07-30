@@ -1,0 +1,349 @@
+---
+/**
+ * Cronologia — la peça de signatura del lloc (secció 4.3 del brief). És l'únic
+ * lloc amb scrollytelling ambiciós; fora d'aquí el moviment és mesurat.
+ *
+ * Repartiment de feina: els passos porten tot el contingut en text i funcionen
+ * sols, sense JS i sense el diagrama. L'instrument del costat és la lectura
+ * gràfica dels tres eixos alhora, sincronitzada amb el pas que es llegeix.
+ *
+ * Frontera 2.2: la fita associativa hi surt com a trajectòria etiquetada, i
+ * sempre subordinada a l'activitat pròpia, que és la que tanca la sèrie.
+ */
+import Section from '../Section.astro';
+import TimelineFigure from './TimelineFigure.astro';
+import { home } from '../../data/home';
+import { langAttr, langKeys, milestones, timeline } from '../../data/timeline';
+import type { Lang } from '../../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const intro = home[lang].timeline;
+const c = timeline[lang];
+
+const steps = milestones.map((milestone, i) => {
+  const copy = c.milestones[i];
+  return {
+    milestone,
+    copy,
+    working: langKeys.filter((key) => milestone.langs[key] === 2).map((key) => c.langNames[key]),
+    acquired: langKeys.filter((key) => milestone.langs[key] === 1).map((key) => c.langNames[key]),
+  };
+});
+---
+
+<Section id="trajectoria" eyebrow={intro.eyebrow} title={intro.title} lead={intro.lead}>
+  <div class="scrolly" slot="wide" data-timeline>
+    <div class="scrolly__figure">
+      <TimelineFigure lang={lang} />
+    </div>
+
+    <ol class="steps">
+      {
+        steps.map(({ milestone, copy, working, acquired }) => (
+          <li
+            class="step"
+            data-timeline-step
+            data-year={String(milestone.year)}
+            data-year-suffix={copy.yearSuffix ?? ''}
+            data-zone-label={copy.zoneLabel}
+            data-langs={langAttr(milestone.langs)}
+          >
+            <p class="step__year nums">
+              {milestone.year}
+              {copy.yearSuffix && <span class="step__suffix">{copy.yearSuffix}</span>}
+            </p>
+            <h3>{copy.title}</h3>
+
+            <dl class="axes ui">
+              <dt>{c.axisLabels.zone}</dt>
+              <dd>{copy.zoneLabel}</dd>
+              {working.length > 0 && (
+                <Fragment>
+                  <dt>{c.axisLabels.working}</dt>
+                  <dd>{working.join(', ')}</dd>
+                </Fragment>
+              )}
+              {acquired.length > 0 && (
+                <Fragment>
+                  <dt>{c.axisLabels.acquired}</dt>
+                  <dd>{acquired.join(', ')}</dd>
+                </Fragment>
+              )}
+            </dl>
+
+            <p class="step__body">{copy.body}</p>
+
+            {copy.aside && (
+              <p class="aside">
+                <span class="aside__label ui">{copy.aside.label}</span>
+                {copy.aside.body}
+              </p>
+            )}
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Section>
+
+<style>
+  .scrolly {
+    grid-column: 1 / -1;
+  }
+
+  /* Quan la graella de secció obre el raïl d'etiqueta, la peça arrenca a la
+     columna de contingut: el raïl queda lliure per continuar adherit. */
+  @media (min-width: 62rem) {
+    .scrolly {
+      grid-column: 2 / -1;
+    }
+  }
+
+  .scrolly__figure {
+    display: none;
+  }
+
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .step {
+    position: relative;
+    border-top: 1px solid var(--rule);
+    padding-block: var(--space-8);
+  }
+
+  .step__year {
+    font-size: var(--step-2);
+    line-height: 1;
+    font-weight: var(--w-light);
+    color: var(--ink-faint);
+  }
+
+  .step__suffix {
+    font-size: var(--step--1);
+    white-space: nowrap;
+  }
+
+  .step h3 {
+    margin-top: var(--space-2);
+    max-width: 24ch;
+  }
+
+  /* Els tres eixos en text: és aquesta fitxa, no el diagrama, la que respon
+     davant d'un lector de pantalla o amb el JS desactivat. */
+  .axes {
+    margin: var(--space-6) 0 0;
+    display: grid;
+    grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr);
+    gap: var(--space-1) var(--space-4);
+    padding-block: var(--space-3);
+    border-block: 1px solid var(--rule);
+  }
+
+  /* En pantalla estreta la llista de sis llengües necessita l'amplada més que
+     l'etiqueta, que continua cabent de sobres. */
+  @media (max-width: 30rem) {
+    .axes {
+      grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr);
+    }
+  }
+
+  .axes dt {
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    line-height: 1.7;
+  }
+
+  .axes dd {
+    margin: 0;
+    color: var(--ink-soft);
+    font-variant: small-caps;
+    letter-spacing: 0.02em;
+  }
+
+  .step__body {
+    margin-top: var(--space-6);
+    max-width: 44ch;
+    color: var(--ink-soft);
+  }
+
+  .aside {
+    margin-top: var(--space-6);
+    max-width: 44ch;
+    padding-inline-start: var(--space-4);
+    border-inline-start: 1px solid var(--rule);
+    font-size: var(--step--1);
+    line-height: var(--leading-body);
+    color: var(--ink-faint);
+  }
+
+  .aside__label {
+    display: block;
+    margin-bottom: var(--space-1);
+    color: var(--accent);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: var(--w-medium);
+  }
+
+  @media (min-width: 64rem) {
+    .scrolly {
+      display: grid;
+      grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+      gap: var(--space-8);
+    }
+
+    /* La columna s'estira tota l'alçada de la peça a propòsit: és el recorregut
+       que necessita l'instrument per quedar adherit mentre es llegeixen els
+       passos. Amb `align-items: start` no en tindria cap. */
+    .scrolly__figure {
+      display: block;
+    }
+
+    /* Prou alçada perquè cada pas domini la pantalla i la sincronització amb
+       l'instrument no depengui de la velocitat del scroll. */
+    .step {
+      min-height: 58vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-inline-start: var(--space-6);
+    }
+
+    .step::before {
+      content: '';
+      position: absolute;
+      inset-block: var(--space-8);
+      inset-inline-start: 0;
+      width: 2px;
+      background: var(--accent);
+      transform: scaleY(0);
+      transform-origin: top;
+      transition: transform var(--dur-slow) var(--ease-out);
+    }
+
+    /*
+     * El pas actiu es marca amb el filet d'accent i prou. Enfosquir els altres
+     * amb `opacity` seria l'efecte esperat, però baixa les etiquetes de
+     * `--ink-faint` a 3,4:1 i se'n va per sota de l'AA en cos petit; davant de
+     * client públic això no es negocia.
+     */
+    .step.is-current::before {
+      transform: scaleY(1);
+    }
+  }
+</style>
+
+<script>
+  /*
+   * Sincronització dels tres eixos amb el scroll.
+   *
+   * L'observador vigila una banda del 20% al centre de la pantalla i, quan hi
+   * entra o en surt un pas, es queda el que tingui el centre més a prop del
+   * centre de la finestra. Una banda amb alçada, i no la línia mitjana exacta,
+   * perquè amb una finestra col·lapsada la intersecció té àrea zero i llavors
+   * `isIntersecting` depèn del motor. Així no cal escoltar cap `scroll`.
+   *
+   * Les dades viuen als atributs dels passos, no en un JSON a part: una sola
+   * font de veritat, la de `src/data/timeline.ts`.
+   */
+  const bindTimeline = () => {
+    const root = document.querySelector<HTMLElement>('[data-timeline]');
+    const figure = root?.querySelector<HTMLElement>('[data-timeline-figure]');
+    const steps = Array.from(root?.querySelectorAll<HTMLElement>('[data-timeline-step]') ?? []);
+    if (!root || !figure || steps.length === 0) return;
+
+    const svg = figure.querySelector<SVGSVGElement>('[data-timeline-svg]');
+    const trace = figure.querySelector<SVGPathElement>('[data-trace]');
+    const nodes = Array.from(figure.querySelectorAll<SVGElement>('[data-node]'));
+    const ratios = (trace?.dataset.ratios ?? '').split(',').map(Number);
+    const rows = (svg?.dataset.rows ?? '').split(',').map(Number);
+
+    const pips = new Map<string, HTMLElement>();
+    for (const pip of figure.querySelectorAll<HTMLElement>('[data-lang]')) {
+      if (pip.dataset.lang) pips.set(pip.dataset.lang, pip);
+    }
+
+    const yearEl = figure.querySelector<HTMLElement>('[data-year]');
+    const suffixEl = figure.querySelector<HTMLElement>('[data-year-suffix]');
+    const zoneEl = figure.querySelector<HTMLElement>('[data-zone]');
+
+    root.classList.add('is-live');
+    figure.classList.add('is-live');
+
+    let current = -1;
+
+    const activate = (index: number) => {
+      if (index < 0 || index === current) return;
+      current = index;
+      const step = steps[index];
+
+      // Eix temps.
+      if (yearEl) yearEl.textContent = step.dataset.year ?? '';
+      if (suffixEl) suffixEl.textContent = step.dataset.yearSuffix ?? '';
+      if (zoneEl) zoneEl.textContent = step.dataset.zoneLabel ?? '';
+
+      // Eix territori.
+      for (const node of nodes) {
+        const at = Number(node.dataset.node);
+        node.dataset.state = at < index ? 'past' : at === index ? 'current' : 'future';
+      }
+      trace?.style.setProperty('--draw', String(ratios[index] ?? 1));
+      svg?.style.setProperty('--row-y', String(rows[index] ?? 0));
+
+      // Eix llengua.
+      for (const pair of (step.dataset.langs ?? '').split(',')) {
+        const [key, state] = pair.split(':');
+        const pip = pips.get(key);
+        if (pip && state) pip.dataset.state = state;
+      }
+
+      steps.forEach((el, at) => el.classList.toggle('is-current', at === index));
+    };
+
+    const inBand = new Set<HTMLElement>();
+
+    const pickNearest = () => {
+      const middle = window.innerHeight / 2;
+      let nearest = -1;
+      let best = Infinity;
+      for (const step of inBand) {
+        const box = step.getBoundingClientRect();
+        const distance = Math.abs((box.top + box.bottom) / 2 - middle);
+        if (distance < best) {
+          best = distance;
+          nearest = steps.indexOf(step);
+        }
+      }
+      activate(nearest);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const step = entry.target as HTMLElement;
+          if (entry.isIntersecting) inBand.add(step);
+          else inBand.delete(step);
+        }
+        pickNearest();
+      },
+      { rootMargin: '-40% 0px -40% 0px', threshold: 0 },
+    );
+
+    for (const step of steps) observer.observe(step);
+    activate(0);
+  };
+
+  bindTimeline();
+  document.addEventListener('astro:page-load', bindTimeline);
+</script>

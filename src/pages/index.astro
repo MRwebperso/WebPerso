@@ -1,0 +1,98 @@
+---
+/**
+ * Arrel del domini. No és una portada: cap de les dues llengües no viu aquí.
+ * Encamina cap a `/ca/` o `/fr/` (tria desada > llengua del navegador >
+ * `x-default`) i, sense JS, presenta les dues portes en igualtat.
+ */
+import { site } from '../config/site.mjs';
+import { defaultLang, langCodes, languages } from '../i18n/utils';
+import '../styles/base.css';
+
+const routes = Object.fromEntries(langCodes.map((l) => [l, `/${l}/`]));
+---
+
+<!doctype html>
+<html lang={languages[defaultLang].htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{site.name}</title>
+    <meta name="robots" content="noindex, follow" />
+    {
+      langCodes.map((code) => (
+        <link
+          rel="alternate"
+          hreflang={languages[code].hreflang}
+          href={new URL(routes[code], Astro.site)}
+        />
+      ))
+    }
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={new URL(routes[defaultLang], Astro.site)}
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline define:vars={{ routes, defaultLang }}>
+      (() => {
+        let saved = null;
+        try {
+          saved = localStorage.getItem('lang');
+        } catch {}
+        const preferred =
+          (saved && routes[saved] && saved) ||
+          (navigator.languages ?? [navigator.language ?? ''])
+            .map((tag) => tag.slice(0, 2).toLowerCase())
+            .find((code) => routes[code]) ||
+          defaultLang;
+        location.replace(routes[preferred] + location.hash);
+      })();
+    </script>
+  </head>
+  <body>
+    <main class="gate wrap">
+      <p class="mark">{site.name}</p>
+      <ul>
+        {
+          langCodes.map((code) => (
+            <li>
+              <a href={routes[code]} hreflang={languages[code].hreflang} lang={languages[code].htmlLang}>
+                {languages[code].label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </main>
+  </body>
+</html>
+
+<style>
+  .gate {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-8);
+  }
+
+  .mark {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    letter-spacing: var(--tracking-display);
+    margin: 0;
+  }
+
+  .gate ul {
+    display: flex;
+    gap: var(--space-6);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .gate a {
+    font-family: var(--font-ui);
+    font-size: var(--step-1);
+  }
+</style>

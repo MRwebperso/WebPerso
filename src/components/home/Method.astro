@@ -1,0 +1,79 @@
+---
+/**
+ * Secció de mètode (registre 2.4). La IA hi és molt visible i sempre en clau
+ * de *com treballo*: cap promesa d'implantar res al client. El fons enfonsat i
+ * les tres columnes li donen el mateix pes visual que a la línia de
+ * comunicació, sense necessitat de cap efecte.
+ */
+import Section from '../Section.astro';
+import { home } from '../../data/home';
+import type { Lang } from '../../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const c = home[lang].method;
+---
+
+<Section id="metode" eyebrow={c.eyebrow} title={c.title} lead={c.lead} sunk>
+  <ol class="principles">
+    {
+      c.principles.map((principle, i) => (
+        <li class="principle">
+          <p class="principle__num nums">{String(i + 1).padStart(2, '0')}</p>
+          <h3>{principle.title}</h3>
+          <p class="principle__body">{principle.body}</p>
+        </li>
+      ))
+    }
+  </ol>
+
+  <p class="boundary">{c.boundary}</p>
+</Section>
+
+<style>
+  .principles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  .principle {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-4);
+  }
+
+  .principle__num {
+    margin: 0 0 var(--space-3);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .principle h3 {
+    max-width: 22ch;
+  }
+
+  .principle__body {
+    margin-top: var(--space-3);
+    color: var(--ink-soft);
+  }
+
+  .boundary {
+    max-width: var(--measure);
+    border-inline-start: 2px solid var(--accent);
+    padding-inline-start: var(--space-6);
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+  }
+
+  @media (min-width: 52rem) {
+    .principles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+  }
+</style>

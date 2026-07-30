@@ -1,0 +1,86 @@
+---
+import Section from '../Section.astro';
+import { home } from '../../data/home';
+import type { Lang } from '../../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const c = home[lang].communication;
+---
+
+<Section id="comunicacio" eyebrow={c.eyebrow} title={c.title} lead={c.lead}>
+  <ol class="offers">
+    {
+      c.offers.map((offer, i) => (
+        <li class="offer">
+          <p class="offer__num nums">{String(i + 1).padStart(2, '0')}</p>
+          <div class="offer__text">
+            <h3>{offer.title}</h3>
+            <p class="offer__body">{offer.body}</p>
+            <p class="offer__deliverables ui">
+              <span class="eyebrow">{offer.deliverablesLabel}</span>
+              <span>{offer.deliverables.join(' · ')}</span>
+            </p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</Section>
+
+<style>
+  .offers {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .offer {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-block: var(--space-8);
+    border-top: 1px solid var(--rule);
+  }
+
+  .offer:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .offer__num {
+    margin: 0;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    padding-top: 0.45em;
+  }
+
+  .offer__text {
+    max-width: var(--measure);
+  }
+
+  .offer__body {
+    margin-top: var(--space-3);
+  }
+
+  .offer__deliverables {
+    margin-top: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 40rem) {
+    .offer {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+
+    .offer__num {
+      padding-top: 0;
+    }
+  }
+</style>

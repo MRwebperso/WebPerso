@@ -1,0 +1,32 @@
+---
+/**
+ * Rutes mirall dels casos, costat català: `/ca/casos/<id>/`. El bessó francès
+ * és `src/pages/fr/cas/[case].astro`, i el segment el tradueix el registre de
+ * `src/i18n/utils.ts` (`casos` → `cas`). Els identificadors de cas no es
+ * tradueixen, de manera que `hreflang` i el commutador de llengua surten sols.
+ *
+ * Embolcall fi, com les portades: tota la plantilla viu a CaseContent.astro.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CaseContent from '../../../components/CaseContent.astro';
+import { site } from '../../../config/site.mjs';
+import { caseContent, cases } from '../../../data/cases';
+
+export function getStaticPaths() {
+  return cases.map((item, index) => ({
+    params: { case: item.id },
+    props: { index },
+  }));
+}
+
+interface Props {
+  index: number;
+}
+
+const { index } = Astro.props;
+const copy = caseContent.ca.cases[index];
+---
+
+<BaseLayout lang="ca" title={`${copy.title} — ${site.name}`} description={copy.summary}>
+  <CaseContent lang="ca" index={index} />
+</BaseLayout>

@@ -1,0 +1,313 @@
+---
+/**
+ * Plantilla única de cas (bloc 6 de l'ordre de treball).
+ *
+ * Una sola plantilla per als quatre casos i per a les dues llengües: és el que
+ * evita que les pàgines de cas i la one-page divergeixin d'estil, que és el que
+ * demana la secció 4.3 del brief. Per això reutilitza les primitives de
+ * composició de la portada —`.wrap`, `.section-grid`, `.rail`, `.eyebrow`,
+ * `.lead`— en lloc de tenir graella pròpia.
+ *
+ * Frontera 2.2: l'etiqueta del marc va al raïl, a l'alçada del títol, i és el
+ * primer que es llegeix. Els casos associatius no es poden confondre amb
+ * encàrrecs, i els individuals no queden per sota: la plantilla és la mateixa i
+ * no hi ha cap tractament que distingeixi els uns dels altres.
+ */
+import { cases, caseContent } from '../data/cases';
+import { langKeys, timeline } from '../data/timeline';
+import { useTranslations } from '../i18n/ui';
+import { localize, type Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+  /** Posició a `cases`: fixa el cas, els veïns i l'ordre de lectura. */
+  index: number;
+}
+
+const { lang, index } = Astro.props;
+const t = useTranslations(lang);
+
+const facts = cases[index];
+const c = caseContent[lang];
+const copy = c.cases[index];
+
+// L'ordre de les llengües surt del registre de la cronologia, no de l'ordre en
+// què s'han escrit al cas: així la llista es llegeix igual a tot el lloc.
+const workLangs = langKeys
+  .filter((key) => facts.langs.includes(key))
+  .map((key) => timeline[lang].langNames[key]);
+
+const rows: { label: string; value: string }[] = [
+  { label: c.factLabels.context, value: copy.context },
+  { label: c.factLabels.role, value: copy.role },
+  { label: c.factLabels.period, value: copy.period },
+  { label: c.factLabels.territory, value: copy.territory },
+  { label: c.factLabels.langs, value: workLangs.join(', ') },
+  { label: c.factLabels.deliverables, value: copy.deliverables.join(' · ') },
+];
+
+const selection = `${localize(lang)}#casos`;
+const prev = index > 0 ? index - 1 : null;
+const next = index < cases.length - 1 ? index + 1 : null;
+
+const href = (at: number) => localize(lang, ['casos', cases[at].id]);
+const titleOf = (at: number) => c.cases[at].title;
+---
+
+<article class="case" aria-labelledby="case-title">
+  <header class="case__head">
+    <div class="wrap section-grid">
+      <div class="rail">
+        <p class="eyebrow">{c.kindLabels[facts.kind]}</p>
+      </div>
+      <div>
+        <p class="case__period nums">{copy.period}</p>
+        <h1 id="case-title">{copy.title}</h1>
+        <p class="lead case__summary">{copy.summary}</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="case__facts" aria-labelledby="case-facts-title">
+    <div class="wrap section-grid">
+      <div class="rail">
+        <p class="eyebrow" id="case-facts-title">{t('case.facts')}</p>
+      </div>
+      <dl class="facts ui">
+        {
+          rows.map((row) => (
+            <Fragment>
+              <dt>{row.label}</dt>
+              <dd>{row.value}</dd>
+            </Fragment>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="case__account" aria-labelledby="case-account-title">
+    <div class="wrap section-grid">
+      <div class="rail">
+        <p class="eyebrow" id="case-account-title">{t('case.account')}</p>
+      </div>
+      <ol class="chapters">
+        {
+          copy.chapters.map((chapter, i) => (
+            <li class="chapter">
+              <p class="chapter__num nums">{String(i + 1).padStart(2, '0')}</p>
+              <div class="chapter__text">
+                <h2>{chapter.title}</h2>
+                <p class="chapter__body">{chapter.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <nav class="case__nav" aria-label={t('case.nav')}>
+    <div class="wrap case__nav-inner">
+      <a class="case__back ui" href={selection}>{t('case.back')}</a>
+      <ul class="siblings">
+        {
+          prev !== null && (
+            <li class="sibling">
+              <span class="eyebrow">{t('case.prev')}</span>
+              <a href={href(prev)}>{titleOf(prev)}</a>
+            </li>
+          )
+        }
+        {
+          next !== null && (
+            <li class="sibling sibling--next">
+              <span class="eyebrow">{t('case.next')}</span>
+              <a href={href(next)}>{titleOf(next)}</a>
+            </li>
+          )
+        }
+      </ul>
+    </div>
+  </nav>
+</article>
+
+<style>
+  /* El ritme vertical és el de la portada: la capçalera de cas pesa com el
+     hero i les bandes següents com una secció. */
+  .case__head {
+    padding-block: clamp(var(--space-12), 9vh, var(--space-24)) var(--space-16);
+  }
+
+  .case__period {
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: var(--space-4);
+  }
+
+  .case h1 {
+    font-size: var(--step-4);
+    max-width: 30ch;
+  }
+
+  .case__summary {
+    margin-top: var(--space-8);
+    color: var(--ink);
+  }
+
+  /* La fitxa va enfonsada, com la secció de mètode: dona pes als fets del cas
+     sense recórrer a cap efecte ni a cap caixa amb ombra. */
+  .case__facts {
+    background: var(--paper-sunk);
+    padding-block: var(--space-12);
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+    gap: var(--space-3) var(--space-6);
+    margin: 0;
+    max-width: var(--measure);
+  }
+
+  .facts dt {
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    line-height: 1.7;
+  }
+
+  .facts dd {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 34rem) {
+    .facts {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .facts dt {
+      margin-top: var(--space-4);
+    }
+
+    .facts dt:first-child {
+      margin-top: 0;
+    }
+  }
+
+  .case__account {
+    padding-block: var(--space-24);
+  }
+
+  .chapters {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Mateixa peça que els blocs d'oferta de la portada: xifra al marge i text a
+     la columna de mesura. Un cas i una línia de servei es llegeixen igual. */
+  .chapter {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-block: var(--space-8);
+    border-top: 1px solid var(--rule);
+  }
+
+  .chapter:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .chapter__num {
+    margin: 0;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    padding-top: 0.45em;
+  }
+
+  .chapter__text {
+    max-width: var(--measure);
+  }
+
+  /* Dins d'un cas els capítols són els títols de segon nivell: l'h1 és el
+     títol del cas. La mida es baixa perquè no competeixi amb la capçalera. */
+  .chapter h2 {
+    font-size: var(--step-1);
+    letter-spacing: 0;
+    max-width: 24ch;
+  }
+
+  .chapter__body {
+    margin-top: var(--space-3);
+  }
+
+  @media (max-width: 40rem) {
+    .chapter {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+
+    .chapter__num {
+      padding-top: 0;
+    }
+  }
+
+  .case__nav {
+    border-top: 1px solid var(--rule);
+    padding-block: var(--space-12);
+  }
+
+  .case__nav-inner {
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  .case__back {
+    color: var(--ink-soft);
+    text-decoration-color: var(--rule);
+    width: fit-content;
+  }
+
+  .siblings {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .sibling a {
+    display: block;
+    margin-top: var(--space-2);
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    letter-spacing: var(--tracking-display);
+    text-decoration-color: var(--rule);
+    max-width: 24ch;
+  }
+
+  .sibling a:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  @media (min-width: 46rem) {
+    .siblings {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-8);
+    }
+
+    /* Amb un sol veí, el «següent» s'ha de quedar a la seva columna: si no,
+       el darrer cas ensenyaria l'enllaç anterior a la casella del següent. */
+    .sibling--next {
+      grid-column: 2;
+      text-align: end;
+      justify-self: end;
+    }
+  }
+</style>

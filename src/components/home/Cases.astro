@@ -1,0 +1,169 @@
+---
+/**
+ * Selecció de casos a la portada. Quatre fitxes, sense filtres: amb aquest
+ * volum de contingut un filtre buit només crida l'atenció sobre el buit
+ * (secció 4.3 del brief).
+ *
+ * Jerarquia de la secció 2.2: totes les fitxes tenen el mateix tractament
+ * —mateixa mida, mateix pes, mateixa posició a la graella— i les d'activitat
+ * pròpia van primer, per l'ordre de `src/data/cases.ts`. L'etiqueta del marc
+ * queda a sota del títol, on es llegeix sempre, mai com a distintiu que faci
+ * pesar més una fitxa que una altra.
+ */
+import Section from '../Section.astro';
+import { cases, caseContent } from '../../data/cases';
+import { home } from '../../data/home';
+import { useTranslations } from '../../i18n/ui';
+import { localize, type Lang } from '../../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const intro = home[lang].cases;
+const c = caseContent[lang];
+---
+
+<Section id="casos" eyebrow={intro.eyebrow} title={intro.title} lead={intro.lead}>
+  <ol class="cards" slot="wide">
+    {
+      cases.map((item, index) => {
+        const copy = c.cases[index];
+        return (
+          <li class="card">
+            <p class="card__period nums">{copy.period}</p>
+            <h3 class="card__title">
+              <a href={localize(lang, ['casos', item.id])}>{copy.title}</a>
+            </h3>
+            <p class="card__kind">{c.kindLabels[item.kind]}</p>
+            <p class="card__summary">{copy.summary}</p>
+            <p class="card__more ui" aria-hidden="true">{t('case.read')}</p>
+          </li>
+        );
+      })
+    }
+  </ol>
+</Section>
+
+<style>
+  .cards {
+    grid-column: 1 / -1;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  /* Com la cronologia: quan la graella de secció obre el raïl d'etiqueta, les
+     fitxes arrenquen a la columna de contingut i el raïl continua adherit. */
+  @media (min-width: 62rem) {
+    .cards {
+      grid-column: 2 / -1;
+    }
+  }
+
+  .card {
+    position: relative;
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-4);
+    /* Les fitxes s'estiren fins a baix perquè el filet de sota quedi a la
+       mateixa alçada en tota la fila, amb resums de longitud desigual. */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card__period {
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .card__title {
+    margin-top: var(--space-3);
+    max-width: 22ch;
+  }
+
+  .card__title a {
+    text-decoration: none;
+  }
+
+  /*
+   * Tota la fitxa és clicable, però l'enllaç és un i és el títol: cap `div`
+   * embolicat amb `onclick`, i el lector de pantalla llegeix un sol enllaç amb
+   * el nom del cas. La contrapartida assumida és que la capa tapa el resum i el
+   * text de la fitxa no es pot seleccionar amb el ratolí.
+   */
+  .card__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .card__kind {
+    margin-top: var(--space-3);
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .card__summary {
+    margin-top: var(--space-4);
+    color: var(--ink-soft);
+    max-width: 46ch;
+  }
+
+  .card__more {
+    margin-top: auto;
+    padding-top: var(--space-6);
+    color: var(--ink-faint);
+    transition: color var(--dur-base) var(--ease-out);
+  }
+
+  .card__more::after {
+    content: '\2009→';
+    display: inline-block;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  .card:hover .card__more,
+  .card:focus-within .card__more {
+    color: var(--accent);
+  }
+
+  .card:hover .card__more::after,
+  .card:focus-within .card__more::after {
+    transform: translateX(0.25rem);
+  }
+
+  .card:hover .card__title a,
+  .card:focus-within .card__title a {
+    color: var(--accent);
+  }
+
+  /* El focus ha de dibuixar-se sobre la fitxa, no sobre les dues línies del
+     títol: és la fitxa sencera el que s'activa amb la tecla. */
+  .card__title a:focus-visible {
+    outline: none;
+  }
+
+  /* `:has(:focus-visible)`, no `:focus-within`: amb el segon, un clic de ratolí
+     també dibuixaria el marc, i el marc és per a la navegació per teclat. */
+  .card:has(a:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 6px;
+    border-radius: 2px;
+  }
+
+  @media (min-width: 46rem) {
+    .cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-12) var(--space-8);
+    }
+  }
+</style>

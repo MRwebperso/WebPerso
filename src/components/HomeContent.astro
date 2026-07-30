@@ -1,0 +1,31 @@
+---
+/**
+ * Composició de la one-page. Una sola plantilla per a les dues llengües: la
+ * paritat estructural no depèn de recordar-se de replicar res.
+ *
+ * Ordre de la secció 4.5 del brief: presentació (nucli invariant) → oferta de
+ * comunicació → IA com a mètode → cronologia → casos → contacte. La línia
+ * acadèmica hi és com a credencial dins de l'oferta de recerca, no com a
+ * servei propi.
+ */
+import Hero from './home/Hero.astro';
+import Offer from './home/Offer.astro';
+import Method from './home/Method.astro';
+import Timeline from './home/Timeline.astro';
+import Cases from './home/Cases.astro';
+import Contact from './home/Contact.astro';
+import type { Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<Hero lang={lang} />
+<Offer lang={lang} />
+<Method lang={lang} />
+<Timeline lang={lang} />
+<Cases lang={lang} />
+<Contact lang={lang} />

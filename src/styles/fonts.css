@@ -1,0 +1,24 @@
+/*
+ * Tipografia auto-allotjada. Cap petició a un CDN de tercers: els `woff2`
+ * surten del paquet npm i els serveix el mateix domini.
+ *
+ * Newsreader (serif, eix de pes 200–800) — títols i text corregut.
+ * IBM Plex Sans (eix de pes 100–700) — etiquetes, navegació, xifres.
+ *
+ * Fitxers segmentats per rang Unicode: només es baixa el llatí bàsic
+ * (U+0000–00FF, que ja cobreix català i francès sencers, punt volat i lligadura
+ * œ incloses). El llatí estès només si algun text el demana; el vietnamita, el
+ * ciríl·lic i el grec del paquet no es demanen mai.
+ *
+ * Compilacions d'eix: es fan servir les `wght`, no les `opsz`. L'eix òptic del
+ * Newsreader duplica el pes del fitxer (132 kB contra 58 kB en llatí) per un
+ * guany perceptiu petit amb els pocs cossos grans d'aquest lloc. Per
+ * recuperar-lo n'hi ha prou de canviar `wght` per `opsz` aquí sota i tornar a
+ * activar `font-optical-sizing: auto` a base.css.
+ *
+ * La cursiva del Plex no s'importa: cap dels seus usos (etiquetes, navegació,
+ * xifres) la demana.
+ */
+@import '@fontsource-variable/newsreader/wght.css';
+@import '@fontsource-variable/newsreader/wght-italic.css';
+@import '@fontsource-variable/ibm-plex-sans/wght.css';

@@ -1,0 +1,28 @@
+---
+/**
+ * Rutes mirall dels casos, costat francès: `/fr/cas/<id>/`. Vegeu el bessó
+ * català a `src/pages/ca/casos/[case].astro`.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CaseContent from '../../../components/CaseContent.astro';
+import { site } from '../../../config/site.mjs';
+import { caseContent, cases } from '../../../data/cases';
+
+export function getStaticPaths() {
+  return cases.map((item, index) => ({
+    params: { case: item.id },
+    props: { index },
+  }));
+}
+
+interface Props {
+  index: number;
+}
+
+const { index } = Astro.props;
+const copy = caseContent.fr.cases[index];
+---
+
+<BaseLayout lang="fr" title={`${copy.title} — ${site.name}`} description={copy.summary}>
+  <CaseContent lang="fr" index={index} />
+</BaseLayout>

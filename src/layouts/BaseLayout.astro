@@ -1,0 +1,133 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { useTranslations } from '../i18n/ui';
+import {
+  defaultLang,
+  getAlternates,
+  langCodes,
+  languages,
+  type Lang,
+} from '../i18n/utils';
+import '../styles/base.css';
+// Precàrrega dels dos subconjunts llatins que sí que es faran servir sempre.
+// Vite emet el mateix fitxer que referencia el CSS de les fonts, no una còpia.
+import serifLatin from '@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2?url';
+import sansLatin from '@fontsource-variable/ibm-plex-sans/files/ibm-plex-sans-latin-wght-normal.woff2?url';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  /** Pàgines de servei (arrel, 404) fora de l'índex dels cercadors. */
+  noindex?: boolean;
+}
+
+const { lang, title, description, noindex = false } = Astro.props;
+const t = useTranslations(lang);
+
+const pageTitle = title ?? t('meta.title');
+const pageDescription = description ?? t('meta.description');
+
+// Cap URL absoluta escrita a mà: totes surten d'`Astro.site` (una línia a
+// src/config/site.mjs). Si el domini canvia, aquí no es toca res.
+const alternates = getAlternates(Astro.url);
+const canonical = new URL(alternates[lang], Astro.site);
+---
+
+<!doctype html>
+<html lang={languages[lang].htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+
+    <link rel="preload" href={serifLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={sansLatin} as="font" type="font/woff2" crossorigin />
+
+    <link rel="canonical" href={canonical} />
+
+    {
+      langCodes.map((code) => (
+        <link
+          rel="alternate"
+          hreflang={languages[code].hreflang}
+          href={new URL(alternates[code], Astro.site)}
+        />
+      ))
+    }
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={new URL(alternates[defaultLang], Astro.site)}
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={languages[lang].ogLocale} />
+    {
+      langCodes
+        .filter((code) => code !== lang)
+        .map((code) => (
+          <meta property="og:locale:alternate" content={languages[code].ogLocale} />
+        ))
+    }
+
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <ClientRouter />
+
+    {/* Abans del primer pintat: és el que autoritza els estats inicials de
+        `.reveal`. Sense JS no s'afegeix i el contingut es veu tal qual. */}
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">{t('skip.content')}</a>
+    <Header lang={lang} />
+    <main id="content">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+
+    <script>
+      // Revelació en scroll. Es reactiva a cada transició de pàgina.
+      const bind = () => {
+        document.documentElement.classList.add('js');
+        const targets = document.querySelectorAll<HTMLElement>('.reveal');
+        if (!targets.length) return;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          targets.forEach((el) => el.classList.add('is-in'));
+          return;
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add('is-in');
+              io.unobserve(entry.target);
+            }
+          },
+          { rootMargin: '0px 0px -12% 0px', threshold: 0.1 },
+        );
+        targets.forEach((el) => io.observe(el));
+      };
+      bind();
+      document.addEventListener('astro:page-load', bind);
+
+      // En commutar de llengua a mig document, el router substitueix la pàgina
+      // i deixa el desplaçament a zero. L'àncora és el que manté la posició.
+      document.addEventListener('astro:after-swap', () => {
+        if (!location.hash) return;
+        const target = document.querySelector(decodeURIComponent(location.hash));
+        target?.scrollIntoView({ behavior: 'instant', block: 'start' });
+      });
+    </script>
+  </body>
+</html>

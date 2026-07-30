@@ -1,0 +1,44 @@
+---
+/**
+ * Contacte. Ara mateix, correu professional visible; el formulari senzill
+ * s'hi afegeix al bloc 8.
+ */
+import Section from '../Section.astro';
+import { site } from '../../config/site.mjs';
+import { home } from '../../data/home';
+import type { Lang } from '../../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const c = home[lang].contact;
+---
+
+<Section id="contacte" eyebrow={c.eyebrow} title={c.title} lead={c.lead}>
+  <p class="direct">
+    <span class="eyebrow">{c.emailLabel}</span>
+    <a href={`mailto:${site.email}`}>{site.email}</a>
+  </p>
+</Section>
+
+<style>
+  .direct {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .direct a {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    letter-spacing: var(--tracking-display);
+    text-decoration-color: var(--rule);
+    width: fit-content;
+  }
+
+  .direct a:hover {
+    text-decoration-color: var(--accent);
+  }
+</style>

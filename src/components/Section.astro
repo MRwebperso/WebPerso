@@ -1,0 +1,57 @@
+---
+/**
+ * Primitiva de secció de la one-page: raïl d'etiqueta + columna de contingut.
+ * Totes les seccions passen per aquí perquè el ritme vertical i la posició de
+ * l'etiqueta no divergeixin d'una secció a l'altra.
+ */
+interface Props {
+  /** Àncora estable, idèntica en les dues llengües. */
+  id: string;
+  eyebrow: string;
+  title: string;
+  lead?: string;
+  /** Fons enfonsat, per a les seccions que han de pesar igual que l'oferta. */
+  sunk?: boolean;
+}
+
+/*
+ * El slot `wide` entra a la graella de secció com a fill directe, no dins de la
+ * columna de contingut: qui l'ompli decideix quantes columnes ocupa. És el que
+ * permet que la cronologia tingui dues columnes pròpies sense perdre el raïl
+ * d'etiqueta adherent a l'esquerra.
+ */
+
+const { id, eyebrow, title, lead, sunk = false } = Astro.props;
+---
+
+<section
+  class:list={['section', { 'section--sunk': sunk }]}
+  id={id}
+  aria-labelledby={`${id}-title`}
+>
+  <div class="wrap section-grid">
+    <div class="rail">
+      <p class="eyebrow">{eyebrow}</p>
+    </div>
+    <div class="body">
+      <h2 id={`${id}-title`}>{title}</h2>
+      {lead && <p class="lead section__lead">{lead}</p>}
+      <slot />
+    </div>
+    <slot name="wide" />
+  </div>
+</section>
+
+<style>
+  .body > :global(h2) {
+    max-width: 28ch;
+  }
+
+  .section__lead {
+    margin-top: var(--space-6);
+  }
+
+  .body > :global(* + *:not(.section__lead)) {
+    margin-top: var(--space-12);
+  }
+</style>

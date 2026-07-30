@@ -1,0 +1,94 @@
+---
+/**
+ * Commutador de llengua.
+ *
+ * Funciona sense JS: és un enllaç a la ruta mirall pregenerada de la pàgina
+ * actual (mai a la portada). Amb JS, la commutació és instantània —
+ * pre-càrrega en `hover` + transició de vista — i la tria queda desada per a
+ * l'entrada següent pel domini nu.
+ */
+import { useTranslations } from '../i18n/ui';
+import { getAlternates, languages, otherLang, type Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const target = otherLang(lang);
+const href = getAlternates(Astro.url)[target];
+---
+
+<a
+  class="lang"
+  href={href}
+  hreflang={languages[target].hreflang}
+  lang={languages[target].htmlLang}
+  rel="alternate"
+  data-astro-prefetch="hover"
+  data-lang-pick={target}
+  title={t('lang.to')}
+>
+  <span class="sr-only">{t('lang.switch')}:</span>
+  <span aria-hidden="true" class="lang__from">{lang.toUpperCase()}</span>
+  <span aria-hidden="true" class="lang__sep">/</span>
+  <span class="lang__to">{target.toUpperCase()}</span>
+</a>
+
+<script>
+  const remember = (event: Event) => {
+    const link = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>(
+      '[data-lang-pick]',
+    );
+    if (!link) return;
+    // La commutació manté la posició: mateixa secció, altra llengua.
+    if (location.hash && !link.hash) link.href += location.hash;
+    try {
+      localStorage.setItem('lang', link.dataset.langPick!);
+    } catch {
+      /* mode privat: la tria simplement no persisteix */
+    }
+  };
+  // Fase de captura: cal reescriure l'href abans que el router de vistes el
+  // llegeixi al seu propi gestor de clic (fase de bombolla).
+  document.addEventListener('click', remember, { capture: true });
+</script>
+
+<style>
+  .lang {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3em;
+    font-family: var(--font-ui);
+    font-size: var(--step--1);
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    color: var(--ink-faint);
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .lang:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .lang__from {
+    color: var(--ink);
+  }
+
+  .lang:hover .lang__from {
+    color: var(--ink-faint);
+  }
+
+  .lang__to {
+    font-weight: 500;
+  }
+</style>
