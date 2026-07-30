@@ -15,7 +15,7 @@ const c = home[lang].communication;
   <ol class="offers">
     {
       c.offers.map((offer, i) => (
-        <li class="offer">
+        <li class="offer reveal" style={`--reveal-i:${i}`}>
           <p class="offer__num nums">{String(i + 1).padStart(2, '0')}</p>
           <div class="offer__text">
             <h3>{offer.title}</h3>

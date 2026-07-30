@@ -1,14 +1,17 @@
 ---
 /**
- * Selecció de casos a la portada. Quatre fitxes, sense filtres: amb aquest
- * volum de contingut un filtre buit només crida l'atenció sobre el buit
- * (secció 4.3 del brief).
+ * Selecció de casos a la portada. Sense filtres: amb aquest volum de contingut
+ * un filtre buit només crida l'atenció sobre el buit (secció 4.3 del brief).
  *
  * Jerarquia de la secció 2.2: totes les fitxes tenen el mateix tractament
- * —mateixa mida, mateix pes, mateixa posició a la graella— i les d'activitat
- * pròpia van primer, per l'ordre de `src/data/cases.ts`. L'etiqueta del marc
+ * —mateixa mida, mateix pes, mateixa posició a la graella— i obre la llista un
+ * lloc de treball, per l'ordre de `src/data/cases.ts`. L'etiqueta del marc
  * queda a sota del títol, on es llegeix sempre, mai com a distintiu que faci
  * pesar més una fitxa que una altra.
+ *
+ * El retard de revelació va per columna i no per posició absoluta: en una
+ * graella de dues columnes, escalonar fins a la sisena fitxa faria esperar la
+ * fila de baix mig segon després d'haver entrat en pantalla.
  */
 import Section from '../Section.astro';
 import { cases, caseContent } from '../../data/cases';
@@ -32,7 +35,7 @@ const c = caseContent[lang];
       cases.map((item, index) => {
         const copy = c.cases[index];
         return (
-          <li class="card">
+          <li class="card reveal" style={`--reveal-i:${index % 2}`}>
             <p class="card__period nums">{copy.period}</p>
             <h3 class="card__title">
               <a href={localize(lang, ['casos', item.id])}>{copy.title}</a>

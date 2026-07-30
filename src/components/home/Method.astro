@@ -21,7 +21,7 @@ const c = home[lang].method;
   <ol class="principles">
     {
       c.principles.map((principle, i) => (
-        <li class="principle">
+        <li class="principle reveal" style={`--reveal-i:${i}`}>
           <p class="principle__num nums">{String(i + 1).padStart(2, '0')}</p>
           <h3>{principle.title}</h3>
           <p class="principle__body">{principle.body}</p>

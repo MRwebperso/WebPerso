@@ -102,7 +102,14 @@ const canonical = new URL(alternates[lang], Astro.site);
         document.documentElement.classList.add('js');
         const targets = document.querySelectorAll<HTMLElement>('.reveal');
         if (!targets.length) return;
-        if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        // Dues sortides cap al contingut visible abans de dependre de
+        // l'observador: el text el tapa una regla de CSS i el que la desfà és
+        // aquest script, de manera que qualsevol camí que no acabi en `is-in`
+        // deixa la pàgina en blanc.
+        if (
+          matchMedia('(prefers-reduced-motion: reduce)').matches ||
+          !('IntersectionObserver' in window)
+        ) {
           targets.forEach((el) => el.classList.add('is-in'));
           return;
         }

@@ -71,15 +71,25 @@ L'única peça amb scrollytelling del lloc ([Timeline.astro](src/components/home
 Quatre casos, sense filtres, amb una sola plantilla ([CaseContent.astro](src/components/CaseContent.astro)) i les dades a [src/data/cases.ts](src/data/cases.ts).
 
 - **Afegir o treure un cas és editar `cases.ts` i res més.** La tupla de quatre i els tres capítols per cas són el que imposa la paritat: si el francès no cobreix el que hi ha en català, `npm run check` falla.
-- **L'ordre de l'array és l'ordre de lectura**, a la portada i a la navegació entre casos. Els casos d'activitat individual van primer, perquè la frontera 2.2 del brief no permet que la feina individual quedi visualment per sota de l'associativa. El camp `year` no ordena res: només documenta l'any d'inici.
+- **L'ordre de l'array és l'ordre de lectura**, a la portada i a la navegació entre casos, i el fixa l'usuari. Obre la llista un lloc de treball, que és el que sosté la jerarquia de la frontera 2.2; els Banys d'Arles van en quart lloc per decisió seva del 30/07/2026, tot i quedar per sota dels casos associatius. El camp `year` no ordena res: només documenta l'any d'inici.
 - `kind` té quatre valors: `position`, `commission`, `own` i `associative`. Els tres primers són activitat individual; el quart obliga l'etiqueta *«realitzat en el marc associatiu»*. Cap dels quatre té tractament visual propi: l'etiqueta és text, no distintiu. `position` —lloc de treball ocupat— es distingeix de `commission` a propòsit: dir «encàrrec» d'un lloc assalariat seria inexacte, i el marc exacte és part del senyal.
 - **Els slugs no es tradueixen** (`/ca/casos/banys-d-arles/` ↔ `/fr/cas/banys-d-arles/`): són noms propis de projecte o d'entitat, i és el que fa que `hreflang` i el commutador de llengua surtin sols del registre de `src/i18n/utils.ts`. La contrapartida és que un lector francès veu una URL en català per a una entitat que coneix pel nom francès.
 - La plantilla reutilitza les primitives de la portada —`.wrap`, `.section-grid`, `.rail`, `.eyebrow`, `.lead`— i els capítols repeteixen la peça dels blocs d'oferta. És el que evita que les pàgines de cas divergeixin d'estil de la one-page.
 - A les fitxes de la portada, tota la superfície és clicable amb **un sol enllaç**, el del títol, estirat amb un `::after`. La contrapartida assumida és que el text de la fitxa no es pot seleccionar amb el ratolí.
 - L'eix llengua de cada cas surt del mateix registre que la cronologia (`langKeys` de `timeline.ts`), i per això es llegeix sempre en el mateix ordre.
 
+## Moviment i marca
+
+Fora de la cronologia, el moviment és el de la secció 4.4 del brief: mesurat, i mai per cridar l'atenció sobre ell mateix.
+
+- **Revelació en scroll** sobre els blocs de llista —oferta, principis de mètode, fitxes de cas i capítols de cas—, amb un escalonament de 70 ms per posició. No la porten ni el hero ni la cronologia: el primer ja es veu en carregar i la segona té la seva pròpia mecànica.
+- **L'estat inicial el condiciona `.js`**, que s'afegeix a l'arrel abans del primer pintat. El text el tapa una regla de CSS i qui la desfà és l'script, de manera que aquest té dues sortides directes cap al contingut visible —moviment reduït i absència d'`IntersectionObserver`— abans de dependre de l'observador.
+- **Transició entre pàgines:** fosa curta a la sortida i mig centímetre de pujada a l'entrada. La capçalera té nom de transició propi i en queda fora: és idèntica a totes les pàgines i, animada com a grup a part, no parpelleja.
+- **La marca** (`public/favicon.svg` i la capçalera) és la mateixa a la pestanya i a la pàgina: horitzó pla i muntanya irregular que dibuixa la M. A la capçalera va inline i pren els tokens —l'horitzó amb `--mark-rule`, la muntanya amb `currentColor`, que segueix el color de l'enllaç. El vermell està acotat a la marca i no entra a la interfície: si s'escampés, competiria amb l'accent.
+
 ## Pendent
 
-- Domini definitiu: només la línia `siteUrl` de `site.mjs`, o la variable d'entorn `SITE_URL` a l'amfitrió. El correu professional ja hi és.
-- Casos: la selecció i els fets són els que va donar l'usuari. Queda per confirmar l'eix llengua dels Banys d'Arles (hi consta `fr, ca`, deduït de «traduccions») i si l'ordre de lectura ha de ser el de la frontera 2.2 —llocs de treball primer— o el de l'enumeració original.
-- Micro-interaccions, formulari, Decap CMS i desplegament: blocs 7–10 de l'ordre de treball.
+- Domini definitiu: només la línia `siteUrl` de `site.mjs`, o la variable d'entorn `SITE_URL` a l'amfitrió. El correu professional ja hi és. `SITE_URL` està definida a Vercel des del 30/07/2026 i la canònica de producció ja hi apunta.
+- Casos: la selecció, els fets i l'ordre són els que va donar l'usuari, i l'eix llengua dels Banys d'Arles està confirmat. Queden dos casos per definir per arribar als sis que vol l'usuari.
+- Formulari, Decap CMS i desplegament: blocs 8–10 de l'ordre de treball. El desplegament ja funciona; li falta el pas per Decap.
+- Auditoria d'accessibilitat, pendent des del bloc 5 i més exigible ara que el lloc és públic.

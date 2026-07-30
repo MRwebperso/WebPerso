@@ -221,6 +221,51 @@ section[id] {
     opacity: 1;
     transform: none;
   }
+
+  /* Escalonament dins d'un grup. L'observador dispara cada element pel seu
+     compte, però els que comparteixen fila entren alhora: el retard és el que
+     els converteix en seqüència. Sostre baix a propòsit —quatre elements són
+     210 ms— perquè qui llegeix de pressa no esperi el text. */
+  .js .reveal {
+    transition-delay: calc(var(--reveal-i, 0) * 70ms);
+  }
+}
+
+/*
+ * Transició entre pàgines (4.4). El router ja hi és des del bloc 1; això només
+ * en fixa la forma: fosa curta i mig centímetre de pujada a l'entrada.
+ *
+ * La capçalera té nom de transició propi i queda fora de la fosa de l'arrel.
+ * És idèntica a totes les pàgines, i el navegador anima cada grup per separat:
+ * amb dos continguts iguals, el resultat és que no es mou. Sense això,
+ * parpellejaria a cada navegació, que és exactament el que la barra adherent
+ * no ha de fer.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: page-out var(--dur-fast) var(--ease-out) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: page-in var(--dur-base) var(--ease-out) both;
+  }
+
+  .header {
+    view-transition-name: page-header;
+  }
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

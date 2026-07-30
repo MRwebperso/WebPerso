@@ -8,8 +8,9 @@ import type { LangKey } from './timeline';
  * un filtre buit només crida l’atenció sobre el buit.
  *
  * L’ordre de l’array és l’ordre de lectura, a la portada i a la navegació entre
- * casos. Els dos llocs de treball van primer: la frontera 2.2 no permet que la
- * feina individual quedi per sota de l’associativa.
+ * casos. L’ordre el fixa l’usuari. Obre un lloc de treball, que és el que
+ * sosté la jerarquia de la frontera 2.2: els Banys d’Arles van en quart lloc
+ * per decisió seva del 30/07/2026, tot i quedar per sota dels associatius.
  *
  * Com a la cronologia, els fets no es tradueixen i la paritat la imposen els
  * tipus: quatre casos en tupla, tres capítols per cas i les etiquetes de tipus
@@ -43,9 +44,9 @@ type Four<T> = readonly [T, T, T, T];
 
 export const cases: Four<CaseFacts> = [
   { id: 'agencia-atractivitat', kind: 'position', year: 2023, langs: ['fr', 'ca', 'es', 'en'] },
-  { id: 'banys-d-arles', kind: 'position', year: 2023, langs: ['fr', 'ca'] },
   { id: 'mar-i-muntanya', kind: 'associative', year: 2026, langs: ['fr', 'ca'] },
   { id: 'que-fas', kind: 'associative', year: 2026, langs: ['fr', 'ca'] },
+  { id: 'banys-d-arles', kind: 'position', year: 2023, langs: ['fr', 'ca'] },
 ];
 
 interface Chapter {
@@ -128,35 +129,6 @@ const ca: CasesContent = {
       ],
     },
     {
-      title: 'Els Banys d’Arles: tres mesos i un servei per endreçar',
-      summary:
-        'Un pas curt pel servei de comunicació d’un ajuntament termal, amb la comunicació institucional de l’alcaldessa a fer cada setmana i el servei mateix a reestructurar.',
-      context: 'Servei de Comunicació, Ajuntament dels Banys d’Arles i Palaldà',
-      role: 'Comunicació institucional i reestructuració del servei',
-      period: 'agost → octubre 2023',
-      territory: 'Els Banys d’Arles i Palaldà',
-      deliverables: [
-        'Comunicació institucional de l’alcaldessa',
-        'Reestructuració i modernització del servei',
-        'Traduccions i visuals',
-        'Dinamització de les xarxes socials',
-      ],
-      chapters: [
-        {
-          title: 'El punt de partida',
-          body: 'Tres mesos en un servei de comunicació municipal són poc temps per a gairebé tot. Hi havia dues coses a fer alhora: sortir cada setmana amb la comunicació institucional de l’alcaldessa, que no espera, i endreçar un servei que necessitava modernitzar-se. Les dues competien pel mateix temps.',
-        },
-        {
-          title: 'Què vaig fer',
-          body: 'Vaig posar l’estructura abans del volum, perquè l’estructura sobreviu al contracte i les publicacions no. Això va voler dir reorganitzar com entra i com surt la informació del servei, i modernitzar-ne les eines. A sobre d’això, la producció corrent: la comunicació de l’alcaldia, les traduccions i els visuals, i una presència a les xarxes que passés de publicar quan hi havia temps a publicar per calendari.',
-        },
-        {
-          title: 'Què n’ha quedat',
-          body: 'El pas va ser curt i orientat a propòsit al que quedaria després, que és la reorganització del servei. A l’octubre del mateix any vaig començar a l’Alt Vallespir. D’aquells tres mesos ve una convicció que no he canviat: en comunicació pública, arreglar el procés val més que afegir una publicació més.',
-        },
-      ],
-    },
-    {
       title: 'Mar i Muntanya, a Taula!',
       summary:
         'Una marca de comunicació bilingüe per a quatre fires gastronòmiques fora de temporada, dues al nord i dues al sud, que per separat no arriben enlloc.',
@@ -214,6 +186,35 @@ const ca: CasesContent = {
         },
       ],
     },
+    {
+      title: 'Els Banys d’Arles: tres mesos i un servei per endreçar',
+      summary:
+        'Un pas curt pel servei de comunicació d’un ajuntament termal, amb la comunicació institucional de l’alcaldia a fer cada setmana i el servei mateix a reestructurar.',
+      context: 'Servei de Comunicació, Ajuntament dels Banys d’Arles i Palaldà',
+      role: 'Comunicació institucional i reestructuració del servei',
+      period: 'agost → octubre 2023',
+      territory: 'Els Banys d’Arles i Palaldà',
+      deliverables: [
+        'Comunicació institucional de l’alcaldia',
+        'Reestructuració i modernització del servei',
+        'Traduccions i visuals',
+        'Dinamització de les xarxes socials',
+      ],
+      chapters: [
+        {
+          title: 'El punt de partida',
+          body: 'Tres mesos en un servei de comunicació municipal són poc temps per a gairebé tot. Hi havia dues coses a fer alhora: sortir cada setmana amb la comunicació institucional de l’alcaldia, que no espera, i endreçar un servei que necessitava modernitzar-se. Les dues competien pel mateix temps.',
+        },
+        {
+          title: 'Què vaig fer',
+          body: 'Vaig posar l’estructura abans del volum, perquè l’estructura sobreviu al contracte i les publicacions no. Això va voler dir reorganitzar com entra i com surt la informació del servei, i modernitzar-ne les eines. A sobre d’això, la producció corrent: la comunicació de l’alcaldia, les traduccions i els visuals, i una presència a les xarxes que passés de publicar quan hi havia temps a publicar per calendari.',
+        },
+        {
+          title: 'Què n’ha quedat',
+          body: 'El pas va ser curt i orientat a propòsit al que quedaria després, que és la reorganització del servei. A l’octubre del mateix any vaig començar a l’Alt Vallespir. D’aquells tres mesos ve una convicció que no he canviat: en comunicació pública, arreglar el procés val més que afegir una publicació més.',
+        },
+      ],
+    },
   ],
 };
 
@@ -260,35 +261,6 @@ const fr: CasesContent = {
         {
           title: 'Ce qui en reste',
           body: 'Le poste s’est achevé en décembre 2025. Au territoire restent le cadre stratégique et la pratique éditoriale. Ce que j’en ai emporté, c’est la manière de travailler en quatre langues à la fois et la lecture de la frontière comme ressource, qui est exactement ce que j’emploie aujourd’hui dans les projets de communication transfrontalière que je mène à mon compte.',
-        },
-      ],
-    },
-    {
-      title: 'Amélie-les-Bains : trois mois et un service à remettre en ordre',
-      summary:
-        'Un passage court au service communication d’une mairie thermale, avec la communication institutionnelle de Madame le Maire à assurer chaque semaine et le service lui-même à restructurer.',
-      context: 'Service Communication, Mairie d’Amélie-les-Bains-Palalda',
-      role: 'Communication institutionnelle et restructuration du service',
-      period: 'août → octobre 2023',
-      territory: 'Amélie-les-Bains-Palalda',
-      deliverables: [
-        'Communication institutionnelle de Madame le Maire',
-        'Restructuration et modernisation du service',
-        'Traductions et visuels',
-        'Dynamisation des réseaux sociaux',
-      ],
-      chapters: [
-        {
-          title: 'Le point de départ',
-          body: 'Trois mois dans un service de communication municipale, c’est peu de temps pour presque tout. Il y avait deux choses à mener en même temps : sortir chaque semaine la communication institutionnelle de Madame le Maire, qui n’attend pas, et remettre en ordre un service qui avait besoin d’être modernisé. Les deux se disputaient le même temps.',
-        },
-        {
-          title: 'Ce que j’ai fait',
-          body: 'J’ai placé la structure avant le volume, parce que la structure survit au contrat et les publications non. Cela a voulu dire réorganiser la manière dont l’information entre et sort du service, et en moderniser les outils. Là-dessus, la production courante : la communication de la mairie, les traductions et les visuels, et une présence sur les réseaux qui passe de publier quand il y a le temps à publier selon un calendrier.',
-        },
-        {
-          title: 'Ce qui en reste',
-          body: 'Le passage a été court et orienté à dessein vers ce qui resterait ensuite, c’est-à-dire la réorganisation du service. En octobre de la même année, je commençais en Haut-Vallespir. De ces trois mois vient une conviction que je n’ai pas changée : en communication publique, réparer le processus vaut mieux qu’ajouter une publication de plus.',
         },
       ],
     },
@@ -347,6 +319,35 @@ const fr: CasesContent = {
         {
           title: 'Où cela en est',
           body: 'Le site est construit et dans sa forme définitive. La chaîne d’automatisation est écrite et relue ; il reste à la brancher sur le compte définitif, qui doit être propriétaire à la fois de la boîte, de la feuille et du script. De tout ce que j’ai produit, c’est le cas qui explique le mieux comment j’emploie les outils d’IA : une pièce délimitée dans un processus qu’une personne valide, non un moteur qui décide de ce qui se publie.',
+        },
+      ],
+    },
+    {
+      title: 'Amélie-les-Bains : trois mois et un service à remettre en ordre',
+      summary:
+        'Un passage court au service communication d’une mairie thermale, avec la communication institutionnelle de la municipalité à assurer chaque semaine et le service lui-même à restructurer.',
+      context: 'Service Communication, Mairie d’Amélie-les-Bains-Palalda',
+      role: 'Communication institutionnelle et restructuration du service',
+      period: 'août → octobre 2023',
+      territory: 'Amélie-les-Bains-Palalda',
+      deliverables: [
+        'Communication institutionnelle de la municipalité',
+        'Restructuration et modernisation du service',
+        'Traductions et visuels',
+        'Dynamisation des réseaux sociaux',
+      ],
+      chapters: [
+        {
+          title: 'Le point de départ',
+          body: 'Trois mois dans un service de communication municipale, c’est peu de temps pour presque tout. Il y avait deux choses à mener en même temps : sortir chaque semaine la communication institutionnelle de la municipalité, qui n’attend pas, et remettre en ordre un service qui avait besoin d’être modernisé. Les deux se disputaient le même temps.',
+        },
+        {
+          title: 'Ce que j’ai fait',
+          body: 'J’ai placé la structure avant le volume, parce que la structure survit au contrat et les publications non. Cela a voulu dire réorganiser la manière dont l’information entre et sort du service, et en moderniser les outils. Là-dessus, la production courante : la communication de la mairie, les traductions et les visuels, et une présence sur les réseaux qui passe de publier quand il y a le temps à publier selon un calendrier.',
+        },
+        {
+          title: 'Ce qui en reste',
+          body: 'Le passage a été court et orienté à dessein vers ce qui resterait ensuite, c’est-à-dire la réorganisation du service. En octobre de la même année, je commençais en Haut-Vallespir. De ces trois mois vient une conviction que je n’ai pas changée : en communication publique, réparer le processus vaut mieux qu’ajouter une publication de plus.',
         },
       ],
     },

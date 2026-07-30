@@ -94,7 +94,7 @@ const titleOf = (at: number) => c.cases[at].title;
       <ol class="chapters">
         {
           copy.chapters.map((chapter, i) => (
-            <li class="chapter">
+            <li class="chapter reveal" style={`--reveal-i:${i}`}>
               <p class="chapter__num nums">{String(i + 1).padStart(2, '0')}</p>
               <div class="chapter__text">
                 <h2>{chapter.title}</h2>
