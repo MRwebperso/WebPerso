@@ -4,8 +4,9 @@ import type { LangKey } from './timeline';
 /**
  * Portfolio — dades i contingut dels casos.
  *
- * Quatre casos, sense filtres (secció 4.3 del brief): amb tan poc contingut,
- * un filtre buit només crida l’atenció sobre el buit.
+ * Sis casos, sense filtres (secció 4.3 del brief): amb tan poc contingut, un
+ * filtre buit només crida l’atenció sobre el buit. El brief en demanava tres o
+ * quatre; els sis són decisió de l’usuari del 30/07/2026.
  *
  * L’ordre de l’array és l’ordre de lectura, a la portada i a la navegació entre
  * casos. L’ordre el fixa l’usuari. Obre un lloc de treball, que és el que
@@ -13,21 +14,29 @@ import type { LangKey } from './timeline';
  * per decisió seva del 30/07/2026, tot i quedar per sota dels associatius.
  *
  * Com a la cronologia, els fets no es tradueixen i la paritat la imposen els
- * tipus: quatre casos en tupla, tres capítols per cas i les etiquetes de tipus
+ * tipus: sis casos en tupla, tres capítols per cas i les etiquetes de tipus
  * en `Record`. Afegir un cas o un capítol en una llengua i no en l’altra no
  * compila. L’eix llengua reutilitza el registre de `timeline.ts`, que és el
  * mateix de la cronologia.
  */
 
 /**
- * `position`, `commission` i `own` són activitat individual; `associative`
- * obliga l’etiquetatge de la secció 2.2 del brief.
+ * `position`, `commission`, `own` i `affiliation` són activitat individual;
+ * `associative` obliga l’etiquetatge de la secció 2.2 del brief.
  *
  * `position` és un lloc de treball ocupat, que no és el mateix que un encàrrec
  * facturat: dir-ne «encàrrec» seria inexacte, i la precisió del marc és part
- * del senyal que ha de donar el portfolio.
+ * del senyal que ha de donar el portfolio. Pel mateix motiu hi ha
+ * `affiliation`: una vinculació de recerca no és un lloc de treball, i
+ * presentar-la com a tal seria inflar-la.
  */
-export const caseKinds = ['position', 'commission', 'own', 'associative'] as const;
+export const caseKinds = [
+  'position',
+  'commission',
+  'own',
+  'associative',
+  'affiliation',
+] as const;
 export type CaseKind = (typeof caseKinds)[number];
 
 export interface CaseFacts {
@@ -40,13 +49,15 @@ export interface CaseFacts {
   langs: readonly LangKey[];
 }
 
-type Four<T> = readonly [T, T, T, T];
+type Six<T> = readonly [T, T, T, T, T, T];
 
-export const cases: Four<CaseFacts> = [
+export const cases: Six<CaseFacts> = [
   { id: 'agencia-atractivitat', kind: 'position', year: 2023, langs: ['fr', 'ca', 'es', 'en'] },
   { id: 'mar-i-muntanya', kind: 'associative', year: 2026, langs: ['fr', 'ca'] },
   { id: 'que-fas', kind: 'associative', year: 2026, langs: ['fr', 'ca'] },
   { id: 'banys-d-arles', kind: 'position', year: 2023, langs: ['fr', 'ca'] },
+  { id: 'grecs-oacu', kind: 'affiliation', year: 2020, langs: ['ca', 'es', 'en'] },
+  { id: 'movokeur', kind: 'position', year: 2013, langs: ['es', 'en'] },
 ];
 
 interface Chapter {
@@ -79,7 +90,7 @@ export interface CasesContent {
     langs: string;
     deliverables: string;
   };
-  cases: Four<CaseCopy>;
+  cases: Six<CaseCopy>;
 }
 
 const ca: CasesContent = {
@@ -88,6 +99,7 @@ const ca: CasesContent = {
     commission: 'Encàrrec',
     own: 'Projecte propi',
     associative: 'Realitzat en el marc associatiu',
+    affiliation: 'Vinculació de recerca',
   },
   factLabels: {
     context: 'Marc',
@@ -215,6 +227,63 @@ const ca: CasesContent = {
         },
       ],
     },
+    {
+      title: 'Recerca associada a la UB: seminaris, projectes i un terreny a Suïssa',
+      summary:
+        'Quatre anys de vinculació al Departament d’Antropologia Social i Cultural de la Universitat de Barcelona, amb una etnografia pròpia sobre els temporers vitícoles a Suïssa.',
+      context:
+        'GRECS/OACU, Departament d’Antropologia Social i Cultural, Universitat de Barcelona',
+      role: 'Investigador associat',
+      period: 'setembre 2020 → 2024',
+      territory: 'Barcelona i Suïssa',
+      deliverables: [
+        'Participació en seminaris i projectes de recerca del grup',
+        'Etnografia sobre els temporers vitícoles a Suïssa',
+      ],
+      chapters: [
+        {
+          title: 'El punt de partida',
+          body: 'Una vinculació de recerca associada no és un lloc de treball: ningú no t’assigna feina i ningú no te’n reclama. El que la sosté és, d’una banda, un grup amb qui discutir el que fas, i de l’altra, un terreny propi que justifiqui seguir-hi. Vaig entrar-hi el setembre del 2020, quan acabava d’instal·lar-me lluny de Barcelona, i això volia dir mantenir el vincle a distància i amb el terreny en un tercer país.',
+        },
+        {
+          title: 'Què vaig fer',
+          body: 'Dues coses en paral·lel. Als seminaris i als projectes del grup, el que s’hi aprèn és a defensar un plantejament davant de gent que no té cap obligació de ser amable: és la millor escola que conec per detectar on un argument no s’aguanta. I un terreny propi, l’etnografia dels temporers vitícoles a Suïssa. Una població estacional i mòbil no s’estudia amb un qüestionari: demana ser-hi quan hi són, tornar-hi la temporada següent i parlar la llengua de la gent, no la de la institució que la contracta.',
+        },
+        {
+          title: 'Què n’ha quedat',
+          body: 'La vinculació es va acabar el 2024. El que en conservo és mètode, i el faig servir cada setmana: abans d’escriure res sobre un territori, anar-hi, escoltar qui hi viu i acceptar que el que en surti no serà el que esperava. Els diagnòstics territorials que faig ara per encàrrec surten d’aquesta disciplina, no d’una plantilla.',
+        },
+      ],
+    },
+    {
+      title: 'MOVOKEUR: quatre anys d’assistència a la recerca en un projecte internacional',
+      summary:
+        'Assistència de recerca en un projecte internacional del Ministerio de Educación y Cultura: planificació compartida, entrevistes, publicacions i l’organització d’un taller internacional.',
+      context: 'Projecte MOVOKEUR · Ministerio de Educación y Cultura',
+      role: 'Assistent de recerca',
+      period: 'setembre 2013 → juliol 2017',
+      territory: 'Barcelona · projecte internacional',
+      deliverables: [
+        'Planificació col·laborativa d’un projecte internacional',
+        'Articles i capítols de llibre',
+        'Entrevistes semiestructurades',
+        'Organització de l’Antipode International Workshop Award 2015',
+      ],
+      chapters: [
+        {
+          title: 'El punt de partida',
+          body: 'Un projecte de recerca internacional té dues vides que no s’assemblen: la que consta a la sol·licitud i la que passa cada mes entre equips de països diferents, amb calendaris i maneres de treballar que no coincideixen. Hi vaig entrar el setembre del 2013 com a assistent de recerca, que és la posició des de la qual es veuen totes dues alhora.',
+        },
+        {
+          title: 'Què vaig fer',
+          body: 'La planificació era col·laborativa i això és menys còmode del que sona: vol dir negociar què s’entrega, quan i qui ho signa, amb gent que no comparteix ni institució ni horari. A sobre, la feina de recerca: entrevistes semiestructurades i la redacció d’articles i de capítols de llibre, on el text ha de passar per avaluadors que no et coneixen i que busquen l’escletxa. I el 2015, l’organització de l’Antipode International Workshop Award, que ja no és recerca sinó producció —programa, pressupost, gent que arriba i que se’n va— i que es va fer amb la mateixa exigència.',
+        },
+        {
+          title: 'Què n’ha quedat',
+          body: 'El projecte es va tancar el juliol del 2017. D’aquells quatre anys en surten les dues coses que ara faig servir a la línia de dossiers i de recerca aplicada: escriure per a algú que avalua amb criteris explícits, i sostenir un calendari compartit entre socis que no depenen de tu. La segona és, de llarg, la que decideix si un projecte transfronterer arriba a terme.',
+        },
+      ],
+    },
   ],
 };
 
@@ -224,6 +293,7 @@ const fr: CasesContent = {
     commission: 'Commande',
     own: 'Projet personnel',
     associative: 'Réalisé dans le cadre associatif',
+    affiliation: 'Rattachement de recherche',
   },
   factLabels: {
     context: 'Cadre',
@@ -348,6 +418,63 @@ const fr: CasesContent = {
         {
           title: 'Ce qui en reste',
           body: 'Le passage a été court et orienté à dessein vers ce qui resterait ensuite, c’est-à-dire la réorganisation du service. En octobre de la même année, je commençais en Haut-Vallespir. De ces trois mois vient une conviction que je n’ai pas changée : en communication publique, réparer le processus vaut mieux qu’ajouter une publication de plus.',
+        },
+      ],
+    },
+    {
+      title: 'Recherche associée à l’UB : séminaires, projets et un terrain en Suisse',
+      summary:
+        'Quatre ans de rattachement au Département d’Anthropologie Sociale et Culturelle de l’Université de Barcelone, avec une ethnographie propre sur les saisonniers viticoles en Suisse.',
+      context:
+        'GRECS/OACU, Département d’Anthropologie Sociale et Culturelle, Université de Barcelone',
+      role: 'Chercheur associé',
+      period: 'septembre 2020 → 2024',
+      territory: 'Barcelone et Suisse',
+      deliverables: [
+        'Participation aux séminaires et aux projets de recherche du groupe',
+        'Ethnographie sur les saisonniers viticoles en Suisse',
+      ],
+      chapters: [
+        {
+          title: 'Le point de départ',
+          body: 'Un rattachement de chercheur associé n’est pas un poste : personne ne vous assigne de travail et personne ne vous en réclame. Ce qui le tient, c’est d’un côté un groupe avec qui discuter ce que l’on fait, de l’autre un terrain propre qui justifie d’y rester. J’y suis entré en septembre 2020, au moment où je venais de m’installer loin de Barcelone : il fallait donc maintenir le lien à distance, et le terrain dans un troisième pays.',
+        },
+        {
+          title: 'Ce que j’ai fait',
+          body: 'Deux choses en parallèle. Dans les séminaires et les projets du groupe, ce qui s’apprend, c’est à défendre une approche devant des gens qui n’ont aucune obligation d’être aimables : je ne connais pas de meilleure école pour repérer où un argument ne tient pas. Et un terrain propre, l’ethnographie des saisonniers viticoles en Suisse. Une population saisonnière et mobile ne s’étudie pas par questionnaire : elle demande d’être là quand elle y est, d’y revenir la saison suivante et de parler la langue des gens, pas celle de l’institution qui les emploie.',
+        },
+        {
+          title: 'Ce qui en reste',
+          body: 'Le rattachement s’est achevé en 2024. Ce que j’en garde est une méthode, et je m’en sers chaque semaine : avant d’écrire quoi que ce soit sur un territoire, y aller, écouter ceux qui y vivent et accepter que ce qui en sortira ne sera pas ce que j’attendais. Les diagnostics territoriaux que je mène aujourd’hui sur commande viennent de cette discipline, pas d’un modèle prérempli.',
+        },
+      ],
+    },
+    {
+      title: 'MOVOKEUR : quatre ans d’assistanat de recherche sur un projet international',
+      summary:
+        'Assistanat de recherche sur un projet international du Ministerio de Educación y Cultura : planification partagée, entretiens, publications et organisation d’un atelier international.',
+      context: 'Projet MOVOKEUR · Ministerio de Educación y Cultura',
+      role: 'Assistant de recherche',
+      period: 'septembre 2013 → juillet 2017',
+      territory: 'Barcelone · projet international',
+      deliverables: [
+        'Planification collaborative d’un projet international',
+        'Articles et chapitres de livres',
+        'Entretiens semi-structurés',
+        'Organisation de l’Antipode International Workshop Award 2015',
+      ],
+      chapters: [
+        {
+          title: 'Le point de départ',
+          body: 'Un projet de recherche international a deux vies qui ne se ressemblent pas : celle qui figure dans la demande, et celle qui se joue chaque mois entre des équipes de pays différents, avec des calendriers et des façons de travailler qui ne coïncident pas. J’y suis entré en septembre 2013 comme assistant de recherche, c’est-à-dire à la place d’où l’on voit les deux à la fois.',
+        },
+        {
+          title: 'Ce que j’ai fait',
+          body: 'La planification était collaborative, ce qui est moins confortable que cela n’en a l’air : il s’agit de négocier ce que l’on livre, quand, et qui le signe, avec des gens qui ne partagent ni institution ni horaires. Là-dessus, le travail de recherche : des entretiens semi-structurés et la rédaction d’articles et de chapitres de livres, où le texte passe devant des évaluateurs qui ne vous connaissent pas et qui cherchent la faille. Et en 2015, l’organisation de l’Antipode International Workshop Award, qui n’est plus de la recherche mais de la production —programme, budget, des gens qui arrivent et qui repartent— et qui s’est menée avec la même exigence.',
+        },
+        {
+          title: 'Ce qui en reste',
+          body: 'Le projet s’est clos en juillet 2017. De ces quatre ans viennent les deux choses dont je me sers aujourd’hui sur la ligne des dossiers et de la recherche appliquée : écrire pour quelqu’un qui évalue selon des critères explicites, et tenir un calendrier partagé entre des partenaires qui ne dépendent pas de vous. La seconde est, de loin, celle qui décide si un projet transfrontalier arrive à son terme.',
         },
       ],
     },
