@@ -1,0 +1,4 @@
+# Normalització de finals de línia. El repositori guarda sempre LF; cada
+# màquina rep el que li toca a la còpia de treball. Sense això, un commit
+# fet des de Windows pot aparèixer com un canvi de fitxer sencer.
+* text=auto
