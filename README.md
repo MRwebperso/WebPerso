@@ -71,9 +71,9 @@ L'única peça amb scrollytelling del lloc ([Timeline.astro](src/components/home
 Quatre casos, sense filtres, amb una sola plantilla ([CaseContent.astro](src/components/CaseContent.astro)) i les dades a [src/data/cases.ts](src/data/cases.ts).
 
 - **Afegir o treure un cas és editar `cases.ts` i res més.** La tupla de quatre i els tres capítols per cas són el que imposa la paritat: si el francès no cobreix el que hi ha en català, `npm run check` falla.
-- **L'ordre de l'array és l'ordre de lectura**, a la portada i a la navegació entre casos. Els casos d'activitat pròpia van primer, perquè la frontera 2.2 del brief no permet que la feina individual quedi visualment per sota de l'associativa.
-- `kind` té tres valors: `commission`, `own` i `associative`. Els dos primers són activitat individual; el tercer obliga l'etiqueta *«realitzat en el marc associatiu»*. Cap dels tres té tractament visual propi: l'etiqueta és text, no distintiu.
-- **Els slugs no es tradueixen** (`/ca/casos/casa-macia/` ↔ `/fr/cas/casa-macia/`): són noms propis de projecte, i és el que fa que `hreflang` i el commutador de llengua surtin sols del registre de `src/i18n/utils.ts`.
+- **L'ordre de l'array és l'ordre de lectura**, a la portada i a la navegació entre casos. Els casos d'activitat individual van primer, perquè la frontera 2.2 del brief no permet que la feina individual quedi visualment per sota de l'associativa. El camp `year` no ordena res: només documenta l'any d'inici.
+- `kind` té quatre valors: `position`, `commission`, `own` i `associative`. Els tres primers són activitat individual; el quart obliga l'etiqueta *«realitzat en el marc associatiu»*. Cap dels quatre té tractament visual propi: l'etiqueta és text, no distintiu. `position` —lloc de treball ocupat— es distingeix de `commission` a propòsit: dir «encàrrec» d'un lloc assalariat seria inexacte, i el marc exacte és part del senyal.
+- **Els slugs no es tradueixen** (`/ca/casos/banys-d-arles/` ↔ `/fr/cas/banys-d-arles/`): són noms propis de projecte o d'entitat, i és el que fa que `hreflang` i el commutador de llengua surtin sols del registre de `src/i18n/utils.ts`. La contrapartida és que un lector francès veu una URL en català per a una entitat que coneix pel nom francès.
 - La plantilla reutilitza les primitives de la portada —`.wrap`, `.section-grid`, `.rail`, `.eyebrow`, `.lead`— i els capítols repeteixen la peça dels blocs d'oferta. És el que evita que les pàgines de cas divergeixin d'estil de la one-page.
 - A les fitxes de la portada, tota la superfície és clicable amb **un sol enllaç**, el del títol, estirat amb un `::after`. La contrapartida assumida és que el text de la fitxa no es pot seleccionar amb el ratolí.
 - L'eix llengua de cada cas surt del mateix registre que la cronologia (`langKeys` de `timeline.ts`), i per això es llegeix sempre en el mateix ordre.
@@ -81,5 +81,5 @@ Quatre casos, sense filtres, amb una sola plantilla ([CaseContent.astro](src/com
 ## Pendent
 
 - Domini definitiu: només la línia `siteUrl` de `site.mjs`, o la variable d'entorn `SITE_URL` a l'amfitrió. El correu professional ja hi és.
-- Contingut dels quatre casos: pendent de confirmació dels fets i de la tria de la selecció.
+- Casos: la selecció i els fets són els que va donar l'usuari. Queda per confirmar l'eix llengua dels Banys d'Arles (hi consta `fr, ca`, deduït de «traduccions») i si l'ordre de lectura ha de ser el de la frontera 2.2 —llocs de treball primer— o el de l'enumeració original.
 - Micro-interaccions, formulari, Decap CMS i desplegament: blocs 7–10 de l'ordre de treball.

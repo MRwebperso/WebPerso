@@ -5,31 +5,35 @@ import type { LangKey } from './timeline';
  * Portfolio — dades i contingut dels casos.
  *
  * Quatre casos, sense filtres (secció 4.3 del brief): amb tan poc contingut,
- * un filtre buit només crida l'atenció sobre el buit.
+ * un filtre buit només crida l’atenció sobre el buit.
  *
- * L'ordre de l'array és l'ordre de lectura, a la portada i a la navegació entre
- * casos. Els dos casos d'activitat pròpia van primer: la frontera 2.2 no permet
- * que la feina individual quedi per sota de l'associativa.
+ * L’ordre de l’array és l’ordre de lectura, a la portada i a la navegació entre
+ * casos. Els dos llocs de treball van primer: la frontera 2.2 no permet que la
+ * feina individual quedi per sota de l’associativa.
  *
  * Com a la cronologia, els fets no es tradueixen i la paritat la imposen els
  * tipus: quatre casos en tupla, tres capítols per cas i les etiquetes de tipus
- * en `Record`. Afegir un cas o un capítol en una llengua i no en l'altra no
- * compila. L'eix llengua reutilitza el registre de `timeline.ts`, que és el
+ * en `Record`. Afegir un cas o un capítol en una llengua i no en l’altra no
+ * compila. L’eix llengua reutilitza el registre de `timeline.ts`, que és el
  * mateix de la cronologia.
  */
 
 /**
- * `commission` i `own` són activitat individual; `associative` obliga
- * l'etiquetatge de la secció 2.2 del brief.
+ * `position`, `commission` i `own` són activitat individual; `associative`
+ * obliga l’etiquetatge de la secció 2.2 del brief.
+ *
+ * `position` és un lloc de treball ocupat, que no és el mateix que un encàrrec
+ * facturat: dir-ne «encàrrec» seria inexacte, i la precisió del marc és part
+ * del senyal que ha de donar el portfolio.
  */
-export const caseKinds = ['commission', 'own', 'associative'] as const;
+export const caseKinds = ['position', 'commission', 'own', 'associative'] as const;
 export type CaseKind = (typeof caseKinds)[number];
 
 export interface CaseFacts {
-  /** Slug de la URL. No es tradueix: és nom propi de projecte. */
+  /** Slug de la URL. No es tradueix: és nom propi de projecte o d’entitat. */
   id: string;
   kind: CaseKind;
-  /** Any d'inici. Ordena i surt a la fitxa en xifres. */
+  /** Any d’inici. L’ordre de lectura, però, és el de l’array, no el de l’any. */
   year: number;
   /** Llengües de treball del cas, del registre de la cronologia. */
   langs: readonly LangKey[];
@@ -38,10 +42,10 @@ export interface CaseFacts {
 type Four<T> = readonly [T, T, T, T];
 
 export const cases: Four<CaseFacts> = [
-  { id: 'casa-macia', kind: 'commission', year: 2026, langs: ['fr', 'ca', 'es'] },
-  { id: 'que-fas', kind: 'own', year: 2026, langs: ['fr', 'ca'] },
+  { id: 'agencia-atractivitat', kind: 'position', year: 2023, langs: ['fr', 'ca', 'es', 'en'] },
+  { id: 'banys-d-arles', kind: 'position', year: 2023, langs: ['fr', 'ca'] },
   { id: 'mar-i-muntanya', kind: 'associative', year: 2026, langs: ['fr', 'ca'] },
-  { id: 'xerrem-al-vallespir', kind: 'associative', year: 2026, langs: ['fr', 'ca'] },
+  { id: 'que-fas', kind: 'associative', year: 2026, langs: ['fr', 'ca'] },
 ];
 
 interface Chapter {
@@ -79,6 +83,7 @@ export interface CasesContent {
 
 const ca: CasesContent = {
   kindLabels: {
+    position: 'Lloc de treball',
     commission: 'Encàrrec',
     own: 'Projecte propi',
     associative: 'Realitzat en el marc associatiu',
@@ -93,60 +98,61 @@ const ca: CasesContent = {
   },
   cases: [
     {
-      title: 'Casa Macià: dues candidatures, dos marcs',
+      title: 'Alt Vallespir: una destinació de frontera en quatre llengües',
       summary:
-        'Dos dossiers de subvenció el mateix any per a un centre d’interpretació en obres, davant de dos finançadors que no demanen ni la mateixa llengua ni la mateixa mena d’argument.',
-      context: 'Casa Macià (Vil·la Denise), Prats-de-Molló-la-Preste',
-      role: 'Redacció de dossiers i recerca de context',
-      period: '2026',
-      territory: 'Vallespir i Ripollès',
+        'Dos anys de promoció turística a l’Alt Vallespir, amb la frontera tractada com a mercat i no com a límit, i quatre llengües de treball en lloc d’una i tres traduccions.',
+      context:
+        'Oficina de Turisme de Prats de Molló · Agència d’Atractivitat, Comunitat de Municipis de l’Alt Vallespir',
+      role: 'Eixos estratègics, promoció transfronterera i comunicació',
+      period: 'octubre 2023 → desembre 2025',
+      territory: 'Alt Vallespir',
       deliverables: [
-        'Dossier EsCaT / POCTEFA (plataforma SIGEFA)',
-        'Dossier de projectes singulars d’economia social (Generalitat)',
-        'Cartografia d’actors i xarxa de centres de memòria',
-        'Pressupost i documents d’acompanyament',
+        'Eixos estratègics del turisme a l’Alt Vallespir',
+        'Promoció transfronterera de la destinació',
+        'Visuals turístics d’acollida i de captació',
+        'Gestió editorial del compte d’Instagram',
       ],
       chapters: [
         {
           title: 'El punt de partida',
-          body: 'La Casa Macià és la casa on el 1926 es va instal·lar l’estat major de Francesc Macià, i avui un centre d’interpretació en obres dedicat a la resistència, l’exili i la solidaritat. L’estructura jurídica són tres entitats amb papers diferents —una al nord, una al sud i una fundació—, cosa que en la vida diària és un detall administratiu i en un formulari de subvenció és la primera pantalla que et pot deixar fora. Calia finançar una fase concreta de l’equipament i hi havia dues convocatòries obertes el mateix any.',
+          body: 'L’Alt Vallespir és un territori de muntanya amb la frontera al capdamunt: els visitants hi arriben del nord i del sud, i les dues procedències no busquen el mateix ni s’informen als mateixos llocs. La feina es feia des de l’oficina de turisme de Prats de Molló i, alhora, dins de l’agència d’atractivitat de la comunitat de municipis. Això vol dir dues escales sempre a la vista: el que necessita un municipi concret i el que només té sentit si es promociona el conjunt.',
         },
         {
           title: 'Què vaig fer',
-          body: 'Vaig llegir les dues convocatòries senceres abans d’escriure cap línia, i la lectura va decidir el dossier. La d’economia social tenia un tallafoc d’admissibilitat en forma jurídica i antiguitat que deixava fora tres de les quatre línies: haver-hi treballat la línia equivocada volia dir perdre el termini sense saber-ho. La candidatura transfronterera demanava el contrari, un argument de cooperació —què produeix la col·laboració nord-sud que no existiria sense ella—, amb els indicadors encadenats com els vol el programa. Base factual comuna per a totes dues, doncs, i dues arquitectures argumentals separades, sempre en el registre de memòria i patrimoni, que és el terreny on el projecte es defensa millor.',
+          body: 'Quatre feines, i cap no era independent de les altres. Els eixos estratègics fixaven de què es parla i de què no, perquè en un territori petit dispersar el missatge surt més car que no dir res. La promoció transfronterera era una responsabilitat pròpia i no un afegit: mirar el sud com a públic i com a soci, no com a competència. El plurilingüisme el vaig tractar com a quatre llengües de treball —francès, català, anglès i castellà—, que no és el mateix que redactar en francès i encarregar tres traduccions: canvia què s’escriu, no només com es diu. I els visuals anaven per parelles de funció: els d’acollida, que els ha de trobar qui ja hi és, i els de captació, que han de funcionar en una pantalla de telèfon a dos-cents quilòmetres. El compte d’Instagram el portava jo, amb línia editorial i calendari, no a impulsos.',
         },
         {
-          title: 'On és ara',
-          body: 'La candidatura transfronterera es va dipositar dins el termini de juliol i la decisió és pendent; la segona segueix el seu propi calendari. El que queda fet, arribin els diners o no, és una base documentada —dades de territori, xarxa d’actors, avals acadèmics— que es torna a fer servir a la convocatòria següent en lloc de reconstruir-se cada vegada des de zero.',
+          title: 'Què n’ha quedat',
+          body: 'El lloc es va acabar el desembre del 2025. Al territori hi queden el marc estratègic i la pràctica editorial. El que me’n vaig endur és la manera de treballar en quatre llengües alhora i la lectura de la frontera com a recurs, que és exactament el que faig servir ara als projectes de comunicació transfronterera que porto pel meu compte.',
         },
       ],
     },
     {
-      title: '«Què fas?», l’agenda cultural de Catalunya Nord',
+      title: 'Els Banys d’Arles: tres mesos i un servei per endreçar',
       summary:
-        'Una agenda d’esdeveniments per a les cinc comarques del nord, feta amb la condició de no costar res cada mes i de continuar essent reparable per una sola persona.',
-      context: 'Iniciativa pròpia',
-      role: 'Concepció, desenvolupament i curadoria',
-      period: '2026 → avui',
-      territory: 'Rosselló, Conflent, Vallespir, Capcir i Cerdanya',
+        'Un pas curt pel servei de comunicació d’un ajuntament termal, amb la comunicació institucional de l’alcaldessa a fer cada setmana i el servei mateix a reestructurar.',
+      context: 'Servei de Comunicació, Ajuntament dels Banys d’Arles i Palaldà',
+      role: 'Comunicació institucional i reestructuració del servei',
+      period: 'agost → octubre 2023',
+      territory: 'Els Banys d’Arles i Palaldà',
       deliverables: [
-        'Aplicació web estàtica, sense framework ni dependències',
-        'Cadena d’extracció automàtica de les propostes per correu',
-        'Full de curadoria amb publicació a un clic',
-        'Butlletí setmanal per comarca',
+        'Comunicació institucional de l’alcaldessa',
+        'Reestructuració i modernització del servei',
+        'Traduccions i visuals',
+        'Dinamització de les xarxes socials',
       ],
       chapters: [
         {
-          title: 'El problema',
-          body: 'Les associacions culturals del nord anuncien cadascuna pel seu compte, i el resultat és que ningú no sap què passa a trenta quilòmetres de casa. Concebre un agregador no té cap dificultat; el que costa és que sobrevisqui a l’entusiasme inicial. Per això les restriccions me les vaig posar jo abans de començar: cap cost recurrent, cap compte d’usuari, cap base de dades, i codi que jo mateix pugui reparar d’aquí a sis mesos sense demanar ajuda a ningú.',
+          title: 'El punt de partida',
+          body: 'Tres mesos en un servei de comunicació municipal són poc temps per a gairebé tot. Hi havia dues coses a fer alhora: sortir cada setmana amb la comunicació institucional de l’alcaldessa, que no espera, i endreçar un servei que necessitava modernitzar-se. Les dues competien pel mateix temps.',
         },
         {
           title: 'Què vaig fer',
-          body: 'Una associació escriu un correu tal com l’escriuria a una persona. Un model de llenguatge en treu els setze camps de la fitxa d’esdeveniment, sempre els mateixos i sempre en text pla, a temperatura zero. Jo reviso les fitxes deu minuts la setmana i publico les que passen. El web és HTML, CSS i JavaScript sense framework: llegeix un sol fitxer de dades i mostra cada esdeveniment en català a dalt i en francès a sota, amb la tipografia diferenciant les dues llengües. La part d’IA fa exactament una feina —convertir prosa lliure en fitxa estructurada— i res del que produeix arriba al públic sense passar per la revisió.',
+          body: 'Vaig posar l’estructura abans del volum, perquè l’estructura sobreviu al contracte i les publicacions no. Això va voler dir reorganitzar com entra i com surt la informació del servei, i modernitzar-ne les eines. A sobre d’això, la producció corrent: la comunicació de l’alcaldia, les traduccions i els visuals, i una presència a les xarxes que passés de publicar quan hi havia temps a publicar per calendari.',
         },
         {
-          title: 'On és ara',
-          body: 'El web està construït i en la seva forma definitiva. La cadena d’automatització està escrita i revisada, i queda pendent de connectar-se al compte definitiu, que ha de ser propietari alhora de la bústia, del full i de l’script. De tot el que he fet, és el cas que explica millor com faig servir les eines d’IA: una peça acotada dins d’un procés que valida una persona, no un motor que decideix què es publica.',
+          title: 'Què n’ha quedat',
+          body: 'El pas va ser curt i orientat a propòsit al que quedaria després, que és la reorganització del servei. A l’octubre del mateix any vaig començar a l’Alt Vallespir. D’aquells tres mesos ve una convicció que no he canviat: en comunicació pública, arreglar el procés val més que afegir una publicació més.',
         },
       ],
     },
@@ -180,31 +186,31 @@ const ca: CasesContent = {
       ],
     },
     {
-      title: 'Xerrem al Vallespir',
+      title: '«Què fas?», l’agenda cultural de Catalunya Nord',
       summary:
-        'Un dossier per portar al Vallespir un mètode de grups de conversa que al sud ja funciona, amb el partenariat que el pugui sostenir quan la subvenció s’acabi.',
-      context: 'CLM, amb la CAL, Ràdio Arrels, el CCCV i Òmnium Cultural',
-      role: 'Redacció del dossier i construcció del partenariat',
-      period: '2026',
-      territory: 'Vallespir i Catalunya Sud',
+        'Una agenda d’esdeveniments per a les cinc comarques del nord, feta amb la condició de no costar res cada mes i de continuar essent reparable per una sola persona.',
+      context: 'CLM',
+      role: 'Concepció, desenvolupament i curadoria',
+      period: '2026 → avui',
+      territory: 'Rosselló, Conflent, Vallespir, Capcir i Cerdanya',
       deliverables: [
-        'Dossier Fonds EsCaT 2026',
-        'Arquitectura del partenariat nord-sud',
-        'Cartografia de socis i cartes de suport',
-        'Objectius i pla d’indicadors',
+        'Aplicació web estàtica, sense framework ni dependències',
+        'Cadena d’extracció automàtica de les propostes per correu',
+        'Full de curadoria amb publicació a un clic',
+        'Butlletí setmanal per comarca',
       ],
       chapters: [
         {
-          title: 'El punt de partida',
-          body: 'Al Vallespir el català es parla, però es fa servir poc en situacions noves. La manera habitual de demanar diners per a això —descriure una llengua en perill— acaba parlant del declivi i no de l’ús, i davant d’un comitè el resultat és un projecte de conservació. El plantejament havia de ser l’invers: crear llocs on la llengua es triï activament i demostrar-ho amb dades de participació.',
+          title: 'El problema',
+          body: 'Les associacions culturals del nord anuncien cadascuna pel seu compte, i el resultat és que ningú no sap què passa a trenta quilòmetres de casa. Concebre un agregador no té cap dificultat; el que costa és que sobrevisqui a l’entusiasme inicial. Per això les restriccions me les vaig posar jo abans de començar: cap cost recurrent, cap compte d’usuari, cap base de dades, i codi que jo mateix pugui reparar d’aquí a sis mesos sense demanar ajuda a ningú.',
         },
         {
           title: 'Què vaig fer',
-          body: 'El mètode no me’l vaig inventar. Els grups de conversa de la CAL funcionen al sud des de fa anys i CLM els va anar a buscar; la feina de dossier va ser construir el partenariat capaç de sostenir-los al nord —Ràdio Arrels per l’estudi i la credibilitat editorial, el CCCV per la xarxa associativa i la continuïtat després del projecte, Òmnium Cultural— i escriure els objectius com a estats observables i no com a activitats lliurades: no «formar trenta persones», sinó «trenta persones capaces de sostenir una conversa en català en un context nou». Cada indicador va amb font de verificació plural, perquè un sol document no prova res davant d’un controlador.',
+          body: 'Una associació escriu un correu tal com l’escriuria a una persona. Un model de llenguatge en treu els setze camps de la fitxa d’esdeveniment, sempre els mateixos i sempre en text pla, a temperatura zero. Jo reviso les fitxes deu minuts la setmana i publico les que passen. El web és HTML, CSS i JavaScript sense framework: llegeix un sol fitxer de dades i mostra cada esdeveniment en català a dalt i en francès a sota, amb la tipografia diferenciant les dues llengües. La part d’IA fa exactament una feina —convertir prosa lliure en fitxa estructurada— i res del que produeix arriba al públic sense passar per la revisió.',
         },
         {
           title: 'On és ara',
-          body: 'La quarta versió del dossier està dipositada i la decisió és pendent. La part que ja no depèn de la resolució és el partenariat: existeix, està documentat i serveix per a la convocatòria següent tant si aquesta arriba com si no.',
+          body: 'El web està construït i en la seva forma definitiva. La cadena d’automatització està escrita i revisada, i queda pendent de connectar-se al compte definitiu, que ha de ser propietari alhora de la bústia, del full i de l’script. De tot el que he fet, és el cas que explica millor com faig servir les eines d’IA: una peça acotada dins d’un procés que valida una persona, no un motor que decideix què es publica.',
         },
       ],
     },
@@ -213,6 +219,7 @@ const ca: CasesContent = {
 
 const fr: CasesContent = {
   kindLabels: {
+    position: 'Poste occupé',
     commission: 'Commande',
     own: 'Projet personnel',
     associative: 'Réalisé dans le cadre associatif',
@@ -227,60 +234,61 @@ const fr: CasesContent = {
   },
   cases: [
     {
-      title: 'Casa Macià : deux candidatures, deux cadres',
+      title: 'Haut-Vallespir : une destination frontalière en quatre langues',
       summary:
-        'Deux dossiers de subvention la même année pour un centre d’interprétation en travaux, devant deux financeurs qui ne demandent ni la même langue ni le même type d’argument.',
-      context: 'Casa Macià (Vil·la Denise), Prats-de-Mollo-la-Preste',
-      role: 'Rédaction de dossiers et recherche de contexte',
-      period: '2026',
-      territory: 'Vallespir et Ripollès',
+        'Deux ans de promotion touristique en Haut-Vallespir, la frontière traitée comme un marché et non comme une limite, et quatre langues de travail au lieu d’une et trois traductions.',
+      context:
+        'Office de Tourisme de Prats-de-Mollo · Agence d’Attractivité, Communauté de Communes du Haut-Vallespir',
+      role: 'Axes stratégiques, promotion transfrontalière et communication',
+      period: 'octobre 2023 → décembre 2025',
+      territory: 'Haut-Vallespir',
       deliverables: [
-        'Dossier EsCaT / POCTEFA (plateforme SIGEFA)',
-        'Dossier de projets singuliers d’économie sociale (Generalitat)',
-        'Cartographie d’acteurs et réseau de centres de mémoire',
-        'Budget et pièces d’accompagnement',
+        'Axes stratégiques du tourisme en Haut-Vallespir',
+        'Promotion transfrontalière de la destination',
+        'Visuels touristiques d’accueil et d’appel',
+        'Gestion éditoriale du compte Instagram',
       ],
       chapters: [
         {
           title: 'Le point de départ',
-          body: 'La Casa Macià est la maison où s’est installé en 1926 l’état-major de Francesc Macià, aujourd’hui centre d’interprétation en travaux consacré à la résistance, à l’exil et à la solidarité. Le montage juridique repose sur trois entités aux rôles distincts —une au nord, une au sud et une fondation—, ce qui relève du détail administratif au quotidien mais constitue, dans un formulaire de subvention, le premier écran susceptible de vous écarter. Il fallait financer une phase précise de l’équipement, et deux appels étaient ouverts la même année.',
+          body: 'Le Haut-Vallespir est un territoire de montagne avec la frontière tout en haut : les visiteurs arrivent du nord et du sud, et ces deux provenances ne cherchent pas la même chose et ne s’informent pas aux mêmes endroits. Le travail se faisait depuis l’office de tourisme de Prats-de-Mollo et, en même temps, au sein de l’agence d’attractivité de la communauté de communes. Cela suppose deux échelles toujours présentes : ce dont une commune donnée a besoin, et ce qui n’a de sens que si l’on promeut l’ensemble.',
         },
         {
           title: 'Ce que j’ai fait',
-          body: 'J’ai lu les deux appels en entier avant d’écrire une ligne, et cette lecture a décidé du dossier. Celui de l’économie sociale comportait un verrou d’admissibilité portant sur la forme juridique et l’ancienneté, qui écartait trois des quatre lignes : travailler la mauvaise ligne, c’était perdre le délai sans le savoir. La candidature transfrontalière demandait l’inverse, un argument de coopération —ce que produit la collaboration nord-sud et qui n’existerait pas sans elle—, avec des indicateurs chaînés comme le programme les attend. Une base factuelle commune aux deux, donc, et deux architectures argumentatives séparées, toujours dans le registre de la mémoire et du patrimoine, qui est le terrain où le projet se défend le mieux.',
+          body: 'Quatre chantiers, et aucun n’était indépendant des autres. Les axes stratégiques fixaient de quoi l’on parle et de quoi l’on ne parle pas, car sur un petit territoire disperser le message coûte plus cher que de se taire. La promotion transfrontalière relevait d’une responsabilité propre et non d’un supplément : regarder le sud comme un public et comme un partenaire, pas comme une concurrence. Le plurilinguisme, je l’ai traité comme quatre langues de travail —français, catalan, anglais et castillan—, ce qui n’est pas la même chose que rédiger en français et commander trois traductions : cela change ce qu’on écrit, pas seulement la façon de le dire. Et les visuels allaient par couples de fonction : ceux d’accueil, que doit trouver celui qui est déjà là, et ceux d’appel, qui doivent tenir sur un écran de téléphone à deux cents kilomètres. Le compte Instagram, je le tenais moi-même, avec une ligne éditoriale et un calendrier, non par impulsions.',
         },
         {
-          title: 'Où cela en est',
-          body: 'La candidature transfrontalière a été déposée dans le délai de juillet et la décision est en attente ; la seconde suit son propre calendrier. Ce qui est acquis, que l’argent arrive ou non, c’est une base documentée —données de territoire, réseau d’acteurs, cautions académiques— qui resservira au prochain appel au lieu d’être reconstruite chaque fois depuis zéro.',
+          title: 'Ce qui en reste',
+          body: 'Le poste s’est achevé en décembre 2025. Au territoire restent le cadre stratégique et la pratique éditoriale. Ce que j’en ai emporté, c’est la manière de travailler en quatre langues à la fois et la lecture de la frontière comme ressource, qui est exactement ce que j’emploie aujourd’hui dans les projets de communication transfrontalière que je mène à mon compte.',
         },
       ],
     },
     {
-      title: '« Què fas ? », l’agenda culturelle de Catalogne Nord',
+      title: 'Amélie-les-Bains : trois mois et un service à remettre en ordre',
       summary:
-        'Un agenda d’événements pour les cinq comarques du nord, construit à la condition de ne rien coûter chaque mois et de rester réparable par une seule personne.',
-      context: 'Initiative personnelle',
-      role: 'Conception, développement et curation',
-      period: '2026 → aujourd’hui',
-      territory: 'Roussillon, Conflent, Vallespir, Capcir et Cerdagne',
+        'Un passage court au service communication d’une mairie thermale, avec la communication institutionnelle de Madame le Maire à assurer chaque semaine et le service lui-même à restructurer.',
+      context: 'Service Communication, Mairie d’Amélie-les-Bains-Palalda',
+      role: 'Communication institutionnelle et restructuration du service',
+      period: 'août → octobre 2023',
+      territory: 'Amélie-les-Bains-Palalda',
       deliverables: [
-        'Application web statique, sans framework ni dépendances',
-        'Chaîne d’extraction automatique des propositions reçues par courriel',
-        'Feuille de curation avec publication en un clic',
-        'Lettre hebdomadaire par comarque',
+        'Communication institutionnelle de Madame le Maire',
+        'Restructuration et modernisation du service',
+        'Traductions et visuels',
+        'Dynamisation des réseaux sociaux',
       ],
       chapters: [
         {
-          title: 'Le problème',
-          body: 'Les associations culturelles du nord annoncent chacune de son côté, et personne ne sait ce qui se passe à trente kilomètres de chez soi. Concevoir un agrégateur ne présente aucune difficulté ; ce qui est difficile, c’est qu’il survive à l’enthousiasme du début. Les contraintes, je me les suis donc imposées avant de commencer : aucun coût récurrent, aucun compte utilisateur, aucune base de données, et un code que je puisse moi-même réparer dans six mois sans demander d’aide à personne.',
+          title: 'Le point de départ',
+          body: 'Trois mois dans un service de communication municipale, c’est peu de temps pour presque tout. Il y avait deux choses à mener en même temps : sortir chaque semaine la communication institutionnelle de Madame le Maire, qui n’attend pas, et remettre en ordre un service qui avait besoin d’être modernisé. Les deux se disputaient le même temps.',
         },
         {
           title: 'Ce que j’ai fait',
-          body: 'Une association écrit un courriel comme elle l’écrirait à une personne. Un modèle de langue en extrait les seize champs de la fiche d’événement, toujours les mêmes et toujours en texte brut, à température zéro. Je relis les fiches dix minutes par semaine et je publie celles qui passent. Le site est du HTML, du CSS et du JavaScript sans framework : il lit un seul fichier de données et affiche chaque événement en catalan au-dessus et en français en dessous, la typographie distinguant les deux langues. La part d’IA fait exactement un travail —transformer de la prose libre en fiche structurée— et rien de ce qu’elle produit n’arrive au public sans passer par la relecture.',
+          body: 'J’ai placé la structure avant le volume, parce que la structure survit au contrat et les publications non. Cela a voulu dire réorganiser la manière dont l’information entre et sort du service, et en moderniser les outils. Là-dessus, la production courante : la communication de la mairie, les traductions et les visuels, et une présence sur les réseaux qui passe de publier quand il y a le temps à publier selon un calendrier.',
         },
         {
-          title: 'Où cela en est',
-          body: 'Le site est construit et dans sa forme définitive. La chaîne d’automatisation est écrite et relue ; il reste à la brancher sur le compte définitif, qui doit être propriétaire à la fois de la boîte, de la feuille et du script. De tout ce que j’ai produit, c’est le cas qui explique le mieux comment j’emploie les outils d’IA : une pièce délimitée dans un processus qu’une personne valide, non un moteur qui décide de ce qui se publie.',
+          title: 'Ce qui en reste',
+          body: 'Le passage a été court et orienté à dessein vers ce qui resterait ensuite, c’est-à-dire la réorganisation du service. En octobre de la même année, je commençais en Haut-Vallespir. De ces trois mois vient une conviction que je n’ai pas changée : en communication publique, réparer le processus vaut mieux qu’ajouter une publication de plus.',
         },
       ],
     },
@@ -314,31 +322,31 @@ const fr: CasesContent = {
       ],
     },
     {
-      title: 'Xerrem al Vallespir',
+      title: '« Què fas ? », l’agenda culturel de Catalogne Nord',
       summary:
-        'Un dossier pour amener au Vallespir une méthode de groupes de conversation qui fonctionne déjà au sud, avec le partenariat capable de la tenir quand la subvention s’arrêtera.',
-      context: 'CLM, avec la CAL, Ràdio Arrels, le CCCV et Òmnium Cultural',
-      role: 'Rédaction du dossier et construction du partenariat',
-      period: '2026',
-      territory: 'Vallespir et Catalogne Sud',
+        'Un agenda d’événements pour les cinq comarques du nord, construit à la condition de ne rien coûter chaque mois et de rester réparable par une seule personne.',
+      context: 'CLM',
+      role: 'Conception, développement et curation',
+      period: '2026 → aujourd’hui',
+      territory: 'Roussillon, Conflent, Vallespir, Capcir et Cerdagne',
       deliverables: [
-        'Dossier Fonds EsCaT 2026',
-        'Architecture du partenariat nord-sud',
-        'Cartographie des partenaires et lettres de soutien',
-        'Objectifs et plan d’indicateurs',
+        'Application web statique, sans framework ni dépendances',
+        'Chaîne d’extraction automatique des propositions reçues par courriel',
+        'Feuille de curation avec publication en un clic',
+        'Lettre hebdomadaire par comarque',
       ],
       chapters: [
         {
-          title: 'Le point de départ',
-          body: 'Au Vallespir, le catalan se parle, mais il s’emploie peu dans des situations nouvelles. La manière habituelle de demander de l’argent pour cela —décrire une langue en danger— finit par parler du déclin et non de l’usage, et devant un comité le résultat est un projet de conservation. Le cadrage devait être l’inverse : créer des lieux où la langue est activement choisie, et le démontrer par des données de participation.',
+          title: 'Le problème',
+          body: 'Les associations culturelles du nord annoncent chacune de son côté, et personne ne sait ce qui se passe à trente kilomètres de chez soi. Concevoir un agrégateur ne présente aucune difficulté ; ce qui est difficile, c’est qu’il survive à l’enthousiasme du début. Les contraintes, je me les suis donc imposées avant de commencer : aucun coût récurrent, aucun compte utilisateur, aucune base de données, et un code que je puisse moi-même réparer dans six mois sans demander d’aide à personne.',
         },
         {
           title: 'Ce que j’ai fait',
-          body: 'La méthode, je ne l’ai pas inventée. Les groupes de conversation de la CAL fonctionnent au sud depuis des années et CLM est allé les chercher ; le travail de dossier a consisté à bâtir le partenariat capable de les tenir au nord —Ràdio Arrels pour le studio et la crédibilité éditoriale, le CCCV pour le réseau associatif et la continuité après le projet, Òmnium Cultural— et à écrire les objectifs comme des états observables et non comme des activités livrées : non pas « former trente personnes », mais « trente personnes capables de tenir une conversation en catalan dans un contexte nouveau ». Chaque indicateur va avec une source de vérification plurielle, parce qu’un document isolé ne prouve rien devant un contrôleur.',
+          body: 'Une association écrit un courriel comme elle l’écrirait à une personne. Un modèle de langue en extrait les seize champs de la fiche d’événement, toujours les mêmes et toujours en texte brut, à température zéro. Je relis les fiches dix minutes par semaine et je publie celles qui passent. Le site est du HTML, du CSS et du JavaScript sans framework : il lit un seul fichier de données et affiche chaque événement en catalan au-dessus et en français en dessous, la typographie distinguant les deux langues. La part d’IA fait exactement un travail —transformer de la prose libre en fiche structurée— et rien de ce qu’elle produit n’arrive au public sans passer par la relecture.',
         },
         {
           title: 'Où cela en est',
-          body: 'La quatrième version du dossier est déposée et la décision est en attente. Ce qui ne dépend plus de l’issue, c’est le partenariat : il existe, il est documenté, et il servira au prochain appel que celui-ci aboutisse ou non.',
+          body: 'Le site est construit et dans sa forme définitive. La chaîne d’automatisation est écrite et relue ; il reste à la brancher sur le compte définitif, qui doit être propriétaire à la fois de la boîte, de la feuille et du script. De tout ce que j’ai produit, c’est le cas qui explique le mieux comment j’emploie les outils d’IA : une pièce délimitée dans un processus qu’une personne valide, non un moteur qui décide de ce qui se publie.',
         },
       ],
     },
