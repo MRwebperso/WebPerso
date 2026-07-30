@@ -27,7 +27,21 @@ const nav: { id: string; key: UIKey }[] = [
 
 <header class="header">
   <div class="wrap header__inner">
-    <a class="mark" href={home}>{site.name}</a>
+    <a class="mark" href={home}>
+      <!-- Mateixa marca que el favicon: horitzó pla i muntanya irregular que
+           dibuixa la M. Els traços van amb els tokens, no amb hex fixos. -->
+      <svg class="mark__logo" viewBox="3 7 26 16" aria-hidden="true" focusable="false">
+        <path d="M4 21h24" stroke="var(--accent)" stroke-width="1.5" />
+        <path
+          d="M6 21 13 9l6 8 4-5 3 9"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <span>{site.name}</span>
+    </a>
     <nav class="nav" aria-label={t('nav.label')}>
       <ul>
         {
@@ -61,12 +75,22 @@ const nav: { id: string; key: UIKey }[] = [
   }
 
   .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
     font-family: var(--font-display);
     font-size: var(--step-1);
     font-weight: var(--w-medium);
     letter-spacing: var(--tracking-display);
     text-decoration: none;
     white-space: nowrap;
+  }
+
+  .mark__logo {
+    height: 1.05em;
+    width: auto;
+    flex: none;
+    overflow: visible;
   }
 
   .nav {
