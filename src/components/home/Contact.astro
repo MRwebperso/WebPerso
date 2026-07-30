@@ -1,10 +1,19 @@
 ---
 /**
- * Contacte. Ara mateix, correu professional visible; el formulari senzill
- * s'hi afegeix al bloc 8.
+ * Contacte (bloc 8): correu professional visible + formulari senzill.
+ *
+ * El formulari només es dibuixa si hi ha `FORM_ENDPOINT`. Sense servei
+ * configurat, la secció es queda amb el correu directe: val més una via que
+ * funciona que un formulari que empassa el missatge en silenci.
+ *
+ * Funciona sense JS —`method="post"` cap al servei, que redirigeix a la seva
+ * pàgina de confirmació— i amb JS no surt de la pàgina: enviament per `fetch`
+ * i estats a la mateixa secció. La validació pròpia hi és per la mateixa raó
+ * que tot el contingut és bilingüe: els missatges del navegador surten en la
+ * llengua de qui llegeix, no en la de la pàgina.
  */
 import Section from '../Section.astro';
-import { site } from '../../config/site.mjs';
+import { formEndpoint, site } from '../../config/site.mjs';
 import { home } from '../../data/home';
 import type { Lang } from '../../i18n/utils';
 
@@ -14,6 +23,7 @@ interface Props {
 
 const { lang } = Astro.props;
 const c = home[lang].contact;
+const f = c.form;
 ---
 
 <Section id="contacte" eyebrow={c.eyebrow} title={c.title} lead={c.lead}>
@@ -21,7 +31,166 @@ const c = home[lang].contact;
     <span class="eyebrow">{c.emailLabel}</span>
     <a href={`mailto:${site.email}`}>{site.email}</a>
   </p>
+
+  {
+    formEndpoint && (
+      <form class="form" method="post" action={formEndpoint} data-contact-form>
+        <p class="form__legend">{f.legend}</p>
+        <p class="form__required ui">{f.required}</p>
+
+        <p class="field">
+          <label class="field__label" for="contact-name">
+            {f.fields.name.label}
+          </label>
+          <input
+            class="field__input"
+            id="contact-name"
+            name="name"
+            type="text"
+            autocomplete="name"
+            required
+            aria-describedby="contact-name-error"
+            data-error={f.fields.name.error}
+          />
+          <span class="field__error ui" id="contact-name-error" />
+        </p>
+
+        <p class="field">
+          <label class="field__label" for="contact-email">
+            {f.fields.email.label}
+          </label>
+          <input
+            class="field__input"
+            id="contact-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+            aria-describedby="contact-email-error"
+            data-error={f.fields.email.error}
+          />
+          <span class="field__error ui" id="contact-email-error" />
+        </p>
+
+        <p class="field">
+          <label class="field__label" for="contact-message">
+            {f.fields.message.label}
+          </label>
+          <textarea
+            class="field__input field__input--area"
+            id="contact-message"
+            name="message"
+            rows="6"
+            required
+            aria-describedby="contact-message-error"
+            data-error={f.fields.message.error}
+          />
+          <span class="field__error ui" id="contact-message-error" />
+        </p>
+
+        {/* Camp trampa. Fora del recorregut del tabulador i sense veu al
+            lector de pantalla: només un robot que empleni el formulari sencer
+            el toca, i és el senyal que ho és. */}
+        <p class="sr-only" aria-hidden="true">
+          <label for="contact-website">{f.honeypot}</label>
+          <input id="contact-website" name="_gotcha" type="text" tabindex="-1" autocomplete="off" />
+        </p>
+
+        <div class="form__foot">
+          <button class="button" type="submit" data-submit-label={f.submit} data-sending-label={f.sending}>
+            {f.submit}
+          </button>
+          <p class="form__privacy ui">{f.privacy}</p>
+        </div>
+
+        <p
+          class="form__status ui"
+          role="status"
+          aria-live="polite"
+          data-ok={f.success}
+          data-ko={f.error}
+        />
+      </form>
+    )
+  }
 </Section>
+
+<script>
+  const bind = () => {
+    const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+    if (!form) return;
+
+    const status = form.querySelector<HTMLElement>('.form__status')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const fields = [
+      ...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('.field__input'),
+    ];
+
+    // A partir d'aquí la validació és nostra: la del navegador parla en la
+    // llengua de qui llegeix, i aquí les dues llengües les decideix la pàgina.
+    form.noValidate = true;
+
+    const errorBox = (field: Element) =>
+      form.querySelector<HTMLElement>(`#${field.getAttribute('aria-describedby')}`)!;
+
+    const check = (field: (typeof fields)[number]) => {
+      const ok = field.checkValidity();
+      const box = errorBox(field);
+      box.textContent = ok ? '' : field.dataset.error!;
+      field.setAttribute('aria-invalid', String(!ok));
+      return ok;
+    };
+
+    // La revisió en directe només s'engega quan un camp ja ha fallat: corregir
+    // algú mentre escriu per primera vegada és molestar-lo, no ajudar-lo.
+    fields.forEach((field) => {
+      field.addEventListener('blur', () => check(field));
+      field.addEventListener('input', () => {
+        if (field.getAttribute('aria-invalid') === 'true') check(field);
+      });
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      status.textContent = '';
+      status.dataset.state = '';
+
+      const bad = fields.map(check).indexOf(false);
+      if (bad !== -1) {
+        fields[bad].focus();
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = button.dataset.sendingLabel!;
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) throw new Error(String(response.status));
+        status.dataset.state = 'ok';
+        status.textContent = status.dataset.ok!;
+        form.reset();
+        fields.forEach((field) => {
+          field.removeAttribute('aria-invalid');
+          errorBox(field).textContent = '';
+        });
+      } catch {
+        status.dataset.state = 'ko';
+        status.textContent = status.dataset.ko!;
+      } finally {
+        button.disabled = false;
+        button.textContent = button.dataset.submitLabel!;
+      }
+    });
+  };
+
+  bind();
+  document.addEventListener('astro:page-load', bind);
+</script>
 
 <style>
   .direct {
@@ -40,5 +209,140 @@ const c = home[lang].contact;
 
   .direct a:hover {
     text-decoration-color: var(--accent);
+  }
+
+  .form {
+    max-width: var(--measure-narrow);
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-6);
+  }
+
+  .form__legend {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .form__required {
+    margin-top: var(--space-2);
+    color: var(--ink-faint);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+  }
+
+  .field__label {
+    font-family: var(--font-ui);
+    font-size: var(--step--1);
+    font-weight: var(--w-medium);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* Camp sense caixa tancada: filet a sota, com la resta del lloc. El fons
+     enfonsat el separa del paper sense afegir cap ombra. */
+  .field__input {
+    font-family: var(--font-ui);
+    font-size: var(--step-0);
+    line-height: var(--leading-snug);
+    color: var(--ink);
+    background: var(--paper-sunk);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: var(--space-3);
+    width: 100%;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .field__input:hover {
+    border-color: var(--ink-faint);
+  }
+
+  .field__input:focus-visible {
+    background: var(--paper);
+    border-color: var(--accent);
+  }
+
+  .field__input--area {
+    resize: vertical;
+    min-height: 8rem;
+  }
+
+  .field__input[aria-invalid='true'] {
+    border-color: var(--mark-rule);
+  }
+
+  .field__error:empty {
+    display: none;
+  }
+
+  .field__error {
+    color: var(--mark-rule);
+  }
+
+  .form__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+    margin-top: var(--space-8);
+  }
+
+  .button {
+    font-family: var(--font-ui);
+    font-size: var(--step--1);
+    font-weight: var(--w-medium);
+    letter-spacing: 0.04em;
+    color: var(--paper);
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    padding: var(--space-3) var(--space-6);
+    cursor: pointer;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .button:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .button[disabled] {
+    background: var(--ink-faint);
+    border-color: var(--ink-faint);
+    cursor: progress;
+  }
+
+  .form__privacy {
+    color: var(--ink-faint);
+    max-width: 28ch;
+  }
+
+  .form__status:empty {
+    display: none;
+  }
+
+  .form__status {
+    margin-top: var(--space-6);
+    padding-inline-start: var(--space-4);
+    border-inline-start: 2px solid var(--rule);
+  }
+
+  .form__status[data-state='ok'] {
+    border-inline-start-color: var(--accent);
+  }
+
+  .form__status[data-state='ko'] {
+    border-inline-start-color: var(--mark-rule);
+    color: var(--ink);
   }
 </style>

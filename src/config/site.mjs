@@ -9,6 +9,16 @@
  */
 export const siteUrl = process.env.SITE_URL ?? 'https://miquelrodrigues.example';
 
+/**
+ * Punt d'arribada del formulari de contacte: la URL que dona el servei de
+ * formularis (Formspree, Web3Forms, Getform i companyia serveixen tots).
+ *
+ * Mentre estigui buida, el formulari no es dibuixa i la secció de contacte es
+ * queda amb el correu directe. És deliberat: val més una secció amb una sola
+ * via que funciona que un formulari que empassa el missatge en silenci.
+ */
+export const formEndpoint = process.env.FORM_ENDPOINT ?? '';
+
 /** Metadades neutres respecte del domini. */
 export const site = {
   /** Correu professional visible (secció 3 del brief). */

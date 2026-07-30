@@ -26,6 +26,28 @@ interface SectionIntro {
   lead: string;
 }
 
+/**
+ * Textos del formulari. Els missatges d'error són els de la validació pròpia:
+ * les cadenes que posa el navegador surten en la llengua de la interfície de
+ * qui llegeix, que en un lloc bilingüe estricte no serveix.
+ */
+interface ContactForm {
+  legend: string;
+  required: string;
+  fields: {
+    name: { label: string; error: string };
+    email: { label: string; error: string };
+    message: { label: string; error: string };
+  };
+  /** Etiqueta del camp trampa, només per a lectors de pantalla. */
+  honeypot: string;
+  submit: string;
+  sending: string;
+  success: string;
+  error: string;
+  privacy: string;
+}
+
 export interface HomeContent {
   hero: {
     eyebrow: string;
@@ -40,7 +62,7 @@ export interface HomeContent {
   };
   timeline: SectionIntro;
   cases: SectionIntro;
-  contact: SectionIntro & { emailLabel: string };
+  contact: SectionIntro & { emailLabel: string; form: ContactForm };
 }
 
 const ca: HomeContent = {
@@ -121,6 +143,28 @@ const ca: HomeContent = {
     title: 'Parlem-ne',
     lead: 'Escriu-me amb el que necessites i el termini que tens. Si no és feina meva t’ho diré de seguida, i si conec algú que ho faci millor, també. Pots escriure en català, francès o castellà; responc en la mateixa llengua.',
     emailLabel: 'Correu directe',
+    form: {
+      legend: 'O escriu-me des d’aquí',
+      required: 'Els tres camps són necessaris.',
+      fields: {
+        name: { label: 'Nom', error: 'Digue’m com et dius.' },
+        email: {
+          label: 'Correu',
+          error: 'Aquesta adreça no sembla completa; sense ella no et puc respondre.',
+        },
+        message: {
+          label: 'Missatge',
+          error: 'Explica’m què necessites, encara que siguin dues línies.',
+        },
+      },
+      honeypot: 'Deixa aquest camp buit',
+      submit: 'Envia el missatge',
+      sending: 'Enviant…',
+      success: 'Rebut. Et responc en un o dos dies feiners.',
+      error:
+        'L’enviament no ha arribat. Torna-ho a provar d’aquí a una estona o escriu-me directament al correu de sobre.',
+      privacy: 'El que escriguis va a la meva bústia i enlloc més.',
+    },
   },
 };
 
@@ -202,6 +246,28 @@ const fr: HomeContent = {
     title: 'Écrivez-moi',
     lead: 'Dites-moi ce dont vous avez besoin et dans quel délai. Si ce n’est pas mon travail je vous le dirai tout de suite, et si je connais quelqu’un qui le fait mieux, également. Vous pouvez écrire en catalan, en français ou en espagnol ; je réponds dans la même langue.',
     emailLabel: 'Courriel direct',
+    form: {
+      legend: 'Ou écrivez-moi d’ici',
+      required: 'Les trois champs sont nécessaires.',
+      fields: {
+        name: { label: 'Nom', error: 'Dites-moi votre nom.' },
+        email: {
+          label: 'Courriel',
+          error: 'Cette adresse semble incomplète ; sans elle je ne peux pas vous répondre.',
+        },
+        message: {
+          label: 'Message',
+          error: 'Dites-moi ce dont vous avez besoin, même en deux lignes.',
+        },
+      },
+      honeypot: 'Laissez ce champ vide',
+      submit: 'Envoyer le message',
+      sending: 'Envoi…',
+      success: 'Bien reçu. Je réponds sous un ou deux jours ouvrés.',
+      error:
+        'L’envoi n’a pas abouti. Réessayez dans un moment, ou écrivez-moi directement à l’adresse ci-dessus.',
+      privacy: 'Ce que vous écrivez arrive dans ma boîte et nulle part ailleurs.',
+    },
   },
 };
 

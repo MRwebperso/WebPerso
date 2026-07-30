@@ -78,6 +78,16 @@ Sis casos, sense filtres, amb una sola plantilla ([CaseContent.astro](src/compon
 - A les fitxes de la portada, tota la superfície és clicable amb **un sol enllaç**, el del títol, estirat amb un `::after`. La contrapartida assumida és que el text de la fitxa no es pot seleccionar amb el ratolí.
 - L'eix llengua de cada cas surt del mateix registre que la cronologia (`langKeys` de `timeline.ts`), i per això es llegeix sempre en el mateix ordre.
 
+## Contacte
+
+Correu professional visible i formulari senzill ([Contact.astro](src/components/home/Contact.astro)).
+
+- **El formulari necessita una variable d'entorn**, `FORM_ENDPOINT`: la URL que dona el servei de formularis (Formspree, Web3Forms, Getform i companyia serveixen tots; l'enviament és un `POST` amb els camps `name`, `email` i `message`). **Mentre no hi sigui, el formulari no es dibuixa** i la secció es queda amb el correu directe. És deliberat: val més una via que funciona que un formulari que empassa el missatge en silenci.
+- **Funciona sense JS**: `method="post"` cap al servei, que redirigeix a la seva pàgina de confirmació. Amb JS no surt de la pàgina: enviament per `fetch` i estats a la mateixa secció, amb el missatge conservat si l'enviament falla.
+- **La validació és pròpia**, i no la del navegador, per la mateixa raó que tot el contingut és bilingüe: les cadenes natives surten en la llengua de la interfície de qui llegeix, no en la de la pàgina. Els errors viuen a `home.ts`, amb la paritat imposada pels tipus.
+- La revisió en directe d'un camp només s'engega **quan ja ha fallat una vegada**: corregir algú mentre escriu per primer cop és molestar-lo. L'error va lligat al camp amb `aria-describedby` i el resultat de l'enviament, a una regió `role="status"`.
+- Contra el correu brossa, un **camp trampa** fora del recorregut del tabulador i sense veu al lector de pantalla. No hi ha cap servei extern de verificació ni cap galeta.
+
 ## Moviment i marca
 
 Fora de la cronologia, el moviment és el de la secció 4.4 del brief: mesurat, i mai per cridar l'atenció sobre ell mateix.
@@ -91,5 +101,6 @@ Fora de la cronologia, el moviment és el de la secció 4.4 del brief: mesurat, 
 
 - Domini definitiu: només la línia `siteUrl` de `site.mjs`, o la variable d'entorn `SITE_URL` a l'amfitrió. El correu professional ja hi és. `SITE_URL` està definida a Vercel des del 30/07/2026 i la canònica de producció ja hi apunta.
 - Casos: la selecció, els fets i l'ordre són els que va donar l'usuari, i l'eix llengua dels Banys d'Arles està confirmat. Queda per confirmar l'eix llengua dels dos casos de recerca —`ca, es, en` per al GRECS/OACU i `es, en` per al MOVOKEUR—, deduït del marc institucional i no dit per l'usuari, i el territori del MOVOKEUR («Barcelona · projecte internacional»).
-- Formulari, Decap CMS i desplegament: blocs 8–10 de l'ordre de treball. El desplegament ja funciona; li falta el pas per Decap.
+- `FORM_ENDPOINT` a Vercel: fins que no hi sigui, el formulari de contacte no es dibuixa en producció.
+- Decap CMS i desplegament: blocs 9–10 de l'ordre de treball. El desplegament ja funciona; li falta el pas per Decap.
 - Auditoria d'accessibilitat, pendent des del bloc 5 i més exigible ara que el lloc és públic.
