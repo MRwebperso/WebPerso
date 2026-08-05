@@ -45,6 +45,11 @@ collections:
     # tradueix. En crear un cas, Decap el deriva del títol en català: convé
     # mirar-lo i escurçar-lo abans de publicar, perquè després moure'l vol dir
     # moure una adreça ja publicada.
+    # Decap avisa per consola que no troba cap camp `title` a l'arrel de la
+    # col·lecció: el títol és dins de `ca`, i `identifier_field` no accepta camins
+    # imbricats (provat el 05/08/2026). L'avís no té conseqüència —el títol de
+    # cada entrada surt de `summary`, i el nom de fitxer d'un cas nou, de `slug`—,
+    # però val més saber d'on ve que anar-lo a buscar un altre dia.
     slug: '{{fields.ca.title}}'
     summary: '{{fields.ca.title}}'
     sortable_fields: [order]
