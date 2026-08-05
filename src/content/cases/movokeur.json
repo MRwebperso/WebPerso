@@ -1,0 +1,65 @@
+{
+  "order": 6,
+  "kind": "position",
+  "year": 2013,
+  "langs": [
+    "es",
+    "en"
+  ],
+  "ca": {
+    "title": "MOVOKEUR: quatre anys d’assistència a la recerca en un projecte internacional",
+    "summary": "Assistència de recerca en un projecte internacional del Ministerio de Educación y Cultura: planificació compartida, entrevistes, publicacions i l’organització d’un taller internacional.",
+    "context": "Projecte MOVOKEUR · Ministerio de Educación y Cultura",
+    "role": "Assistent de recerca",
+    "period": "setembre 2013 → juliol 2017",
+    "territory": "Barcelona · projecte internacional",
+    "deliverables": [
+      "Planificació col·laborativa d’un projecte internacional",
+      "Articles i capítols de llibre",
+      "Entrevistes semiestructurades",
+      "Organització de l’Antipode International Workshop Award 2015"
+    ],
+    "chapters": [
+      {
+        "title": "El punt de partida",
+        "body": "Un projecte de recerca internacional té dues vides que no s’assemblen: la que consta a la sol·licitud i la que passa cada mes entre equips de països diferents, amb calendaris i maneres de treballar que no coincideixen. Hi vaig entrar el setembre del 2013 com a assistent de recerca, que és la posició des de la qual es veuen totes dues alhora."
+      },
+      {
+        "title": "Què vaig fer",
+        "body": "La planificació era col·laborativa i això és menys còmode del que sona: vol dir negociar què s’entrega, quan i qui ho signa, amb gent que no comparteix ni institució ni horari. A sobre, la feina de recerca: entrevistes semiestructurades i la redacció d’articles i de capítols de llibre, on el text ha de passar per avaluadors que no et coneixen i que busquen l’escletxa. I el 2015, l’organització de l’Antipode International Workshop Award, que ja no és recerca sinó producció —programa, pressupost, gent que arriba i que se’n va— i que es va fer amb la mateixa exigència."
+      },
+      {
+        "title": "Què n’ha quedat",
+        "body": "El projecte es va tancar el juliol del 2017. D’aquells quatre anys en surten les dues coses que ara faig servir a la línia de dossiers i de recerca aplicada: escriure per a algú que avalua amb criteris explícits, i sostenir un calendari compartit entre socis que no depenen de tu. La segona és, de llarg, la que decideix si un projecte transfronterer arriba a terme."
+      }
+    ]
+  },
+  "fr": {
+    "title": "MOVOKEUR : quatre ans d’assistanat de recherche sur un projet international",
+    "summary": "Assistanat de recherche sur un projet international du Ministerio de Educación y Cultura : planification partagée, entretiens, publications et organisation d’un atelier international.",
+    "context": "Projet MOVOKEUR · Ministerio de Educación y Cultura",
+    "role": "Assistant de recherche",
+    "period": "septembre 2013 → juillet 2017",
+    "territory": "Barcelone · projet international",
+    "deliverables": [
+      "Planification collaborative d’un projet international",
+      "Articles et chapitres de livres",
+      "Entretiens semi-structurés",
+      "Organisation de l’Antipode International Workshop Award 2015"
+    ],
+    "chapters": [
+      {
+        "title": "Le point de départ",
+        "body": "Un projet de recherche international a deux vies qui ne se ressemblent pas : celle qui figure dans la demande, et celle qui se joue chaque mois entre des équipes de pays différents, avec des calendriers et des façons de travailler qui ne coïncident pas. J’y suis entré en septembre 2013 comme assistant de recherche, c’est-à-dire à la place d’où l’on voit les deux à la fois."
+      },
+      {
+        "title": "Ce que j’ai fait",
+        "body": "La planification était collaborative, ce qui est moins confortable que cela n’en a l’air : il s’agit de négocier ce que l’on livre, quand, et qui le signe, avec des gens qui ne partagent ni institution ni horaires. Là-dessus, le travail de recherche : des entretiens semi-structurés et la rédaction d’articles et de chapitres de livres, où le texte passe devant des évaluateurs qui ne vous connaissent pas et qui cherchent la faille. Et en 2015, l’organisation de l’Antipode International Workshop Award, qui n’est plus de la recherche mais de la production —programme, budget, des gens qui arrivent et qui repartent— et qui s’est menée avec la même exigence."
+      },
+      {
+        "title": "Ce qui en reste",
+        "body": "Le projet s’est clos en juillet 2017. De ces quatre ans viennent les deux choses dont je me sers aujourd’hui sur la ligne des dossiers et de la recherche appliquée : écrire pour quelqu’un qui évalue selon des critères explicites, et tenir un calendrier partagé entre des partenaires qui ne dépendent pas de vous. La seconde est, de loin, celle qui décide si un projet transfrontalier arrive à son terme."
+      }
+    ]
+  }
+}

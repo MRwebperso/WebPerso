@@ -1,0 +1,161 @@
+# Configuració de Decap CMS — bloc 9 de l'ordre de treball.
+#
+# La pantalla que llegeix aquest fitxer és `src/pages/admin/index.astro`, i és
+# allà que hi ha el perquè de la repartició: aquest fitxer el va a buscar Decap
+# tot sol a `/admin/config.yml`, i és el que Decap sap llegir sense passar per
+# la compilació.
+#
+# El que s'edita des d'aquí són els casos i prou. La portada, la cronologia i
+# les cadenes d'interfície continuen essent TypeScript, per la decisió que
+# explica el README a «Contingut editable i CMS».
+
+backend:
+  name: github
+  repo: MRwebperso/WebPerso
+  branch: main
+  # `base_url` no és aquí: el posa la pàgina a partir d'`Astro.site`, perquè el
+  # domini ha de sortir d'un sol lloc del projecte. És també el domini on cauen
+  # la galeta d'estat i el retorn de GitHub.
+  auth_endpoint: api/auth
+
+# Edició en local sense OAuth: `npx decap-server` en un terminal, `npm run dev`
+# a l'altre, i `/admin/` a localhost escriu directament als fitxers del disc.
+# Fora de localhost, Decap ignora aquesta línia.
+local_backend: true
+
+# Commits directes a `main`, que és el que desplega. Un flux editorial amb
+# pull requests no té sentit amb un sol editor, i afegiria una passa a cada
+# canvi de text.
+publish_mode: simple
+
+# Cap camp dels casos no pren imatges avui. Les dues línies hi són perquè Decap
+# les demana; la carpeta no es crea fins que algú hi pugi res.
+media_folder: public/media
+public_folder: /media
+
+collections:
+  - name: cases
+    label: Casos
+    label_singular: Cas
+    folder: src/content/cases
+    extension: json
+    format: json
+    create: true
+    # El nom del fitxer és el segment de la URL en les dues llengües, i no es
+    # tradueix. En crear un cas, Decap el deriva del títol en català: convé
+    # mirar-lo i escurçar-lo abans de publicar, perquè després moure'l vol dir
+    # moure una adreça ja publicada.
+    slug: '{{fields.ca.title}}'
+    summary: '{{fields.ca.title}}'
+    sortable_fields: [order]
+    #
+    # PER QUÈ NO ES FA SERVIR LA FUNCIÓ D'i18n DE DECAP
+    #
+    # Seria la via natural —panells costat per costat i un botó per copiar d'una
+    # llengua a l'altra—, però amb `structure: single_file` Decap espera els
+    # camps no traduïts *dins* de l'objecte de la llengua per omissió, no a
+    # l'arrel del fitxer. Aquí `order`, `kind`, `year` i `langs` són a l'arrel de
+    # manera deliberada: són un sol camp compartit per les dues llengües, i és
+    # això el que fa impossible el desfasament entre els fets i el text. Provat
+    # el 05/08/2026: amb la i18n activada, Decap obre els casos amb aquests
+    # quatre camps buits i marcats com a obligatoris, i desar-los els perdria.
+    #
+    # Per tant, les dues llengües són dos camps d'objecte amb els mateixos
+    # subcamps. Es perd el copiar d'una llengua a l'altra; no es perd la paritat,
+    # que la imposen `required` aquí i l'esquema de `src/content.config.ts` a la
+    # compilació.
+    fields:
+      - name: order
+        label: Ordre de lectura
+        widget: number
+        value_type: int
+        min: 1
+        hint: >-
+          Posició a la portada i a la navegació entre casos. No és l'any i no
+          l'ordena la cronologia. Els números poden tenir buits, però no
+          repetir-se: amb dos casos al mateix número la compilació s'atura.
+
+      - name: kind
+        label: Marc
+        widget: select
+        hint: >-
+          «Marc associatiu» obliga l'etiqueta corresponent a la fitxa i a la
+          pàgina del cas. La llista és tancada de manera deliberada: distingir
+          un lloc de treball d'un encàrrec, i una vinculació de recerca de tots
+          dos, és part del que ha de dir el portfolio.
+        options:
+          - { label: 'Lloc de treball (position)', value: position }
+          - { label: 'Encàrrec (commission)', value: commission }
+          - { label: 'Projecte propi (own)', value: own }
+          - { label: 'Marc associatiu (associative)', value: associative }
+          - { label: 'Vinculació de recerca (affiliation)', value: affiliation }
+
+      - name: year
+        label: Any d'inici
+        widget: number
+        value_type: int
+        hint: Documenta i prou. No ordena res i no surt publicat enlloc.
+
+      - name: langs
+        label: Llengües de treball
+        widget: select
+        multiple: true
+        min: 1
+        hint: >-
+          Les del cas, no les del lloc. L'ordre en què es marquen és
+          indiferent: a la pàgina surten sempre en el mateix ordre.
+        options:
+          - { label: 'Francès (fr)', value: fr }
+          - { label: 'Portuguès (pt)', value: pt }
+          - { label: 'Català (ca)', value: ca }
+          - { label: 'Castellà (es)', value: es }
+          - { label: 'Anglès (en)', value: en }
+          - { label: 'Alemany (de)', value: de }
+
+      - name: ca
+        label: Text en català
+        widget: object
+        fields: &copy_fields
+          - { name: title, label: Títol, widget: string }
+          - name: summary
+            label: Resum
+            widget: text
+            hint: Una frase. Surt a la fitxa de la portada i a la capçalera del cas.
+          - name: context
+            label: Marc o client
+            widget: string
+            hint: En quin marc es va fer i per a qui.
+          - { name: role, label: Paper, widget: string }
+          - name: period
+            label: Període
+            widget: string
+            hint: 'En paraules, no en xifres soltes. Admet «2026 → avui».'
+          - { name: territory, label: Territori, widget: string }
+          - name: deliverables
+            label: Lliurables
+            widget: list
+            min: 1
+            field: { name: item, label: Lliurable, widget: string }
+            hint: >-
+              Les dues llengües n'han de tenir el mateix nombre. És l'única
+              asimetria que l'estructura no impedeix per si sola, i la
+              compilació s'atura si les llistes no es corresponen.
+          - name: chapters
+            label: Capítols
+            widget: list
+            min: 3
+            max: 3
+            hint: >-
+              Sempre tres, i en aquest ordre: punt de partida, intervenció, on
+              és ara. Ni dos ni quatre: la plantilla del cas n'espera tres.
+            fields:
+              - { name: title, label: Títol del capítol, widget: string }
+              - { name: body, label: Text, widget: text }
+
+      - name: fr
+        label: Text en francès
+        widget: object
+        # Els mateixos subcamps que el català, per àncora de YAML: escrits una
+        # sola vegada, de manera que una llengua no pot quedar amb un camp que
+        # l'altra no tingui.
+        fields: *copy_fields

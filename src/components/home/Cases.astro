@@ -5,7 +5,7 @@
  *
  * Jerarquia de la secció 2.2: totes les fitxes tenen el mateix tractament
  * —mateixa mida, mateix pes, mateixa posició a la graella— i obre la llista un
- * lloc de treball, per l'ordre de `src/data/cases.ts`. L'etiqueta del marc
+ * lloc de treball, pel camp `order` de cada cas. L'etiqueta del marc
  * queda a sota del títol, on es llegeix sempre, mai com a distintiu que faci
  * pesar més una fitxa que una altra.
  *
@@ -14,7 +14,7 @@
  * fila de baix mig segon després d'haver entrat en pantalla.
  */
 import Section from '../Section.astro';
-import { cases, caseContent } from '../../data/cases';
+import { caseLabels, getCases } from '../../data/cases';
 import { home } from '../../data/home';
 import { useTranslations } from '../../i18n/ui';
 import { localize, type Lang } from '../../i18n/utils';
@@ -26,21 +26,22 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 const intro = home[lang].cases;
-const c = caseContent[lang];
+const labels = caseLabels[lang];
+const cases = await getCases();
 ---
 
 <Section id="casos" eyebrow={intro.eyebrow} title={intro.title} lead={intro.lead}>
   <ol class="cards" slot="wide">
     {
       cases.map((item, index) => {
-        const copy = c.cases[index];
+        const copy = item.copy[lang];
         return (
           <li class="card reveal" style={`--reveal-i:${index % 2}`}>
             <p class="card__period nums">{copy.period}</p>
             <h3 class="card__title">
               <a href={localize(lang, ['casos', item.id])}>{copy.title}</a>
             </h3>
-            <p class="card__kind">{c.kindLabels[item.kind]}</p>
+            <p class="card__kind">{labels.kindLabels[item.kind]}</p>
             <p class="card__summary">{copy.summary}</p>
             <p class="card__more ui" aria-hidden="true">{t('case.read')}</p>
           </li>

@@ -10,23 +10,24 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import CaseContent from '../../../components/CaseContent.astro';
 import { site } from '../../../config/site.mjs';
-import { caseContent, cases } from '../../../data/cases';
+import { getCase, getCases } from '../../../data/cases';
 
-export function getStaticPaths() {
-  return cases.map((item, index) => ({
+export async function getStaticPaths() {
+  const cases = await getCases();
+  return cases.map((item) => ({
     params: { case: item.id },
-    props: { index },
+    props: { id: item.id },
   }));
 }
 
 interface Props {
-  index: number;
+  id: string;
 }
 
-const { index } = Astro.props;
-const copy = caseContent.ca.cases[index];
+const { id } = Astro.props;
+const copy = (await getCase(id)).copy.ca;
 ---
 
 <BaseLayout lang="ca" title={`${copy.title} — ${site.name}`} description={copy.summary}>
-  <CaseContent lang="ca" index={index} />
+  <CaseContent lang="ca" id={id} />
 </BaseLayout>

@@ -1,11 +1,29 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel';
 import { siteUrl } from './src/config/site.mjs';
 
 export default defineConfig({
   // Únic punt del projecte que coneix el domini. Ve de src/config/site.mjs.
   site: siteUrl,
+  /*
+   * `output: 'static'` (el valor per omissió) es manté: cada pàgina del lloc es
+   * pregenera igual que abans i la compilació no en fa cap a petició.
+   *
+   * L'adaptador, en canvi, és nou i canvia la naturalesa del desplegament: la
+   * compilació ja no deixa un `dist/` d'HTML pla sinó un `.vercel/output/` amb
+   * els actius estàtics i les funcions. Hi és per una sola raó, i és l'única
+   * part del lloc que no pot ser estàtica: les dues rutes d'`src/pages/api/`
+   * que autentiquen el CMS contra GitHub, que porten `prerender = false` i són
+   * les úniques que s'executen a petició. Si algun dia el CMS surt del projecte,
+   * treure l'adaptador i les dues rutes torna el lloc a estàtic pur.
+   *
+   * Conseqüència a vigilar a Vercel: el directori de sortida el detecta el
+   * preajust d'Astro. Si al projecte hi hagués un «Output Directory» fixat a
+   * `dist` a mà, el desplegament quedaria buit i sense error visible.
+   */
+  adapter: vercel(),
   trailingSlash: 'always',
   // Només afecta `astro dev`: permet obrir el servidor de desenvolupament en un
   // port lliure quan el 4321 ja està ocupat. No té cap efecte a la compilació.
@@ -24,6 +42,12 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
+      /*
+       * L'administració del CMS és una pàgina pregenerada com les altres, i sense
+       * aquest filtre entraria al sitemap. Les rutes d'`src/pages/api/` no hi
+       * entren mai —no són pregenerades—, i el `robots.txt` exclou totes dues.
+       */
+      filter: (page) => !new URL(page).pathname.startsWith('/admin'),
       i18n: {
         defaultLocale: 'ca',
         locales: { ca: 'ca-ES', fr: 'fr-FR' },

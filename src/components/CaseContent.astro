@@ -2,7 +2,7 @@
 /**
  * Plantilla única de cas (bloc 6 de l'ordre de treball).
  *
- * Una sola plantilla per als quatre casos i per a les dues llengües: és el que
+ * Una sola plantilla per a tots els casos i per a les dues llengües: és el que
  * evita que les pàgines de cas i la one-page divergeixin d'estil, que és el que
  * demana la secció 4.3 del brief. Per això reutilitza les primitives de
  * composició de la portada —`.wrap`, `.section-grid`, `.rail`, `.eyebrow`,
@@ -13,23 +13,29 @@
  * encàrrecs, i els individuals no queden per sota: la plantilla és la mateixa i
  * no hi ha cap tractament que distingeixi els uns dels altres.
  */
-import { cases, caseContent } from '../data/cases';
+import { caseLabels, getCases } from '../data/cases';
 import { langKeys, timeline } from '../data/timeline';
 import { useTranslations } from '../i18n/ui';
 import { localize, type Lang } from '../i18n/utils';
 
 interface Props {
   lang: Lang;
-  /** Posició a `cases`: fixa el cas, els veïns i l'ordre de lectura. */
-  index: number;
+  /** Slug del cas. La plantilla en deriva la posició, i d'aquí els veïns. */
+  id: string;
 }
 
-const { lang, index } = Astro.props;
+const { lang, id } = Astro.props;
 const t = useTranslations(lang);
 
+// La llista ja ve ordenada per `order`, de manera que la posició d'aquest cas és
+// la que decideix quins són els veïns de la navegació de baix.
+const cases = await getCases();
+const index = cases.findIndex((item) => item.id === id);
+if (index < 0) throw new Error(`Cas desconegut: «${id}».`);
+
 const facts = cases[index];
-const c = caseContent[lang];
-const copy = c.cases[index];
+const labels = caseLabels[lang];
+const copy = facts.copy[lang];
 
 // L'ordre de les llengües surt del registre de la cronologia, no de l'ordre en
 // què s'han escrit al cas: així la llista es llegeix igual a tot el lloc.
@@ -38,12 +44,12 @@ const workLangs = langKeys
   .map((key) => timeline[lang].langNames[key]);
 
 const rows: { label: string; value: string }[] = [
-  { label: c.factLabels.context, value: copy.context },
-  { label: c.factLabels.role, value: copy.role },
-  { label: c.factLabels.period, value: copy.period },
-  { label: c.factLabels.territory, value: copy.territory },
-  { label: c.factLabels.langs, value: workLangs.join(', ') },
-  { label: c.factLabels.deliverables, value: copy.deliverables.join(' · ') },
+  { label: labels.factLabels.context, value: copy.context },
+  { label: labels.factLabels.role, value: copy.role },
+  { label: labels.factLabels.period, value: copy.period },
+  { label: labels.factLabels.territory, value: copy.territory },
+  { label: labels.factLabels.langs, value: workLangs.join(', ') },
+  { label: labels.factLabels.deliverables, value: copy.deliverables.join(' · ') },
 ];
 
 const selection = `${localize(lang)}#casos`;
@@ -51,14 +57,14 @@ const prev = index > 0 ? index - 1 : null;
 const next = index < cases.length - 1 ? index + 1 : null;
 
 const href = (at: number) => localize(lang, ['casos', cases[at].id]);
-const titleOf = (at: number) => c.cases[at].title;
+const titleOf = (at: number) => cases[at].copy[lang].title;
 ---
 
 <article class="case" aria-labelledby="case-title">
   <header class="case__head">
     <div class="wrap section-grid">
       <div class="rail">
-        <p class="eyebrow">{c.kindLabels[facts.kind]}</p>
+        <p class="eyebrow">{labels.kindLabels[facts.kind]}</p>
       </div>
       <div>
         <p class="case__period nums">{copy.period}</p>

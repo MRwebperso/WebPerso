@@ -1,0 +1,79 @@
+---
+/**
+ * Pantalla d'administració del CMS. Bloc 9 de l'ordre de treball.
+ *
+ * És una pàgina d'Astro i no un fitxer d'HTML a `public/`, per dues raons que
+ * no es veuen fins que es prova:
+ *
+ * - A `astro dev`, un `public/admin/index.html` només respon a
+ *   `/admin/index.html`: `/admin/` hi dona 404. Com que l'edició en local amb
+ *   `npx decap-server` passa justament pel servidor de desenvolupament, la
+ *   forma que hi falla és la forma equivocada.
+ * - El `base_url` que Decap necessita ha de ser el domini que rep el retorn
+ *   d'OAuth, i d'aquí surt d'`Astro.site` —el punt únic que coneix el domini—,
+ *   no de l'origen de la finestra. La diferència compta en un desplegament de
+ *   previsualització: amb l'origen de la finestra, la galeta d'estat cauria al
+ *   domini de la previsualització i el retorn al canònic, i l'autenticació
+ *   moriria amb un «l'estat de la sessió no ha tornat».
+ *
+ * No passa per `BaseLayout` i no té ruta mirall: no és una pàgina del lloc i no
+ * entra al contracte lingüístic. Els seus textos són en català i prou. Queda
+ * fora del sitemap pel filtre d'`astro.config.mjs`, fora dels cercadors pel
+ * `robots.txt`, i porta `noindex` escrit aquí a sobre.
+ *
+ * La resta de la configuració —col·lecció, camps, etiquetes— és a
+ * `public/admin/config.yml`, que Decap va a buscar tot sol a `/admin/config.yml`.
+ */
+const baseUrl = Astro.site?.origin;
+---
+
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Administració · casos</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      /* Si el paquet de Decap no arriba, la pàgina no ha de ser blanca i muda. */
+      .fallback {
+        font: 1rem/1.6 system-ui, sans-serif;
+        margin: 3rem auto;
+        max-width: 34rem;
+        padding: 0 1.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="fallback">
+      <p>
+        S’està carregant l’administració dels casos. Si no apareix, és que no
+        s’ha pogut baixar el paquet de Decap; el lloc públic no en depèn.
+      </p>
+    </div>
+
+    <!--
+      Arrencada manual perquè el `base_url` no es pot escriure a `config.yml`:
+      allà seria el domini repetit en un segon lloc del projecte. El que es
+      passa aquí es fusiona damunt del que ve del fitxer.
+    -->
+    <script is:inline>
+      window.CMS_MANUAL_INIT = true;
+    </script>
+    <!-- Fixat a la major 3: unpkg en resol l'última publicada. -->
+    <script is:inline src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"
+    ></script>
+    <script is:inline define:vars={{ baseUrl }}>
+      if (window.CMS) {
+        // El text d'espera diu «no s'ha pogut baixar el paquet», i aquest camí
+        // és justament el que demostra que sí que s'ha baixat: si es quedés a la
+        // pàgina, quedaria per damunt de l'administració contradient-la.
+        document.querySelector('.fallback')?.remove();
+        // Sense domini configurat, val més deixar que Decap llegeixi el fitxer
+        // tal com és que passar-li un `base_url` buit.
+        window.CMS.init(baseUrl ? { config: { backend: { base_url: baseUrl } } } : undefined);
+      }
+    </script>
+  </body>
+</html>
