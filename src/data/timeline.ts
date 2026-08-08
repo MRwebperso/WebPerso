@@ -112,7 +112,7 @@ const ca: TimelineContent = {
   stateLabels: { learning: 'en aprenentatge', acquired: 'adquirida' },
   axisLabels: { zone: 'Territori', acquired: 'Adquirides', learning: 'En aprenentatge' },
   figureNote:
-    'Cada fila és una fita: el carril diu a quin costat de la frontera, la columna de la dreta en quines llengües. La línia de punts és la frontera.',
+    'El mapa mostra la fita que s’està llegint i d’on es venia; la columna de la dreta, en quines llengües. La línia de punts és la frontera.',
   milestones: [
     {
       title: 'Les Cevenes',
@@ -166,7 +166,7 @@ const fr: TimelineContent = {
   stateLabels: { learning: 'en apprentissage', acquired: 'acquise' },
   axisLabels: { zone: 'Territoire', acquired: 'Acquises', learning: 'En apprentissage' },
   figureNote:
-    'Chaque ligne est une étape : le couloir indique de quel côté de la frontière, la colonne de droite dans quelles langues. La ligne pointillée est la frontière.',
+    'La carte montre l’étape en cours de lecture et celle d’où l’on vient ; la colonne de droite, dans quelles langues. La ligne pointillée est la frontière.',
   milestones: [
     {
       title: 'Les Cévennes',

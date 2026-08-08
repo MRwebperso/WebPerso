@@ -4,9 +4,9 @@
  * llengua) llegibles d'un cop d'ull i sincronitzats amb el pas que s'està
  * llegint.
  *
- * El territori és un mapa —costa de França i la península, projectada a mà
- * des de longitud/latitud reals— amb un punt que viatja d'una fita a la
- * següent. Cada tram del viatge és el seu propi traç (`figure__route-segment`,
+ * El territori és un mapa —els països d'Europa occidental, un contorn tancat
+ * cadascun, projectats a mà des de longitud/latitud reals— amb un punt que
+ * viatja d'una fita a la següent. Cada tram del viatge és el seu propi traç (`figure__route-segment`,
  * `data-node` = índex d'arribada): només es dibuixa el tram que s'acaba de
  * recórrer; els anteriors es desfan. «Projectes europeus» i la Pandèmia porten, a més, un
  * ram de rutes secundàries (moltes destinacions / anada i tornada Suïssa–
@@ -23,7 +23,9 @@
  * fites que encara no s'han caminat («future») ni les que ja han quedat dues
  * enrere («past») es dibuixen. Comença, doncs, amb un sol punt fosc i cap
  * traç, i cada fita nova fa desaparèixer el punt i el tram més antics alhora
- * que en neixen els seus.
+ * que en neixen els seus. Els rams decoratius segueixen la mateixa regla:
+ * només el de la fita que s'està llegint. El que no se'n va mai és el mapa
+ * —els països i la frontera—, que és el fons, no el recorregut.
  *
  * Cada element decoratiu (ram, tram, punt) entra amb el seu propi
  * `--reveal-delay`: res apareix de cop. La classe `is-priming` (afegida i
@@ -71,63 +73,358 @@ function project(lon: number, lat: number): Point {
   };
 }
 
-// ── Costa de França i la península: silueta simplificada, no traçada d'un
-// mapa real — esquemàtica, no cartografia. ──
-const COAST_LONLAT: [number, number][] = [
-  [7.5, 49.0],
-  [2.0, 50.9],
-  [-1.6, 49.4],
-  [-4.5, 48.4],
-  [-2.2, 47.2],
-  [-1.2, 46.0],
-  [-1.2, 44.7],
-  [-1.5, 43.5],
-  [-8.9, 43.4],
-  [-9.4, 42.2],
-  [-9.4, 39.6],
-  [-9.15, 38.72],
-  [-8.9, 37.05],
-  [-7.4, 36.9],
-  [-2.5, 36.7],
-  [0.5, 37.9],
-  [0.2, 39.5],
-  [2.17, 41.39],
-  [3.1, 42.45],
-  [3.0, 43.3],
-  [4.8, 43.3],
-  [5.3, 43.2],
-  [7.0, 43.6],
-  [7.4, 46.0],
+/**
+ * Els països, un contorn tancat cadascun.
+ *
+ * Abans hi havia una sola silueta que ajuntava França i la península en un
+ * únic polígon. Tenia dos problemes: els costats que no són costa —el tall
+ * pels Pirineus, el que travessava el golf de Biscaia— quedaven dibuixats
+ * igual que la costa, i a prop (la càmera arriba a 2,4×) allò ja no es llegia
+ * com un mapa sinó com ratlles escampades. Amb un anell per país, cada traç
+ * que es veu és una frontera o una costa de veres, i quan la càmera s'allunya
+ * hi apareixen els veïns en lloc de blanc.
+ *
+ * Continuen sent contorns simplificats —vint punts per país, no cartografia—,
+ * però les fronteres compartides van amb les mateixes coordenades als dos
+ * anells perquè no s'obrin escletxes entre països.
+ */
+const COUNTRIES: [number, number][][] = [
+  // Portugal
+  [
+    [-8.87, 41.88],
+    [-8.2, 42.15],
+    [-7.0, 41.95],
+    [-6.2, 41.58],
+    [-6.85, 41.0],
+    [-6.95, 40.35],
+    [-7.0, 39.68],
+    [-7.55, 39.68],
+    [-7.05, 38.9],
+    [-7.35, 38.4],
+    [-7.1, 38.05],
+    [-7.45, 37.55],
+    [-7.4, 37.18],
+    [-8.6, 37.1],
+    [-8.95, 37.02],
+    [-8.8, 38.45],
+    [-9.5, 38.78],
+    [-9.35, 39.35],
+    [-8.85, 40.15],
+    [-8.7, 41.0],
+  ],
+  // Espanya
+  [
+    [-8.87, 41.88],
+    [-8.85, 42.6],
+    [-9.3, 43.05],
+    [-8.9, 43.4],
+    [-7.0, 43.55],
+    [-5.0, 43.55],
+    [-3.0, 43.42],
+    [-1.79, 43.35],
+    [-0.7, 42.85],
+    [0.65, 42.7],
+    [1.72, 42.5],
+    [3.1, 42.43],
+    [2.17, 41.39],
+    [1.25, 41.1],
+    [0.87, 40.72],
+    [0.0, 40.0],
+    [-0.33, 39.45],
+    [-0.5, 38.35],
+    [-0.98, 37.6],
+    [-2.45, 36.83],
+    [-4.42, 36.72],
+    [-5.6, 36.02],
+    [-6.3, 36.53],
+    [-6.95, 37.2],
+    [-7.4, 37.18],
+    [-7.45, 37.55],
+    [-7.1, 38.05],
+    [-7.35, 38.4],
+    [-7.05, 38.9],
+    [-7.55, 39.68],
+    [-7.0, 39.68],
+    [-6.95, 40.35],
+    [-6.85, 41.0],
+    [-6.2, 41.58],
+    [-7.0, 41.95],
+    [-8.2, 42.15],
+  ],
+  // França
+  [
+    [-1.79, 43.35],
+    [-1.25, 44.6],
+    [-1.15, 45.6],
+    [-1.05, 46.0],
+    [-2.15, 47.0],
+    [-4.78, 48.05],
+    [-3.0, 48.85],
+    [-1.6, 49.7],
+    [0.2, 49.7],
+    [1.6, 50.95],
+    [2.55, 51.05],
+    [3.6, 50.5],
+    [4.2, 49.95],
+    [5.8, 49.55],
+    [6.35, 49.47],
+    [8.23, 48.97],
+    [7.6, 47.58],
+    [6.87, 47.5],
+    [6.1, 46.55],
+    [6.15, 46.15],
+    [7.05, 45.92],
+    [6.63, 45.1],
+    [7.0, 44.25],
+    [7.5, 43.77],
+    [5.35, 43.32],
+    [4.85, 43.35],
+    [3.05, 43.02],
+    [3.1, 42.43],
+    [1.72, 42.5],
+    [0.65, 42.7],
+    [-0.7, 42.85],
+  ],
+  // Gran Bretanya
+  [
+    [-5.7, 50.07],
+    [-3.0, 50.7],
+    [0.9, 50.95],
+    [1.75, 52.48],
+    [0.0, 53.6],
+    [-1.4, 54.6],
+    [-2.0, 55.4],
+    [-3.3, 55.0],
+    [-3.1, 54.1],
+    [-3.3, 53.4],
+    [-4.7, 53.4],
+    [-4.1, 52.4],
+    [-5.3, 51.7],
+    [-3.3, 51.4],
+    [-4.2, 51.2],
+  ],
+  // Irlanda
+  [
+    [-6.03, 54.1],
+    [-6.2, 53.35],
+    [-6.05, 52.2],
+    [-7.0, 51.95],
+    [-8.5, 51.55],
+    [-9.9, 51.45],
+    [-10.2, 52.1],
+    [-9.3, 53.25],
+    [-9.9, 54.25],
+    [-8.3, 54.6],
+    [-7.2, 55.4],
+    [-5.9, 54.6],
+  ],
+  // Bèlgica
+  [
+    [2.55, 51.05],
+    [3.35, 51.38],
+    [4.2, 51.35],
+    [5.05, 51.47],
+    [5.8, 51.1],
+    [6.0, 50.75],
+    [6.4, 50.32],
+    [6.13, 50.18],
+    [5.75, 49.9],
+    [5.8, 49.55],
+    [4.2, 49.95],
+    [3.6, 50.5],
+  ],
+  // Països Baixos
+  [
+    [3.35, 51.38],
+    [4.05, 51.98],
+    [4.55, 52.45],
+    [4.75, 52.95],
+    [5.4, 53.45],
+    [6.7, 53.4],
+    [7.0, 52.64],
+    [6.7, 52.4],
+    [6.17, 51.9],
+    [5.8, 51.1],
+    [5.05, 51.47],
+    [4.2, 51.35],
+  ],
+  // Luxemburg
+  [
+    [5.75, 49.9],
+    [5.8, 49.55],
+    [6.35, 49.47],
+    [6.5, 49.8],
+    [6.13, 50.18],
+  ],
+  // Alemanya
+  [
+    [7.6, 47.58],
+    [8.6, 47.8],
+    [9.55, 47.55],
+    [10.17, 47.27],
+    [12.9, 47.72],
+    [13.8, 48.58],
+    [12.4, 49.8],
+    [12.1, 50.3],
+    [13.4, 50.7],
+    [14.8, 50.87],
+    [14.7, 52.1],
+    [14.4, 53.3],
+    [13.0, 54.4],
+    [11.0, 54.4],
+    [10.0, 54.5],
+    [9.0, 54.85],
+    [8.65, 55.4],
+    [8.5, 53.9],
+    [7.2, 53.68],
+    [6.7, 53.4],
+    [7.0, 52.64],
+    [6.7, 52.4],
+    [6.17, 51.9],
+    [5.8, 51.1],
+    [6.0, 50.75],
+    [6.4, 50.32],
+    [6.13, 50.18],
+    [6.5, 49.8],
+    [6.35, 49.47],
+    [8.23, 48.97],
+  ],
+  // Suïssa
+  [
+    [6.15, 46.15],
+    [7.05, 45.92],
+    [8.0, 46.0],
+    [9.0, 46.0],
+    [10.45, 46.87],
+    [9.6, 47.06],
+    [9.55, 47.55],
+    [8.6, 47.8],
+    [7.6, 47.58],
+    [6.87, 47.5],
+    [6.1, 46.55],
+  ],
+  // Àustria
+  [
+    [9.55, 47.55],
+    [9.6, 47.06],
+    [10.45, 46.87],
+    [11.0, 46.9],
+    [12.4, 46.7],
+    [13.6, 46.5],
+    [14.6, 46.45],
+    [16.0, 46.87],
+    [16.5, 47.0],
+    [16.9, 47.7],
+    [17.16, 48.0],
+    [16.0, 48.78],
+    [15.0, 48.98],
+    [13.8, 48.58],
+    [12.9, 47.72],
+    [10.17, 47.27],
+  ],
+  // Itàlia
+  [
+    [7.5, 43.77],
+    [8.9, 44.4],
+    [10.0, 44.0],
+    [10.3, 43.0],
+    [11.1, 42.4],
+    [12.2, 41.7],
+    [13.5, 41.2],
+    [14.2, 40.8],
+    [15.3, 40.0],
+    [16.1, 38.9],
+    [15.65, 38.0],
+    [17.2, 38.9],
+    [17.5, 40.5],
+    [16.2, 41.75],
+    [15.0, 42.1],
+    [14.0, 42.6],
+    [13.5, 43.6],
+    [12.5, 44.4],
+    [12.3, 45.4],
+    [13.6, 45.8],
+    [13.6, 46.5],
+    [12.4, 46.7],
+    [11.0, 46.9],
+    [10.45, 46.87],
+    [9.0, 46.0],
+    [8.0, 46.0],
+    [7.05, 45.92],
+    [6.63, 45.1],
+    [7.0, 44.25],
+  ],
+  // Eslovènia i el seu entorn immediat
+  [
+    [13.6, 45.8],
+    [13.6, 46.5],
+    [14.6, 46.45],
+    [16.0, 46.87],
+    [16.6, 46.48],
+    [15.6, 45.8],
+  ],
+  // Txèquia
+  [
+    [12.1, 50.3],
+    [13.4, 50.7],
+    [14.8, 50.87],
+    [15.3, 51.0],
+    [16.6, 50.2],
+    [17.5, 50.3],
+    [17.5, 49.0],
+    [16.9, 48.6],
+    [16.0, 48.78],
+    [15.0, 48.98],
+    [13.8, 48.58],
+    [12.4, 49.8],
+  ],
+  // Polònia occidental (l'est queda fora del quadre)
+  [
+    [14.7, 52.1],
+    [14.4, 53.3],
+    [14.2, 53.9],
+    [16.5, 54.55],
+    [17.5, 54.75],
+    [17.5, 50.3],
+    [16.6, 50.2],
+    [15.3, 51.0],
+    [14.8, 50.87],
+  ],
+  // Còrsega
+  [
+    [8.55, 42.98],
+    [9.45, 42.72],
+    [9.55, 42.1],
+    [9.35, 41.38],
+    [8.8, 41.55],
+    [8.55, 42.35],
+  ],
+  // Sardenya
+  [
+    [8.2, 41.15],
+    [9.3, 41.2],
+    [9.55, 40.5],
+    [9.7, 39.2],
+    [9.1, 39.1],
+    [8.4, 38.9],
+    [8.4, 40.0],
+    [8.15, 40.6],
+  ],
+  // Sicília
+  [
+    [12.45, 37.8],
+    [15.1, 38.25],
+    [15.65, 38.0],
+    [15.1, 36.65],
+    [12.65, 37.55],
+  ],
 ];
-const coastPoints = COAST_LONLAT.map(([lon, lat]) => project(lon, lat));
-const coastD = `${coastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
 
-/** Fronteres veïnes: només ratlla, sense nom de país. Amagades fins que la
- * càmera s'allunya a «Projectes europeus» (`figure__geo`, gate per
- * `data-node="3"`) —abans d'això la Cronologia és zoom sobre Cevenes o sobre
- * el trajecte Cevenes–Portugal–Barcelona, on aquestes ratlles no hi pinten
- * res—, i atenuades un cop passada aquesta fita, no eliminades. */
-const BORDER_LONLAT: [number, number][][] = [
-  [
-    [5.5, 45.3],
-    [6.63, 45.7],
-    [7.5, 46.6],
-    [8.2, 48.3],
-    [6.8, 49.2],
-  ],
-  [
-    [8.2, 47.6],
-    [9.6, 47.65],
-  ],
-  [
-    [4.2, 50.0],
-    [2.5, 50.9],
-  ],
-];
-const borderPaths = BORDER_LONLAT.map((line) => {
-  const pts = line.map(([lon, lat]) => project(lon, lat));
-  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-});
+function ringD(ring: [number, number][]): string {
+  const pts = ring.map(([lon, lat]) => project(lon, lat));
+  return `${pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
+}
+const countryPaths = COUNTRIES.map(ringD);
 
 /** Catalunya, contorn més detallat: només es fa notar quan la càmera s'hi
  * acosta a la fita final. Nord i sud com una sola massa —la frontera real ja
@@ -149,9 +446,9 @@ const CATALONIA_LONLAT: [number, number][] = [
 const catalanCoastPoints = CATALONIA_LONLAT.map(([lon, lat]) => project(lon, lat));
 const catalanCoastD = `${catalanCoastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
 
-// ── Frontera real: una ratlla pels Pirineus, a l'altura del Vallespir. Amagada
-// fins a «Projectes europeus», com les fronteres veïnes —comparteix el mateix
-// `figure__geo`. ──
+// ── Frontera real: una ratlla pels Pirineus, a l'altura del Vallespir. Sempre
+// visible, ara que hi ha contorns de països de veres a sota i la ratlla hi cau
+// al damunt en lloc de flotar sola: és el que anuncia el peu de la figura. ──
 const frontierA = project(0.2, 42.75);
 const frontierB = project(3.3, 42.4);
 
@@ -301,21 +598,16 @@ const lastCopy = c.milestones[c.milestones.length - 1];
       </defs>
 
       <g class="figure__world">
-        <path class="figure__land" d={coastD} fill="url(#timeline-hatch)" />
-        <path class="figure__land-outline" d={coastD} vector-effect="non-scaling-stroke" />
-
-        <g class="figure__geo" data-node="3">
-          {borderPaths.map((d) => <path class="figure__border" d={d} vector-effect="non-scaling-stroke" />)}
-
-          <line
-            class="figure__frontier"
-            x1={frontierA.x}
-            y1={frontierA.y}
-            x2={frontierB.x}
-            y2={frontierB.y}
-            vector-effect="non-scaling-stroke"
-          />
+        <g class="figure__countries">
+          {countryPaths.map((d) => <path class="figure__land" d={d} fill="url(#timeline-hatch)" />)}
+          {
+            countryPaths.map((d) => (
+              <path class="figure__land-outline" d={d} vector-effect="non-scaling-stroke" />
+            ))
+          }
         </g>
+
+        <line class="figure__frontier" x1={frontierA.x} y1={frontierA.y} x2={frontierB.x} y2={frontierB.y} />
 
         <g class="figure__oscillation" data-node="4">
           {
@@ -404,7 +696,6 @@ const lastCopy = c.milestones[c.milestones.length - 1];
               data-node={seg.nodeIndex}
               d={seg.d}
               pathLength="1"
-              vector-effect="non-scaling-stroke"
             />
           ))
         }
@@ -519,49 +810,64 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     stroke-width: 1;
   }
 
-  .figure__border {
-    fill: none;
-    stroke: var(--rule);
-    stroke-width: 1;
-    stroke-dasharray: 1.5 2;
-    opacity: 0.8;
-  }
-
+  /*
+   * La frontera i els trams del viatge són els dos únics traços discontinus, i
+   * per això els dos únics que NO poden dur `vector-effect: non-scaling-stroke`:
+   * amb l'efecte activat el navegador mesura el patró de guions en píxels de
+   * pantalla mentre la longitud de la corba es compta en unitats del mapa, i a
+   * càmera 2× només se'n dibuixa la meitat. És d'aquí que venia el tram que no
+   * arribava mai al punt de destinació. Sense l'efecte, la mesura torna a ser
+   * la mateixa als dos costats i el gruix es compensa a mà dividint per
+   * `--cam-scale`, que és el que feia l'efecte i l'únic que en volíem.
+   */
   .figure__frontier {
     stroke: var(--accent);
-    stroke-width: 1;
-    stroke-dasharray: 2 3;
+    stroke-width: calc(1 / var(--cam-scale, 1));
+    stroke-dasharray: calc(2 / var(--cam-scale, 1)) calc(3 / var(--cam-scale, 1));
     opacity: 0.65;
+    transition: stroke-width var(--dur-slow) var(--ease-out);
   }
 
   /*
    * Cada tram és el seu propi traç, sempre a tinta plena — només la longitud
    * dibuixada (`stroke-dashoffset`) anima; el color no, perquè un tram no ha
    * de veure's pàl·lid mentre creix (era el problema d'abans). `pathLength="1"`
-   * al marcatge fa que 1 sigui exactament tota la corba: el traç arriba al punt
-   * de destinació i no s'atura uns quants píxels abans.
+   * al marcatge fa que 1 sigui exactament tota la corba.
    *
    * Sense JS: tot dibuixat, com si ja s'hagués fet el viatge. Amb JS: només el
    * tram que s'acaba de recórrer existeix. Els anteriors no s'apaguen, es
    * desfan —el mapa no acumula el recorregut sencer, ensenya el salt d'ara.
+   * L'opacitat cau de cop just quan s'ha acabat de desfer: amb `linecap: round`,
+   * un guió de llargada zero encara pinta un punt rodó a l'inici de la corba, i
+   * era aquest el bocí de tram que quedava penjat al mapa.
    */
   .figure__route-segment {
     fill: none;
     stroke-linejoin: round;
     stroke-linecap: round;
     stroke: var(--ink);
-    stroke-width: 1.8;
+    stroke-width: calc(1.8 / var(--cam-scale, 1));
     stroke-dasharray: 1;
     stroke-dashoffset: 0;
-    transition: stroke-dashoffset var(--dur-slow) var(--ease-out);
+    opacity: 1;
+    transition:
+      stroke-dashoffset var(--dur-slow) var(--ease-out),
+      stroke-width var(--dur-slow) var(--ease-out),
+      opacity 0s linear var(--dur-slow);
   }
 
   .figure.is-live .figure__route-segment {
     stroke-dashoffset: 1;
+    opacity: 0;
   }
 
   .figure.is-live .figure__route-segment[data-state='current'] {
     stroke-dashoffset: 0;
+    opacity: 1;
+    transition:
+      stroke-dashoffset var(--dur-slow) var(--ease-out),
+      stroke-width var(--dur-slow) var(--ease-out),
+      opacity 0s linear;
   }
 
   /*
@@ -618,32 +924,19 @@ const lastCopy = c.milestones[c.milestones.length - 1];
      (`--reveal-delay`): no apareixen tots alhora. ── */
   .figure__fan,
   .figure__oscillation,
-  .figure__catalonia,
-  .figure__geo {
+  .figure__catalonia {
     opacity: 1;
     transition: opacity var(--dur-slow) var(--ease-out);
   }
 
-  .figure.is-live .figure__fan[data-state='future'],
-  .figure.is-live .figure__oscillation[data-state='future'],
-  .figure.is-live .figure__catalonia[data-state='future'],
-  .figure.is-live .figure__geo[data-state='future'] {
+  /* Els rams no sobreviuen la seva fita. Quedar-se atenuats era la manera de
+     no perdre'ls del tot, però a l'última fita hi arribaven totes les anades i
+     tornades de la Pandèmia i el mapa hi tornava a acumular recorregut. La
+     mateixa regla que els punts, doncs: només el d'ara. */
+  .figure.is-live .figure__fan:not([data-state='current']),
+  .figure.is-live .figure__oscillation:not([data-state='current']),
+  .figure.is-live .figure__catalonia:not([data-state='current']) {
     opacity: 0;
-  }
-
-  /* Els rams decoratius sí que sobreviuen la fita que els ha portat —són
-     context de mapa, no el recorregut—, però atenuats. `prev` i `past` hi
-     valen igual: la distinció entre «l'anterior» i «els d'abans» només la
-     necessiten els punts i els trams. */
-  .figure.is-live .figure__fan[data-state='prev'],
-  .figure.is-live .figure__oscillation[data-state='prev'],
-  .figure.is-live .figure__catalonia[data-state='prev'],
-  .figure.is-live .figure__geo[data-state='prev'],
-  .figure.is-live .figure__fan[data-state='past'],
-  .figure.is-live .figure__oscillation[data-state='past'],
-  .figure.is-live .figure__catalonia[data-state='past'],
-  .figure.is-live .figure__geo[data-state='past'] {
-    opacity: 0.4;
   }
 
   .figure__fan-arc,
@@ -658,13 +951,13 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     transition-delay: 0s;
   }
 
-  .figure.is-live .figure__fan[data-state='future'] .figure__fan-arc,
-  .figure.is-live .figure__fan[data-state='future'] .figure__fan-dot,
-  .figure.is-live .figure__oscillation[data-state='future'] .figure__oscillation-arc,
-  .figure.is-live .figure__catalonia[data-state='future'] .figure__catalonia-arc,
-  .figure.is-live .figure__catalonia[data-state='future'] .figure__catalonia-land,
-  .figure.is-live .figure__catalonia[data-state='future'] .figure__catalonia-land-outline,
-  .figure.is-live .figure__catalonia[data-state='future'] .figure__catalonia-dot {
+  .figure.is-live .figure__fan:not([data-state='current']) .figure__fan-arc,
+  .figure.is-live .figure__fan:not([data-state='current']) .figure__fan-dot,
+  .figure.is-live .figure__oscillation:not([data-state='current']) .figure__oscillation-arc,
+  .figure.is-live .figure__catalonia:not([data-state='current']) .figure__catalonia-arc,
+  .figure.is-live .figure__catalonia:not([data-state='current']) .figure__catalonia-land,
+  .figure.is-live .figure__catalonia:not([data-state='current']) .figure__catalonia-land-outline,
+  .figure.is-live .figure__catalonia:not([data-state='current']) .figure__catalonia-dot {
     opacity: 0;
     transition-delay: 0s;
   }
@@ -722,15 +1015,8 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     transition-delay: 0s;
   }
 
-  .figure.is-live .figure__oscillation[data-state='future'] .figure__oscillation-dot {
+  .figure.is-live .figure__oscillation:not([data-state='current']) .figure__oscillation-dot {
     opacity: 0;
-  }
-
-  .figure.is-live .figure__oscillation[data-state='prev'] .figure__oscillation-dot,
-  .figure.is-live .figure__oscillation[data-state='past'] .figure__oscillation-dot {
-    opacity: 1;
-    fill: var(--ink-faint);
-    stroke: var(--paper);
   }
 
   .figure.is-live .figure__oscillation[data-state='current'] .figure__oscillation-dot {
@@ -784,7 +1070,6 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   .figure.is-priming .figure__fan,
   .figure.is-priming .figure__oscillation,
   .figure.is-priming .figure__catalonia,
-  .figure.is-priming .figure__geo,
   .figure.is-priming .figure__fan-arc,
   .figure.is-priming .figure__fan-dot,
   .figure.is-priming .figure__oscillation-arc,
