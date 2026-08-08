@@ -278,7 +278,7 @@ const steps = milestones.map((milestone, i) => {
 
     root.classList.add('is-live');
     // 'is-priming' talla les transicions de traç/ram perquè el primer activate()
-    // no es vegi com un flaix (visible → amagat): s'aplica l'estat 0 instantani
+    // no es vegi com un flaix (visible → amagat): s'aplica l'estat instantani
     // i, un cop el navegador l'ha pintat (el `void offsetHeight` ho força), es
     // treu la classe i les transicions tornen per als canvis reals de l'usuari.
     figure.classList.add('is-live', 'is-priming');
@@ -315,22 +315,23 @@ const steps = milestones.map((milestone, i) => {
       steps.forEach((el, at) => el.classList.toggle('is-current', at === index));
     };
 
-    const inBand = new Set<HTMLElement>();
-
-    const pickNearest = () => {
-      const middle = window.innerHeight / 2;
+    const middle = () => window.innerHeight / 2;
+    const nearestTo = (candidates: HTMLElement[]): number => {
       let nearest = -1;
       let best = Infinity;
-      for (const step of inBand) {
+      for (const step of candidates) {
         const box = step.getBoundingClientRect();
-        const distance = Math.abs((box.top + box.bottom) / 2 - middle);
+        const distance = Math.abs((box.top + box.bottom) / 2 - middle());
         if (distance < best) {
           best = distance;
           nearest = steps.indexOf(step);
         }
       }
-      activate(nearest);
+      return nearest;
     };
+
+    const inBand = new Set<HTMLElement>();
+    const pickNearest = () => activate(nearestTo([...inBand]));
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -345,7 +346,13 @@ const steps = milestones.map((milestone, i) => {
     );
 
     for (const step of steps) observer.observe(step);
-    activate(0);
+    // La primera activació és la fita que ja es veu en carregar, no sempre la
+    // 0: si la pàgina arrenca amb la Cronologia ja mig vista (recàrrega amb
+    // scroll conservat, navegació client d'Astro que torna a cridar aquesta
+    // funció), `activate(0)` saltaria a Cevenes per, mig segon després, haver
+    // de refer tot el camí fins a la fita real —una repetició sencera de
+    // l'animació, ja no protegida per `is-priming`, just després d'arrencar.
+    activate(nearestTo(steps));
     void figure.offsetHeight;
     figure.classList.remove('is-priming');
   };

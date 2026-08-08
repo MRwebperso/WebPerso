@@ -99,8 +99,11 @@ const COAST_LONLAT: [number, number][] = [
 const coastPoints = COAST_LONLAT.map(([lon, lat]) => project(lon, lat));
 const coastD = `${coastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
 
-/** Fronteres veïnes: només ratlla, sense nom de país — es fan notar quan la
- * càmera s'allunya a «Projectes europeus», discretes a la resta de fites. */
+/** Fronteres veïnes: només ratlla, sense nom de país. Amagades fins que la
+ * càmera s'allunya a «Projectes europeus» (`figure__geo`, gate per
+ * `data-node="3"`) —abans d'això la Cronologia és zoom sobre Cevenes o sobre
+ * el trajecte Cevenes–Portugal–Barcelona, on aquestes ratlles no hi pinten
+ * res—, i atenuades un cop passada aquesta fita, no eliminades. */
 const BORDER_LONLAT: [number, number][][] = [
   [
     [5.5, 45.3],
@@ -143,7 +146,9 @@ const CATALONIA_LONLAT: [number, number][] = [
 const catalanCoastPoints = CATALONIA_LONLAT.map(([lon, lat]) => project(lon, lat));
 const catalanCoastD = `${catalanCoastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
 
-// ── Frontera real: una ratlla pels Pirineus, a l'altura del Vallespir. ──
+// ── Frontera real: una ratlla pels Pirineus, a l'altura del Vallespir. Amagada
+// fins a «Projectes europeus», com les fronteres veïnes —comparteix el mateix
+// `figure__geo`. ──
 const frontierA = project(0.2, 42.75);
 const frontierB = project(3.3, 42.4);
 
@@ -310,16 +315,18 @@ const lastCopy = c.milestones[c.milestones.length - 1];
         <path class="figure__land" d={coastD} fill="url(#timeline-hatch)" />
         <path class="figure__land-outline" d={coastD} vector-effect="non-scaling-stroke" />
 
-        {borderPaths.map((d) => <path class="figure__border" d={d} vector-effect="non-scaling-stroke" />)}
+        <g class="figure__geo" data-node="3">
+          {borderPaths.map((d) => <path class="figure__border" d={d} vector-effect="non-scaling-stroke" />)}
 
-        <line
-          class="figure__frontier"
-          x1={frontierA.x}
-          y1={frontierA.y}
-          x2={frontierB.x}
-          y2={frontierB.y}
-          vector-effect="non-scaling-stroke"
-        />
+          <line
+            class="figure__frontier"
+            x1={frontierA.x}
+            y1={frontierA.y}
+            x2={frontierB.x}
+            y2={frontierB.y}
+            vector-effect="non-scaling-stroke"
+          />
+        </g>
 
         <g class="figure__oscillation" data-node="4">
           {
@@ -624,20 +631,23 @@ const lastCopy = c.milestones[c.milestones.length - 1];
      (`--reveal-delay`): no apareixen tots alhora. ── */
   .figure__fan,
   .figure__oscillation,
-  .figure__catalonia {
+  .figure__catalonia,
+  .figure__geo {
     opacity: 1;
     transition: opacity var(--dur-slow) var(--ease-out);
   }
 
   .figure.is-live .figure__fan[data-state='future'],
   .figure.is-live .figure__oscillation[data-state='future'],
-  .figure.is-live .figure__catalonia[data-state='future'] {
+  .figure.is-live .figure__catalonia[data-state='future'],
+  .figure.is-live .figure__geo[data-state='future'] {
     opacity: 0;
   }
 
   .figure.is-live .figure__fan[data-state='past'],
   .figure.is-live .figure__oscillation[data-state='past'],
-  .figure.is-live .figure__catalonia[data-state='past'] {
+  .figure.is-live .figure__catalonia[data-state='past'],
+  .figure.is-live .figure__geo[data-state='past'] {
     opacity: 0.4;
   }
 
@@ -762,17 +772,22 @@ const lastCopy = c.milestones[c.milestones.length - 1];
 
   /*
    * Mentre `is-priming` hi és (només a l'arrencada, un instant), cap
-   * d'aquests elements no anima el pas d'amagat a visible: `activate(0)`
-   * aplica l'estat 0 de cop. Els punts que ja neixen «future» hi són inclosos
-   * —si no, es veurien un instant abans d'esvair-se— però només aquest estat:
-   * el punt «current» hi queda fora expressament, perquè el primer sí que
-   * s'ha de veure blanc i enfosquir-se amb calma, no aparèixer ja fosc.
+   * d'aquests elements no anima el pas d'amagat a visible: la primera
+   * activació aplica l'estat real de cop. Els punts que ja neixen «future» hi
+   * són inclosos —si no, es veurien un instant abans d'esvair-se— però només
+   * aquest estat: el punt «current» hi queda fora expressament, perquè el
+   * primer sí que s'ha de veure blanc i enfosquir-se amb calma, no aparèixer
+   * ja fosc. Els «pips» de llengua hi són pel mateix motiu que els trams: el
+   * marcatge estàtic els dibuixa amb les dades de l'última fita (Vallespir,
+   * totes adquirides), i sense això es veurien un instant totes plenes abans
+   * de buidar-se cap a l'estat real de la primera fita mostrada.
    */
   .figure.is-priming .figure__route-segment,
   .figure.is-priming .figure__node[data-state='future'],
   .figure.is-priming .figure__fan,
   .figure.is-priming .figure__oscillation,
   .figure.is-priming .figure__catalonia,
+  .figure.is-priming .figure__geo,
   .figure.is-priming .figure__fan-arc,
   .figure.is-priming .figure__fan-dot,
   .figure.is-priming .figure__oscillation-arc,
@@ -780,7 +795,8 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   .figure.is-priming .figure__catalonia-arc,
   .figure.is-priming .figure__catalonia-land,
   .figure.is-priming .figure__catalonia-land-outline,
-  .figure.is-priming .figure__catalonia-dot {
+  .figure.is-priming .figure__catalonia-dot,
+  .figure.is-priming .pip {
     transition: none !important;
   }
 
