@@ -45,25 +45,25 @@ export const milestones: Six<Milestone> = [
     id: 'portugal',
     year: 1996,
     zones: ['europa'],
-    langs: { fr: 1, pt: 1, ca: 0, es: 0, en: 0, de: 0 },
-  },
-  {
-    id: 'europa',
-    year: 2006,
-    zones: ['europa'],
-    langs: { fr: 2, pt: 2, ca: 0, es: 0, en: 0, de: 0 },
+    langs: { fr: 2, pt: 1, ca: 0, es: 0, en: 0, de: 0 },
   },
   {
     id: 'barcelona',
     year: 2008,
     zones: ['sud'],
-    langs: { fr: 2, pt: 2, ca: 1, es: 1, en: 2, de: 0 },
+    langs: { fr: 2, pt: 2, ca: 2, es: 2, en: 2, de: 0 },
+  },
+  {
+    id: 'europa',
+    year: 2012,
+    zones: ['sud'],
+    langs: { fr: 2, pt: 2, ca: 2, es: 2, en: 2, de: 0 },
   },
   {
     id: 'pandemia',
     year: 2020,
     zones: ['europa', 'nord'],
-    langs: { fr: 2, pt: 2, ca: 1, es: 1, en: 2, de: 1 },
+    langs: { fr: 2, pt: 2, ca: 2, es: 2, en: 2, de: 1 },
   },
   {
     id: 'vallespir',
@@ -88,8 +88,8 @@ export interface TimelineContent {
   zoneNames: Record<Zone, string>;
   frontier: string;
   langNames: Record<LangKey, string>;
-  stateLabels: { acquired: string; working: string };
-  axisLabels: { zone: string; working: string; acquired: string };
+  stateLabels: { learning: string; acquired: string };
+  axisLabels: { zone: string; acquired: string; learning: string };
   figureNote: string;
   milestones: Six<MilestoneCopy>;
 }
@@ -105,40 +105,40 @@ const ca: TimelineContent = {
     en: 'anglès',
     de: 'alemany',
   },
-  stateLabels: { acquired: 'adquirida', working: 'de treball' },
-  axisLabels: { zone: 'Territori', working: 'De treball', acquired: 'Adquirides' },
+  stateLabels: { learning: 'en aprenentatge', acquired: 'adquirida' },
+  axisLabels: { zone: 'Territori', acquired: 'Adquirides', learning: 'En aprenentatge' },
   figureNote:
     'Cada fila és una fita: el carril diu a quin costat de la frontera, la columna de la dreta en quines llengües. La línia de punts és la frontera.',
   milestones: [
     {
       title: 'Les Cevenes',
-      zoneLabel: 'Europa',
+      zoneLabel: 'Cevenes, França',
       body: 'Creixo en un poble de mitja muntanya, als peus de les Cevenes. Francès com a primera llengua i un entorn de comuna petita: d’aquí ve la familiaritat amb els territoris de muntanya que després he retrobat com a terreny de treball.',
     },
     {
       title: 'Évora i Lisboa',
-      zoneLabel: 'Europa',
+      zoneLabel: 'Évora i Lisboa, Portugal',
       body: 'Passo l’adolescència a Évora i em llicencio en Economia a Lisboa. El portuguès es converteix en llengua d’estudi i de vida diària; és el primer bilingüisme complet i el primer canvi de país.',
     },
     {
-      title: 'Projectes europeus',
-      zoneLabel: 'Europa',
-      body: 'Entro en projectes europeus: establir partenariats, fer el seguiment de subvencions i organitzar esdeveniments arreu d’Europa. És on aprenc que un dossier no es guanya escrivint bé, sinó entenent qui l’ha de llegir i amb quins criteris.',
-    },
-    {
       title: 'Barcelona',
-      zoneLabel: 'Sud de la frontera',
+      zoneLabel: 'Barcelona, Espanya',
       body: 'M’instal·lo a Barcelona: dos màsters i un doctorat en comunicació, amb l’anglès com a llengua de treball. El català i el castellà passen a ser les llengües de cada dia, i és aquí que el sud de la frontera deixa de ser un lloc de pas.',
     },
     {
+      title: 'Projectes europeus',
+      zoneLabel: 'Barcelona, amb viatges arreu d’Europa',
+      body: 'Entro en projectes europeus: establir partenariats, fer el seguiment de subvencions i organitzar esdeveniments arreu d’Europa. És on aprenc que un dossier no es guanya escrivint bé, sinó entenent qui l’ha de llegir i amb quins criteris.',
+    },
+    {
       title: 'Suïssa, Alemanya, Vallespir',
-      zoneLabel: 'Europa i nord de la frontera',
+      zoneLabel: 'Suïssa, Alemanya i Vallespir',
       body: 'Deixo la ciutat. Passo la pandèmia entre Suïssa, Alemanya i el Vallespir, i en surto parlant alemany amb solvència. Treballar a distància per a interlocutors de tres països deixa de ser una excepció i es converteix en la manera normal de treballar.',
     },
     {
       yearSuffix: '→ avui',
       title: 'Alt Vallespir',
-      zoneLabel: 'Nord i sud de la frontera',
+      zoneLabel: 'Prats de Molló, França',
       body: 'M’estableixo a Prats de Molló, aquesta vegada per quedar-m’hi. Des del nord de la frontera treballo per encàrrec als dos costats i en sis llengües: els contactes dispersos per Europa acaben servint el territori que m’ha rebut.',
       aside: {
         label: 'Realitzat en el marc associatiu',
@@ -159,40 +159,40 @@ const fr: TimelineContent = {
     en: 'anglais',
     de: 'allemand',
   },
-  stateLabels: { acquired: 'acquise', working: 'de travail' },
-  axisLabels: { zone: 'Territoire', working: 'De travail', acquired: 'Acquises' },
+  stateLabels: { learning: 'en apprentissage', acquired: 'acquise' },
+  axisLabels: { zone: 'Territoire', acquired: 'Acquises', learning: 'En apprentissage' },
   figureNote:
     'Chaque ligne est une étape : le couloir indique de quel côté de la frontière, la colonne de droite dans quelles langues. La ligne pointillée est la frontière.',
   milestones: [
     {
       title: 'Les Cévennes',
-      zoneLabel: 'Europe',
+      zoneLabel: 'Cévennes, France',
       body: 'Je grandis dans un village de moyenne montagne, au pied des Cévennes. Le français comme première langue et un cadre de petite commune : de là vient la familiarité avec les territoires de montagne que j’ai retrouvés ensuite comme terrain de travail.',
     },
     {
       title: 'Évora et Lisbonne',
-      zoneLabel: 'Europe',
+      zoneLabel: 'Évora et Lisbonne, Portugal',
       body: 'Je passe mon adolescence à Évora et j’obtiens une licence d’économie à Lisbonne. Le portugais devient langue d’étude et de vie quotidienne ; c’est le premier bilinguisme complet, et le premier changement de pays.',
     },
     {
-      title: 'Projets européens',
-      zoneLabel: 'Europe',
-      body: 'J’entre dans les projets européens : établir des partenariats, assurer le suivi de subventions, organiser des événements à travers l’Europe. C’est là que j’apprends qu’un dossier ne se gagne pas en écrivant bien, mais en comprenant qui va le lire et avec quels critères.',
-    },
-    {
       title: 'Barcelone',
-      zoneLabel: 'Sud de la frontière',
+      zoneLabel: 'Barcelone, Espagne',
       body: 'Je m’installe à Barcelone : deux masters et un doctorat en communication, l’anglais comme langue de travail. Le catalan et le castillan deviennent les langues du quotidien, et c’est là que le sud de la frontière cesse d’être un lieu de passage.',
     },
     {
+      title: 'Projets européens',
+      zoneLabel: 'Barcelone, avec des déplacements à travers l’Europe',
+      body: 'J’entre dans les projets européens : établir des partenariats, assurer le suivi de subventions, organiser des événements à travers l’Europe. C’est là que j’apprends qu’un dossier ne se gagne pas en écrivant bien, mais en comprenant qui va le lire et avec quels critères.',
+    },
+    {
       title: 'Suisse, Allemagne, Vallespir',
-      zoneLabel: 'Europe et nord de la frontière',
+      zoneLabel: 'Suisse, Allemagne et Vallespir',
       body: 'Je quitte la ville. Je passe la pandémie entre la Suisse, l’Allemagne et le Vallespir, et j’en sors avec un allemand solide. Travailler à distance pour des interlocuteurs de trois pays cesse d’être une exception : cela devient la façon normale de travailler.',
     },
     {
       yearSuffix: '→ aujourd’hui',
       title: 'Haut-Vallespir',
-      zoneLabel: 'Nord et sud de la frontière',
+      zoneLabel: 'Prats-de-Mollo, France',
       body: 'Je m’installe à Prats-de-Mollo, cette fois pour y rester. Depuis le nord de la frontière, je travaille sur commande des deux côtés et en six langues : les contacts dispersés en Europe finissent par servir le territoire qui m’accueille.',
       aside: {
         label: 'Réalisé dans le cadre associatif',

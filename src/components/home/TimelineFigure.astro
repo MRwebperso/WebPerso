@@ -4,15 +4,28 @@
  * llengua) llegibles d'un cop d'ull i sincronitzats amb el pas que s'està
  * llegint.
  *
+ * El territori és un mapa —costa de França i la península, projectada a mà
+ * des de longitud/latitud reals— amb un punt que viatja d'una fita a la
+ * següent. Cada tram del viatge és el seu propi traç (`figure__route-segment`,
+ * `data-node` = índex d'arribada): només el tram actiu queda tinta fosca, els
+ * anteriors s'apaguen. «Projectes europeus» i la Pandèmia porten, a més, un
+ * ram de rutes secundàries (moltes destinacions / anada i tornada Suïssa–
+ * Vallespir–Alemanya) que pengen del mateix `[data-node]` que la fita
+ * corresponent, així que `activate(index)` a `Timeline.astro` els sincronitza
+ * sense saber que hi són. La «càmera» (`--cam-scale/x/y`, calculada aquí i
+ * aplicada per `activate()`) allunya el mapa a «Projectes europeus» perquè
+ * s'hi vegin els països veïns, i s'acosta a Catalunya a la fita final.
+ *
+ * Cada element decoratiu (ram, tram, punt) entra amb el seu propi
+ * `--reveal-delay`: res apareix de cop. La classe `is-priming` (afegida i
+ * treta per `Timeline.astro` a l'arrencada) evita que aquest mateix mecanisme
+ * es vegi com un flaix la primera vegada.
+ *
  * És deliberadament decoratiu (`aria-hidden`): tota la informació que hi surt
  * existeix en text a cada pas. Així la peça pot ser ambiciosa sense que
  * l'accessibilitat depengui de saber llegir un diagrama.
- *
- * Sense JS es queda en l'estat d'avui —trajectòria sencera, les sis llengües
- * de treball—, que és una lectura vàlida. La classe `is-live` és el que cedeix
- * el control als passos.
  */
-import { langKeys, milestones, timeline, zoneKeys, type Zone } from '../../data/timeline';
+import { langKeys, milestones, timeline } from '../../data/timeline';
 import type { Lang } from '../../i18n/utils';
 
 interface Props {
@@ -22,47 +35,263 @@ interface Props {
 const { lang } = Astro.props;
 const c = timeline[lang];
 
-// ── Geometria del diagrama, en unitats de viewBox ──
-const VIEW = { w: 220, h: 340 };
-const LANE: Record<Zone, number> = { europa: 44, nord: 140, sud: 204 };
-const FRONTIER_X = 172;
-const TOP = 22;
-const BOTTOM = 336;
-const rowY = (i: number) => 44 + i * 56;
+// ── Projecció: longitud/latitud reals → unitats de viewBox ──
+// Equirectangular amb compressió de longitud (cos de la latitud mitjana): prou
+// per a una il·lustració petita i esquemàtica, no una carta de navegació.
+const VIEW = { w: 220, h: 200 };
+const MARGIN = 14;
+const LON_MIN = -10.5;
+const LON_MAX = 17.5;
+const LAT_MIN = 37.5;
+const LAT_MAX = 55;
+const LON_COMPRESS = Math.cos((46.5 * Math.PI) / 180);
 
-/*
- * Traç ortogonal: baixa pel carril d'on venia i creua a l'altura de la fita
- * nova. Les longituds acumulades es calculen aquí perquè el dibuix progressiu
- * s'aturi exactament al node de cada pas i no en un percentatge aproximat.
- */
-let path = `M${LANE[milestones[0].zones[0]]},${rowY(0)}`;
-let run = 0;
-const offsets: number[] = [0];
-
-for (let i = 1; i < milestones.length; i++) {
-  const from = LANE[milestones[i - 1].zones[0]];
-  const to = LANE[milestones[i].zones[0]];
-  path += ` V${rowY(i)}`;
-  run += rowY(i) - rowY(i - 1);
-  if (to !== from) {
-    path += ` H${to}`;
-    run += Math.abs(to - from);
-  }
-  offsets.push(run);
+interface Point {
+  x: number;
+  y: number;
 }
 
-const total = run;
-const ratios = offsets.map((offset) => (offset / total).toFixed(4)).join(',');
-const rows = milestones.map((_, i) => rowY(i)).join(',');
+function project(lon: number, lat: number): Point {
+  const xNorm = (lon - LON_MIN) * LON_COMPRESS;
+  const xSpan = (LON_MAX - LON_MIN) * LON_COMPRESS;
+  const yNorm = LAT_MAX - lat;
+  const ySpan = LAT_MAX - LAT_MIN;
+  return {
+    x: MARGIN + (xNorm / xSpan) * (VIEW.w - MARGIN * 2),
+    y: MARGIN + (yNorm / ySpan) * (VIEW.h - MARGIN * 2),
+  };
+}
 
-/** Ponts entre carrils: les fites que ocupen dues zones alhora. */
-const spans = milestones
-  .map((milestone, i) => ({ milestone, i }))
-  .filter(({ milestone }) => milestone.zones.length > 1)
-  .map(({ milestone, i }) => {
-    const xs = milestone.zones.map((zone) => LANE[zone]);
-    return { i, y: rowY(i), from: Math.min(...xs), to: Math.max(...xs) };
-  });
+// ── Costa de França i la península: silueta simplificada, no traçada d'un
+// mapa real — esquemàtica, no cartografia. ──
+const COAST_LONLAT: [number, number][] = [
+  [7.5, 49.0],
+  [2.0, 50.9],
+  [-1.6, 49.4],
+  [-4.5, 48.4],
+  [-2.2, 47.2],
+  [-1.2, 46.0],
+  [-1.2, 44.7],
+  [-1.5, 43.5],
+  [-8.9, 43.4],
+  [-9.4, 42.2],
+  [-9.4, 39.6],
+  [-9.15, 38.72],
+  [-8.9, 37.05],
+  [-7.4, 36.9],
+  [-2.5, 36.7],
+  [0.5, 37.9],
+  [0.2, 39.5],
+  [2.17, 41.39],
+  [3.1, 42.45],
+  [3.0, 43.3],
+  [4.8, 43.3],
+  [5.3, 43.2],
+  [7.0, 43.6],
+  [7.4, 46.0],
+];
+const coastPoints = COAST_LONLAT.map(([lon, lat]) => project(lon, lat));
+const coastD = `${coastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
+
+/** Fronteres veïnes: només ratlla, sense nom de país — es fan notar quan la
+ * càmera s'allunya a «Projectes europeus», discretes a la resta de fites. */
+const BORDER_LONLAT: [number, number][][] = [
+  [
+    [5.5, 45.3],
+    [6.63, 45.7],
+    [7.5, 46.6],
+    [8.2, 48.3],
+    [6.8, 49.2],
+  ],
+  [
+    [8.2, 47.6],
+    [9.6, 47.65],
+  ],
+  [
+    [4.2, 50.0],
+    [2.5, 50.9],
+  ],
+];
+const borderPaths = BORDER_LONLAT.map((line) => {
+  const pts = line.map(([lon, lat]) => project(lon, lat));
+  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+});
+
+/** Catalunya, contorn més detallat: només es fa notar quan la càmera s'hi
+ * acosta a la fita final. Nord i sud com una sola massa —la frontera real ja
+ * hi passa per damunt com a ratlla. */
+const CATALONIA_LONLAT: [number, number][] = [
+  [2.9, 42.7],
+  [3.1, 42.5],
+  [3.28, 42.32],
+  [3.18, 42.26],
+  [3.2, 41.98],
+  [2.17, 41.39],
+  [1.26, 41.12],
+  [0.73, 40.72],
+  [0.63, 41.62],
+  [1.5, 42.5],
+  [1.9, 42.4],
+  [2.47, 42.4],
+];
+const catalanCoastPoints = CATALONIA_LONLAT.map(([lon, lat]) => project(lon, lat));
+const catalanCoastD = `${catalanCoastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
+
+// ── Frontera real: una ratlla pels Pirineus, a l'altura del Vallespir. ──
+const frontierA = project(0.2, 42.75);
+const frontierB = project(3.3, 42.4);
+
+/** Els llocs reals de cada fita. «Projectes europeus» comparteix coordenades
+ * amb Barcelona a propòsit: no hi va haver trasllat, és la mateixa base amb
+ * els viatges europeus a sobre. */
+const COORDS: Record<string, [number, number]> = {
+  cevenes: [3.9, 44.2],
+  portugal: [-9.15, 38.72],
+  barcelona: [2.17, 41.39],
+  europa: [2.17, 41.39],
+  pandemia: [6.63, 46.52], // Lausanne: Suïssa occidental, dins del territori suís
+  vallespir: [2.47, 42.4],
+};
+const GERMANY: [number, number] = [9.73, 52.37]; // Hannover, no Hamburg
+
+const cevenesPoint = project(...COORDS.cevenes);
+const portugalPoint = project(...COORDS.portugal);
+const barcelonaPoint = project(...COORDS.barcelona);
+const chPoint = project(...COORDS.pandemia);
+const dePoint = project(...GERMANY);
+const vaPoint = project(...COORDS.vallespir);
+
+const anchors: Point[] = milestones.map((m) => project(...COORDS[m.id]));
+
+function controlFor(a: Point, b: Point, bow: number): Point {
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  const len = Math.hypot(b.x - a.x, b.y - a.y);
+  return { x: mx, y: my - len * bow };
+}
+
+function arcD(a: Point, b: Point, bow: number): string {
+  const ctrl = controlFor(a, b, bow);
+  return `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+}
+
+function quadPoint(a: Point, ctrl: Point, b: Point, t: number): Point {
+  const u = 1 - t;
+  return {
+    x: u * u * a.x + 2 * u * t * ctrl.x + t * t * b.x,
+    y: u * u * a.y + 2 * u * t * ctrl.y + t * t * b.y,
+  };
+}
+
+function quadLength(a: Point, ctrl: Point, b: Point, samples = 12): number {
+  let len = 0;
+  let prev = a;
+  for (let s = 1; s <= samples; s++) {
+    const p = quadPoint(a, ctrl, b, s / samples);
+    len += Math.hypot(p.x - prev.x, p.y - prev.y);
+    prev = p;
+  }
+  return len;
+}
+
+/** El fantasma: tot el recorregut, sempre visible i fluix — el marc, no el
+ * viatge. Els trams sense moviment hi passen com a corba de longitud zero:
+ * inofensiu. */
+function buildGhost(points: Point[], bow: number): string {
+  let d = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const ctrl = controlFor(a, b, bow);
+    d += ` Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+/** El viatge de veres: un tram per parella de fites consecutives, saltant les
+ * que no es van moure. Cada tram porta el seu propi `data-node` (l'índex
+ * d'arribada) i la seva pròpia longitud, perquè `activate()` el pugui
+ * il·luminar sol —només el tram actiu queda fosc— sense saber res de mapes. */
+interface RouteSegment {
+  d: string;
+  len: number;
+  nodeIndex: number;
+}
+function buildSegments(points: Point[], bow: number): RouteSegment[] {
+  const segments: RouteSegment[] = [];
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    if (a.x === b.x && a.y === b.y) continue;
+    const ctrl = controlFor(a, b, bow);
+    segments.push({
+      d: `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`,
+      len: quadLength(a, ctrl, b),
+      nodeIndex: i,
+    });
+  }
+  return segments;
+}
+
+const ghostD = buildGhost(anchors, 0.09);
+const segments = buildSegments(anchors, 0.09);
+
+// ── «Projectes europeus» (fita 3): el ram de destinacions, decoratiu i
+// genèric. ──
+const FAN_DESTS: [number, number][] = [
+  [2.35, 48.86], // París
+  [12.5, 41.9], // Roma
+  [16.37, 48.2], // Viena
+  [13.4, 52.52], // Berlín
+  [4.9, 52.37], // Amsterdam
+  [-0.12, 51.5], // Londres
+];
+const fanArcs = FAN_DESTS.map(([lon, lat]) => {
+  const dest = project(lon, lat);
+  return { d: arcD(barcelonaPoint, dest, 0.18), dest };
+});
+
+// ── Pandèmia (fita 4): Suïssa → Vallespir → Alemanya → Suïssa, i algun tram
+// cap a Barcelona («el procés d'establir-se»). L'ordre és el de l'espec, no
+// alfabètic ni geogràfic. ──
+const oscillationArcs = [
+  { d: arcD(chPoint, vaPoint, 0.16), secondary: false },
+  { d: arcD(vaPoint, dePoint, 0.16), secondary: false },
+  { d: arcD(dePoint, chPoint, 0.16), secondary: false },
+  { d: arcD(chPoint, barcelonaPoint, 0.14), secondary: true },
+];
+
+// ── Fita final: contorn de Catalunya i anada i tornada centre ↔ nord, corbes
+// en sentits oposats perquè els dos trams es distingeixin en lloc de
+// superposar-se — el mateix vocabulari que «Projectes europeus». ──
+const catalanArcs = [arcD(barcelonaPoint, vaPoint, 0.15), arcD(vaPoint, barcelonaPoint, -0.15)];
+
+/** La «càmera»: mateix punt de vista per a les fites 0–2, s'allunya a
+ * «Projectes europeus» (es vegin els països veïns), es desplaça cap al nord a
+ * la Pandèmia, s'acosta a Catalunya al final. Un sol transform per fita —
+ * `activate()` només el llegeix. */
+function cameraFor(focus: Point, scale: number) {
+  return { scale, tx: VIEW.w / 2 - scale * focus.x, ty: VIEW.h / 2 - scale * focus.y };
+}
+const westFocus: Point = {
+  x: (cevenesPoint.x + portugalPoint.x + barcelonaPoint.x) / 3,
+  y: (cevenesPoint.y + portugalPoint.y + barcelonaPoint.y) / 3,
+};
+const europeFocus = project((LON_MIN + LON_MAX) / 2, (LAT_MIN + LAT_MAX) / 2);
+// Nomes Suïssa i Alemanya: Vallespir hi entraria massa al sud i tornaria a
+// abaixar la càmera just quan cal pujar-la.
+const oscillationFocus: Point = { x: (chPoint.x + dePoint.x) / 2, y: (chPoint.y + dePoint.y) / 2 };
+const catalanFocus: Point = { x: (barcelonaPoint.x + vaPoint.x) / 2, y: (barcelonaPoint.y + vaPoint.y) / 2 };
+
+const CAMERA = [
+  cameraFor(westFocus, 1.3),
+  cameraFor(westFocus, 1.3),
+  cameraFor(westFocus, 1.3),
+  cameraFor(europeFocus, 0.75),
+  cameraFor(oscillationFocus, 0.85),
+  cameraFor(catalanFocus, 2.4),
+];
+const cameraAttr = CAMERA.map((cam) => `${cam.scale}:${cam.tx.toFixed(1)}:${cam.ty.toFixed(1)}`).join(',');
 
 const last = milestones[milestones.length - 1];
 const lastCopy = c.milestones[c.milestones.length - 1];
@@ -76,68 +305,134 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   <p class="figure__zone ui" data-zone>{lastCopy.zoneLabel}</p>
 
   <div class="figure__body">
-    <svg
-      class="diagram"
-      viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
-      data-timeline-svg
-      data-rows={rows}
-      style={`--total:${total}`}
-    >
-      <rect
-        class="diagram__far"
-        x={FRONTIER_X}
-        y={TOP}
-        width={VIEW.w - FRONTIER_X}
-        height={BOTTOM - TOP}
-      />
+    <svg class="figure__map" viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} data-timeline-svg data-camera={cameraAttr}>
+      <defs>
+        <pattern id="timeline-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+          <line x1="0" y1="0" x2="0" y2="6" class="figure__hatch-line" />
+        </pattern>
+      </defs>
 
-      {
-        zoneKeys.map((zone) => (
-          <line class="diagram__lane" x1={LANE[zone]} x2={LANE[zone]} y1={TOP} y2={BOTTOM} />
-        ))
-      }
+      <g class="figure__world">
+        <path class="figure__land" d={coastD} fill="url(#timeline-hatch)" />
+        <path class="figure__land-outline" d={coastD} vector-effect="non-scaling-stroke" />
 
-      <line class="diagram__frontier" x1={FRONTIER_X} x2={FRONTIER_X} y1={TOP} y2={BOTTOM} />
-      <text
-        class="diagram__frontier-label"
-        x={FRONTIER_X - 8}
-        y={rowY(1)}
-        transform={`rotate(-90 ${FRONTIER_X - 8} ${rowY(1)})`}>{c.frontier}</text
-      >
+        {borderPaths.map((d) => <path class="figure__border" d={d} vector-effect="non-scaling-stroke" />)}
 
-      {zoneKeys.map((zone) => <text class="diagram__zone" x={LANE[zone]} y={14}>{c.zoneNames[zone]}</text>)}
+        <line
+          class="figure__frontier"
+          x1={frontierA.x}
+          y1={frontierA.y}
+          x2={frontierB.x}
+          y2={frontierB.y}
+          vector-effect="non-scaling-stroke"
+        />
 
-      <line class="diagram__row" x1={8} x2={VIEW.w - 8} y1={0} y2={0} />
-
-      <path class="diagram__ghost" d={path} />
-      <path class="diagram__trace" d={path} data-trace data-ratios={ratios} />
-
-      {
-        spans.map((span) => (
-          <line
-            class="diagram__span"
-            data-node={span.i}
-            x1={span.from}
-            x2={span.to}
-            y1={span.y}
-            y2={span.y}
+        <g class="figure__oscillation" data-node="4">
+          {
+            oscillationArcs.map((arc, i) => (
+              <path
+                class:list={['figure__oscillation-arc', { 'figure__oscillation-arc--secondary': arc.secondary }]}
+                d={arc.d}
+                style={`--reveal-delay:${(i * 0.35).toFixed(2)}s`}
+                vector-effect="non-scaling-stroke"
+              />
+            ))
+          }
+          <circle
+            class="figure__oscillation-dot"
+            cx={dePoint.x}
+            cy={dePoint.y}
+            r="3"
+            style="--reveal-delay:0.35s"
+            vector-effect="non-scaling-stroke"
           />
-        ))
-      }
+        </g>
 
-      {
-        milestones.map((milestone, i) =>
-          milestone.zones.map((zone, at) => (
-            <circle
-              class:list={['diagram__node', { 'diagram__node--tied': at > 0 }]}
-              data-node={i}
-              cx={LANE[zone]}
-              cy={rowY(i)}
-              r={at > 0 ? 3.2 : 4.4}
+        <g class="figure__fan" data-node="3">
+          {
+            fanArcs.map((arc, i) => (
+              <>
+                <path
+                  class="figure__fan-arc"
+                  d={arc.d}
+                  style={`--reveal-delay:${(i * 0.12).toFixed(2)}s`}
+                  vector-effect="non-scaling-stroke"
+                />
+                <circle
+                  class="figure__fan-dot"
+                  cx={arc.dest.x}
+                  cy={arc.dest.y}
+                  r="2"
+                  style={`--reveal-delay:${(i * 0.12).toFixed(2)}s`}
+                  vector-effect="non-scaling-stroke"
+                />
+              </>
+            ))
+          }
+        </g>
+
+        <g class="figure__catalonia" data-node="5">
+          <path
+            class="figure__catalonia-land"
+            d={catalanCoastD}
+            fill="url(#timeline-hatch)"
+            style="--reveal-delay:0s"
+          />
+          <path class="figure__catalonia-land-outline" d={catalanCoastD} style="--reveal-delay:0s" vector-effect="non-scaling-stroke" />
+          {
+            catalanArcs.map((d, i) => (
+              <path
+                class="figure__catalonia-arc"
+                d={d}
+                style={`--reveal-delay:${(0.3 + i * 0.35).toFixed(2)}s`}
+                vector-effect="non-scaling-stroke"
+              />
+            ))
+          }
+          <circle
+            class="figure__catalonia-dot"
+            cx={barcelonaPoint.x}
+            cy={barcelonaPoint.y}
+            r="2.5"
+            style="--reveal-delay:0.15s"
+            vector-effect="non-scaling-stroke"
+          />
+          <circle
+            class="figure__catalonia-dot"
+            cx={vaPoint.x}
+            cy={vaPoint.y}
+            r="2.5"
+            style="--reveal-delay:0.65s"
+            vector-effect="non-scaling-stroke"
+          />
+        </g>
+
+        <path class="figure__route-ghost" d={ghostD} vector-effect="non-scaling-stroke" />
+        {
+          segments.map((seg) => (
+            <path
+              class="figure__route-segment"
+              data-node={seg.nodeIndex}
+              d={seg.d}
+              style={`--seg-len:${seg.len.toFixed(1)}`}
+              vector-effect="non-scaling-stroke"
             />
-          )),
-        )
-      }
+          ))
+        }
+
+        {
+          milestones.map((_, i) => (
+            <circle
+              class="figure__node"
+              data-node={i}
+              cx={anchors[i].x}
+              cy={anchors[i].y}
+              r="4.2"
+              vector-effect="non-scaling-stroke"
+            />
+          ))
+        }
+      </g>
     </svg>
 
     <div class="langs">
@@ -153,8 +448,8 @@ const lastCopy = c.milestones[c.milestones.length - 1];
       </ul>
 
       <p class="langs__key ui">
-        <span class="langs__key-item" data-state="1"><span class="pip" />{c.stateLabels.acquired}</span>
-        <span class="langs__key-item" data-state="2"><span class="pip" />{c.stateLabels.working}</span>
+        <span class="langs__key-item" data-state="1"><span class="pip" />{c.stateLabels.learning}</span>
+        <span class="langs__key-item" data-state="2"><span class="pip" />{c.stateLabels.acquired}</span>
       </p>
     </div>
   </div>
@@ -205,90 +500,104 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     text-wrap: pretty;
   }
 
-  /* ── Eix territori ── */
-  .diagram {
+  /* ── Eix territori: el mapa. `overflow: hidden` a propòsit —la càmera
+     retalla a la vora del quadre, no vessa per la pàgina. ── */
+  .figure__map {
     width: 100%;
-    overflow: visible;
+    overflow: hidden;
     font-family: var(--font-ui);
   }
 
-  .diagram__far {
-    fill: var(--accent-soft);
-    opacity: 0.6;
-  }
-
-  .diagram__lane {
+  .figure__hatch-line {
     stroke: var(--rule);
     stroke-width: 1;
   }
 
-  .diagram__frontier {
+  .figure__world {
+    transform-origin: 0 0;
+    transform: translate(calc(var(--cam-x, 0) * 1px), calc(var(--cam-y, 0) * 1px)) scale(var(--cam-scale, 1));
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  .figure__land {
+    stroke: none;
+    opacity: 0.5;
+  }
+
+  .figure__land-outline {
+    fill: none;
+    stroke: var(--rule);
+    stroke-width: 1;
+  }
+
+  .figure__border {
+    fill: none;
+    stroke: var(--rule);
+    stroke-width: 1;
+    stroke-dasharray: 1.5 2;
+    opacity: 0.8;
+  }
+
+  .figure__frontier {
     stroke: var(--accent);
     stroke-width: 1;
     stroke-dasharray: 2 3;
-    opacity: 0.6;
+    opacity: 0.65;
   }
 
-  .diagram__frontier-label {
-    fill: var(--accent);
-    font-size: 11.5px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    text-anchor: middle;
-  }
-
-  .diagram__zone {
-    fill: var(--ink-faint);
-    font-size: 13px;
-    font-weight: var(--w-medium);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    text-anchor: middle;
-  }
-
-  /* Filera activa: l'únic element que es mou de manera contínua amb el scroll. */
-  .diagram__row {
-    stroke: var(--ink);
-    stroke-width: 1;
-    opacity: 0;
-    transform: translateY(calc(var(--row-y, 0) * 1px));
-    transition:
-      transform var(--dur-slow) var(--ease-out),
-      opacity var(--dur-base) var(--ease-out);
-  }
-
-  .diagram__ghost,
-  .diagram__trace {
+  .figure__route-ghost {
     fill: none;
+    stroke: var(--rule);
+    stroke-width: 1.2;
     stroke-linejoin: round;
     stroke-linecap: round;
   }
 
-  .diagram__ghost {
-    stroke: var(--rule);
-    stroke-width: 1;
-  }
-
-  .diagram__trace {
-    --draw: 1;
-    stroke: var(--ink);
-    stroke-width: 1.6;
-    stroke-dasharray: calc(var(--total) * 1px);
-    stroke-dashoffset: calc(var(--total) * (1 - var(--draw)) * 1px);
+  /*
+   * Cada tram és el seu propi traç, sempre a tinta plena — només la longitud
+   * dibuixada (`stroke-dashoffset`) anima; el color no, perquè un tram no ha
+   * de veure's pàl·lid mentre creix (era el problema d'abans). Sense JS: tot
+   * dibuixat, com si ja s'hagués fet el viatge. Amb JS: amagat de bon
+   * començament (`is-live` per defecte), i només el tram «current» queda
+   * fosc — els anteriors s'apaguen en lloc de quedar-se tots ratllats.
+   */
+  .figure__route-segment {
+    fill: none;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    stroke: var(--ink-faint);
+    stroke-width: 1.3;
+    stroke-dasharray: var(--seg-len, 0);
+    stroke-dashoffset: 0;
     transition: stroke-dashoffset var(--dur-slow) var(--ease-out);
   }
 
-  .diagram__span {
-    stroke: var(--ink);
-    stroke-width: 1.6;
-    transition: opacity var(--dur-base) var(--ease-out);
+  .figure.is-live .figure__route-segment {
+    stroke-dashoffset: var(--seg-len, 0);
   }
 
-  /* L'anella de paper separa el node del traç que hi passa per sota. */
-  .diagram__node {
-    fill: var(--ink);
-    stroke: var(--paper);
-    stroke-width: 1.6;
+  .figure.is-live .figure__route-segment[data-state='current'] {
+    stroke: var(--ink);
+    stroke-width: 1.8;
+    stroke-dashoffset: 0;
+  }
+
+  .figure.is-live .figure__route-segment[data-state='past'] {
+    stroke: var(--ink-faint);
+    stroke-width: 1.3;
+    stroke-dashoffset: 0;
+  }
+
+  /*
+   * El node comença blanc (com «future») fins i tot a la primera fita: només
+   * s'enfosqueix quan `activate()` hi posa «current», i amb un retard d'un
+   * `--dur-slow` perquè s'encengui just quan el tram que hi arriba acaba de
+   * dibuixar-se, no alhora. L'anella de paper el separa del traç de sota.
+   */
+  .figure__node {
+    fill: var(--paper);
+    stroke: var(--rule);
+    stroke-width: 1.2;
     transform-box: fill-box;
     transform-origin: center;
     transition:
@@ -297,42 +606,187 @@ const lastCopy = c.milestones[c.milestones.length - 1];
       transform var(--dur-base) var(--ease-out);
   }
 
-  .diagram__node--tied {
-    fill: var(--paper);
-    stroke: var(--ink);
-    stroke-width: 1.4;
-  }
-
-  .figure.is-live .diagram__row {
-    opacity: 0.5;
-  }
-
-  .figure.is-live .diagram__node[data-state='future'] {
+  .figure.is-live .figure__node[data-state='future'] {
     fill: var(--paper);
     stroke: var(--rule);
     stroke-width: 1.2;
   }
 
-  .figure.is-live .diagram__node[data-state='past'] {
+  .figure.is-live .figure__node[data-state='past'] {
     fill: var(--ink-faint);
     stroke: var(--paper);
   }
 
-  .figure.is-live .diagram__node[data-state='current'] {
+  .figure.is-live .figure__node[data-state='current'] {
     fill: var(--accent);
     stroke: var(--paper);
     stroke-width: 2;
     transform: scale(1.4);
+    transition-delay: var(--dur-slow);
   }
 
-  .figure.is-live .diagram__node--tied[data-state='current'] {
-    fill: var(--paper);
-    stroke: var(--accent);
-    stroke-width: 1.8;
+  /* ── Rams decoratius: «Projectes europeus» (moltes destinacions), la
+     Pandèmia (anada i tornada) i la fita final (Catalunya). Sense JS es veuen
+     sencers. Amb JS, cada element hi entra en el seu propi moment
+     (`--reveal-delay`): no apareixen tots alhora. ── */
+  .figure__fan,
+  .figure__oscillation,
+  .figure__catalonia {
+    opacity: 1;
+    transition: opacity var(--dur-slow) var(--ease-out);
   }
 
-  .figure.is-live .diagram__span[data-state='future'] {
+  .figure.is-live .figure__fan[data-state='future'],
+  .figure.is-live .figure__oscillation[data-state='future'],
+  .figure.is-live .figure__catalonia[data-state='future'] {
     opacity: 0;
+  }
+
+  .figure.is-live .figure__fan[data-state='past'],
+  .figure.is-live .figure__oscillation[data-state='past'],
+  .figure.is-live .figure__catalonia[data-state='past'] {
+    opacity: 0.4;
+  }
+
+  .figure__fan-arc,
+  .figure__fan-dot,
+  .figure__oscillation-arc,
+  .figure__catalonia-arc,
+  .figure__catalonia-land,
+  .figure__catalonia-land-outline,
+  .figure__catalonia-dot {
+    opacity: 1;
+    transition: opacity var(--dur-slow) var(--ease-out);
+    transition-delay: 0s;
+  }
+
+  .figure.is-live .figure__fan[data-state='future'] .figure__fan-arc,
+  .figure.is-live .figure__fan[data-state='future'] .figure__fan-dot,
+  .figure.is-live .figure__oscillation[data-state='future'] .figure__oscillation-arc,
+  .figure.is-live .figure__catalonia[data-state='future'] .figure__catalonia-arc,
+  .figure.is-live .figure__catalonia[data-state='future'] .figure__catalonia-land,
+  .figure.is-live .figure__catalonia[data-state='future'] .figure__catalonia-land-outline,
+  .figure.is-live .figure__catalonia[data-state='future'] .figure__catalonia-dot {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+
+  .figure.is-live .figure__fan[data-state='current'] .figure__fan-arc,
+  .figure.is-live .figure__fan[data-state='current'] .figure__fan-dot,
+  .figure.is-live .figure__oscillation[data-state='current'] .figure__oscillation-arc,
+  .figure.is-live .figure__catalonia[data-state='current'] .figure__catalonia-arc,
+  .figure.is-live .figure__catalonia[data-state='current'] .figure__catalonia-land,
+  .figure.is-live .figure__catalonia[data-state='current'] .figure__catalonia-land-outline,
+  .figure.is-live .figure__catalonia[data-state='current'] .figure__catalonia-dot {
+    opacity: 1;
+    transition-delay: var(--reveal-delay, 0s);
+  }
+
+  .figure__fan-arc {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 0.7;
+  }
+
+  .figure__fan-dot {
+    fill: var(--paper);
+    stroke: var(--ink-faint);
+    stroke-width: 1;
+  }
+
+  .figure__oscillation-arc {
+    fill: none;
+    stroke: var(--ink-soft);
+    stroke-width: 0.9;
+  }
+
+  .figure__oscillation-arc--secondary {
+    stroke: var(--ink-faint);
+    stroke-width: 0.7;
+    stroke-dasharray: 1.5 2;
+  }
+
+  /*
+   * El punt d'Alemanya s'encén a part del seu propi ram: apareix (opacitat)
+   * amb la resta de l'oscil·lació, però només s'enfosqueix («fill»/«stroke»)
+   * mig segon més tard — quan el tram Suïssa→Vallespir→Alemanya ja hi hauria
+   * arribat, no a l'instant que el ram sencer es fa visible.
+   */
+  .figure__oscillation-dot {
+    opacity: 1;
+    fill: var(--paper);
+    stroke: var(--ink-faint);
+    stroke-width: 1.2;
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      fill var(--dur-slow) var(--ease-out),
+      stroke var(--dur-slow) var(--ease-out);
+    transition-delay: 0s;
+  }
+
+  .figure.is-live .figure__oscillation[data-state='future'] .figure__oscillation-dot {
+    opacity: 0;
+  }
+
+  .figure.is-live .figure__oscillation[data-state='past'] .figure__oscillation-dot {
+    opacity: 1;
+    fill: var(--ink-faint);
+    stroke: var(--paper);
+  }
+
+  .figure.is-live .figure__oscillation[data-state='current'] .figure__oscillation-dot {
+    opacity: 1;
+    fill: var(--accent);
+    stroke: var(--accent);
+    transition:
+      opacity var(--dur-slow) var(--ease-out) var(--reveal-delay, 0s),
+      fill var(--dur-slow) var(--ease-out) 0.7s,
+      stroke var(--dur-slow) var(--ease-out) 0.7s;
+  }
+
+  .figure__catalonia-land {
+    stroke: none;
+    opacity: 0.5;
+  }
+
+  .figure__catalonia-land-outline {
+    fill: none;
+    stroke: var(--rule);
+    stroke-width: 1;
+  }
+
+  .figure__catalonia-arc {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1;
+  }
+
+  .figure__catalonia-dot {
+    fill: var(--paper);
+    stroke: var(--ink-faint);
+    stroke-width: 1;
+  }
+
+  /*
+   * Mentre `is-priming` hi és (només a l'arrencada, un instant), cap
+   * d'aquests elements no anima el pas d'amagat a visible: `activate(0)`
+   * aplica l'estat 0 de cop. El node hi queda fora expressament —el primer
+   * punt sí que s'ha de veure blanc i enfosquir-se amb calma, no aparèixer ja
+   * fosc.
+   */
+  .figure.is-priming .figure__route-segment,
+  .figure.is-priming .figure__fan,
+  .figure.is-priming .figure__oscillation,
+  .figure.is-priming .figure__catalonia,
+  .figure.is-priming .figure__fan-arc,
+  .figure.is-priming .figure__fan-dot,
+  .figure.is-priming .figure__oscillation-arc,
+  .figure.is-priming .figure__oscillation-dot,
+  .figure.is-priming .figure__catalonia-arc,
+  .figure.is-priming .figure__catalonia-land,
+  .figure.is-priming .figure__catalonia-land-outline,
+  .figure.is-priming .figure__catalonia-dot {
+    transition: none !important;
   }
 
   /* ── Eix llengua ── */

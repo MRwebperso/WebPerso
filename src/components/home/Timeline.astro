@@ -29,8 +29,8 @@ const steps = milestones.map((milestone, i) => {
   return {
     milestone,
     copy,
-    working: langKeys.filter((key) => milestone.langs[key] === 2).map((key) => c.langNames[key]),
-    acquired: langKeys.filter((key) => milestone.langs[key] === 1).map((key) => c.langNames[key]),
+    acquired: langKeys.filter((key) => milestone.langs[key] === 2).map((key) => c.langNames[key]),
+    learning: langKeys.filter((key) => milestone.langs[key] === 1).map((key) => c.langNames[key]),
   };
 });
 ---
@@ -43,7 +43,7 @@ const steps = milestones.map((milestone, i) => {
 
     <ol class="steps">
       {
-        steps.map(({ milestone, copy, working, acquired }) => (
+        steps.map(({ milestone, copy, acquired, learning }) => (
           <li
             class="step"
             data-timeline-step
@@ -61,16 +61,16 @@ const steps = milestones.map((milestone, i) => {
             <dl class="axes ui">
               <dt>{c.axisLabels.zone}</dt>
               <dd>{copy.zoneLabel}</dd>
-              {working.length > 0 && (
-                <Fragment>
-                  <dt>{c.axisLabels.working}</dt>
-                  <dd>{working.join(', ')}</dd>
-                </Fragment>
-              )}
               {acquired.length > 0 && (
                 <Fragment>
                   <dt>{c.axisLabels.acquired}</dt>
                   <dd>{acquired.join(', ')}</dd>
+                </Fragment>
+              )}
+              {learning.length > 0 && (
+                <Fragment>
+                  <dt>{c.axisLabels.learning}</dt>
+                  <dd>{learning.join(', ')}</dd>
                 </Fragment>
               )}
             </dl>
@@ -264,10 +264,8 @@ const steps = milestones.map((milestone, i) => {
     if (!root || !figure || steps.length === 0) return;
 
     const svg = figure.querySelector<SVGSVGElement>('[data-timeline-svg]');
-    const trace = figure.querySelector<SVGPathElement>('[data-trace]');
     const nodes = Array.from(figure.querySelectorAll<SVGElement>('[data-node]'));
-    const ratios = (trace?.dataset.ratios ?? '').split(',').map(Number);
-    const rows = (svg?.dataset.rows ?? '').split(',').map(Number);
+    const camera = (svg?.dataset.camera ?? '').split(',').map((entry) => entry.split(':').map(Number));
 
     const pips = new Map<string, HTMLElement>();
     for (const pip of figure.querySelectorAll<HTMLElement>('[data-lang]')) {
@@ -279,7 +277,11 @@ const steps = milestones.map((milestone, i) => {
     const zoneEl = figure.querySelector<HTMLElement>('[data-zone]');
 
     root.classList.add('is-live');
-    figure.classList.add('is-live');
+    // 'is-priming' talla les transicions de traç/ram perquè el primer activate()
+    // no es vegi com un flaix (visible → amagat): s'aplica l'estat 0 instantani
+    // i, un cop el navegador l'ha pintat (el `void offsetHeight` ho força), es
+    // treu la classe i les transicions tornen per als canvis reals de l'usuari.
+    figure.classList.add('is-live', 'is-priming');
 
     let current = -1;
 
@@ -298,8 +300,10 @@ const steps = milestones.map((milestone, i) => {
         const at = Number(node.dataset.node);
         node.dataset.state = at < index ? 'past' : at === index ? 'current' : 'future';
       }
-      trace?.style.setProperty('--draw', String(ratios[index] ?? 1));
-      svg?.style.setProperty('--row-y', String(rows[index] ?? 0));
+      const [scale, camX, camY] = camera[index] ?? [1, 0, 0];
+      svg?.style.setProperty('--cam-scale', String(scale));
+      svg?.style.setProperty('--cam-x', String(camX));
+      svg?.style.setProperty('--cam-y', String(camY));
 
       // Eix llengua.
       for (const pair of (step.dataset.langs ?? '').split(',')) {
@@ -342,6 +346,8 @@ const steps = milestones.map((milestone, i) => {
 
     for (const step of steps) observer.observe(step);
     activate(0);
+    void figure.offsetHeight;
+    figure.classList.remove('is-priming');
   };
 
   bindTimeline();
