@@ -121,11 +121,22 @@ const COUNTRIES: [number, number][][] = [
     [-7.0, 43.55],
     [-5.0, 43.55],
     [-3.0, 43.42],
+    // Pirineu: les mateixes coordenades que `FRONTIER_LONLAT` i que l'anell
+    // francès, perquè la ratlla de la frontera hi caigui exactament al damunt.
     [-1.79, 43.35],
     [-0.7, 42.85],
     [0.65, 42.7],
+    [1.15, 42.72],
+    [1.42, 42.65],
     [1.72, 42.5],
-    [3.1, 42.43],
+    [2.05, 42.35],
+    [2.42, 42.36],
+    [2.65, 42.42],
+    [3.05, 42.43],
+    [3.32, 42.32],
+    [3.18, 42.26],
+    [3.13, 41.85],
+    [2.85, 41.7],
     [2.17, 41.39],
     [1.25, 41.1],
     [0.87, 40.72],
@@ -180,8 +191,17 @@ const COUNTRIES: [number, number][][] = [
     [5.35, 43.32],
     [4.85, 43.35],
     [3.05, 43.02],
-    [3.1, 42.43],
+    [3.03, 42.92],
+    [3.05, 42.72],
+    [3.16, 42.44],
+    // Pirineu, d'est a oest: mateixes coordenades que l'anell espanyol.
+    [3.05, 42.43],
+    [2.65, 42.42],
+    [2.42, 42.36],
+    [2.05, 42.35],
     [1.72, 42.5],
+    [1.42, 42.65],
+    [1.15, 42.72],
     [0.65, 42.7],
     [-0.7, 42.85],
   ],
@@ -426,31 +446,74 @@ function ringD(ring: [number, number][]): string {
 }
 const countryPaths = COUNTRIES.map(ringD);
 
-/** Catalunya, contorn més detallat: només es fa notar quan la càmera s'hi
- * acosta a la fita final. Nord i sud com una sola massa —la frontera real ja
- * hi passa per damunt com a ratlla. */
+/**
+ * Catalunya sencera, Nord i Sud com una sola massa: de Salses als Ports, de
+ * la Ribagorça al cap de Creus. La frontera d'estat hi passa pel mig —és
+ * `FRONTIER` qui la dibuixa, i és tot el sentit de la fita final: el contorn
+ * no s'atura on s'atura l'estat.
+ *
+ * A la darrera fita la càmera hi entra a fons i aquest contorn passa a ser el
+ * mapa; per això té més punts que els anells de país, i per això el traç és
+ * més marcat que el d'ells.
+ */
 const CATALONIA_LONLAT: [number, number][] = [
-  [2.9, 42.7],
-  [3.1, 42.5],
-  [3.28, 42.32],
-  [3.18, 42.26],
-  [3.2, 41.98],
-  [2.17, 41.39],
-  [1.26, 41.12],
-  [0.73, 40.72],
-  [0.63, 41.62],
-  [1.5, 42.5],
-  [1.9, 42.4],
-  [2.47, 42.4],
+  [3.03, 42.92], // Salses, límit nord de la Catalunya del Nord
+  [3.05, 42.72], // Canet
+  [3.03, 42.55], // Argelers
+  [3.16, 42.44], // Cervera de la Marenda
+  [3.32, 42.32], // cap de Creus
+  [3.18, 42.26], // Roses
+  [3.13, 41.85], // Palamós
+  [2.85, 41.7], // Lloret
+  [2.17, 41.39], // Barcelona
+  [1.62, 41.2], // el Garraf
+  [1.25, 41.1], // Tarragona
+  [1.06, 41.06], // Cambrils
+  [0.87, 40.72], // delta de l'Ebre
+  [0.72, 40.55],
+  [0.28, 40.52], // els Ports
+  [0.2, 40.8], // el Matarranya
+  [0.33, 41.3],
+  [0.3, 41.6], // la Llitera
+  [0.45, 41.9],
+  [0.72, 42.3], // la Ribagorça
+  [0.65, 42.68], // la Val d'Aran
+  [0.8, 42.83],
+  [1.15, 42.72],
+  [1.42, 42.65], // Andorra
+  [1.72, 42.5], // la Cerdanya
+  [1.98, 42.62], // el Capcir
+  [2.12, 42.87], // el Donasà
+  [2.55, 42.92], // les Corberes
 ];
 const catalanCoastPoints = CATALONIA_LONLAT.map(([lon, lat]) => project(lon, lat));
 const catalanCoastD = `${catalanCoastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
 
-// ── Frontera real: una ratlla pels Pirineus, a l'altura del Vallespir. Sempre
-// visible, ara que hi ha contorns de països de veres a sota i la ratlla hi cau
-// al damunt en lloc de flotar sola: és el que anuncia el peu de la figura. ──
-const frontierA = project(0.2, 42.75);
-const frontierB = project(3.3, 42.4);
+/**
+ * La frontera d'estat pels Pirineus. Ja no és una ratlla recta de banda a
+ * banda: a la fita final la càmera hi és a sobre i una recta no hi passaria
+ * per on hi passa de veres. Els mateixos punts serveixen d'aresta comuna als
+ * anells d'Espanya i de França, així la ratlla de punts cau exactament sobre
+ * la vora dels dos països i no uns quants quilòmetres al costat.
+ *
+ * El tram que compta és `[2.42, 42.36]`, el coll d'Ares: passa just al sud de
+ * Prats de Molló, que és on para el punt de la darrera fita.
+ */
+const FRONTIER_LONLAT: [number, number][] = [
+  [-1.79, 43.35],
+  [-0.7, 42.85],
+  [0.65, 42.7],
+  [1.15, 42.72],
+  [1.42, 42.65],
+  [1.72, 42.5],
+  [2.05, 42.35],
+  [2.42, 42.36],
+  [2.65, 42.42],
+  [3.05, 42.43],
+];
+const frontierD = FRONTIER_LONLAT.map(([lon, lat]) => project(lon, lat))
+  .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+  .join(' ');
 
 /** Els llocs reals de cada fita. «Projectes europeus» comparteix coordenades
  * amb Barcelona a propòsit: no hi va haver trasllat, és la mateixa base amb
@@ -543,10 +606,23 @@ const oscillationArcs = [
   { d: arcD(chPoint, barcelonaPoint, 0.14), secondary: true },
 ];
 
-// ── Fita final: contorn de Catalunya i anada i tornada centre ↔ nord, corbes
-// en sentits oposats perquè els dos trams es distingeixin en lloc de
-// superposar-se — el mateix vocabulari que «Projectes europeus». ──
-const catalanArcs = [arcD(barcelonaPoint, vaPoint, 0.15), arcD(vaPoint, barcelonaPoint, -0.15)];
+/**
+ * Fita final: el ram de la feina d'ara. Surt de Prats de Molló cap a les
+ * ciutats on hi ha els encàrrecs i els interlocutors, als dos costats de la
+ * frontera —el mateix vocabulari que «Projectes europeus», però a l'escala de
+ * casa: allà eren capitals europees, aquí són cinc ciutats a dues hores.
+ */
+const CATALAN_DESTS: [number, number][] = [
+  [2.895, 42.698], // Perpinyà
+  [2.422, 42.617], // Prada
+  [2.824, 41.983], // Girona
+  [2.174, 41.387], // Barcelona
+  [0.626, 41.617], // Lleida
+];
+const catalanArcs = CATALAN_DESTS.map(([lon, lat]) => {
+  const dest = project(lon, lat);
+  return { d: arcD(vaPoint, dest, 0.16), dest };
+});
 
 /** La «càmera»: mateix punt de vista per a les fites 0–2, s'allunya a
  * «Projectes europeus» (es vegin els països veïns), es desplaça cap al nord a
@@ -563,7 +639,28 @@ const europeFocus = project((LON_MIN + LON_MAX) / 2, (LAT_MIN + LAT_MAX) / 2);
 // Nomes Suïssa i Alemanya: Vallespir hi entraria massa al sud i tornaria a
 // abaixar la càmera just quan cal pujar-la.
 const oscillationFocus: Point = { x: (chPoint.x + dePoint.x) / 2, y: (chPoint.y + dePoint.y) / 2 };
-const catalanFocus: Point = { x: (barcelonaPoint.x + vaPoint.x) / 2, y: (barcelonaPoint.y + vaPoint.y) / 2 };
+
+/**
+ * A la fita final el quadre és Catalunya sencera i prou: l'enquadrament surt
+ * del contorn mateix, no d'un nombre triat a ull, així que si un dia el
+ * contorn canvia la càmera l'hi segueix. Abans hi havia el punt mitjà entre
+ * Barcelona i el Vallespir a 2,4×, i el país no hi cabia ni s'hi reconeixia.
+ */
+const catBox = catalanCoastPoints.reduce(
+  (box, p) => ({
+    minX: Math.min(box.minX, p.x),
+    maxX: Math.max(box.maxX, p.x),
+    minY: Math.min(box.minY, p.y),
+    maxY: Math.max(box.maxY, p.y),
+  }),
+  { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
+);
+const CAT_PAD = 26;
+const catalanFocus: Point = { x: (catBox.minX + catBox.maxX) / 2, y: (catBox.minY + catBox.maxY) / 2 };
+const catalanScale = Math.min(
+  (VIEW.w - CAT_PAD * 2) / (catBox.maxX - catBox.minX),
+  (VIEW.h - CAT_PAD * 2) / (catBox.maxY - catBox.minY),
+);
 
 // La primera fita és un únic punt fosc, no un territori: la càmera hi entra
 // de prop, com a la fita final, i s'allunya a «Évora i Lisboa» per fer lloc a
@@ -574,7 +671,7 @@ const CAMERA = [
   cameraFor(westFocus, 1.3),
   cameraFor(europeFocus, 0.75),
   cameraFor(oscillationFocus, 0.85),
-  cameraFor(catalanFocus, 2.4),
+  cameraFor(catalanFocus, catalanScale),
 ];
 const cameraAttr = CAMERA.map((cam) => `${cam.scale}:${cam.tx.toFixed(1)}:${cam.ty.toFixed(1)}`).join(',');
 
@@ -592,7 +689,23 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   <div class="figure__body">
     <svg class="figure__map" viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} data-timeline-svg data-camera={cameraAttr}>
       <defs>
-        <pattern id="timeline-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+        {/*
+          La trama es mesura en unitats del mapa, així que la càmera l'amplia
+          amb tota la resta: a 6× quedaven quatre ratlles escampades per tot el
+          quadre, que és justament el que no ha de semblar. `activate()` hi
+          escriu `patternTransform` amb l'escala inversa, de manera que el pas
+          de la trama a la pantalla és el mateix a totes les fites. La ratlla
+          hi va per dins, i per tant s'encongeix amb la casella: la densitat es
+          manté sola.
+        */}
+        <pattern
+          id="timeline-hatch"
+          width="6"
+          height="6"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(38)"
+          data-timeline-hatch
+        >
           <line x1="0" y1="0" x2="0" y2="6" class="figure__hatch-line" />
         </pattern>
       </defs>
@@ -607,7 +720,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           }
         </g>
 
-        <line class="figure__frontier" x1={frontierA.x} y1={frontierA.y} x2={frontierB.x} y2={frontierB.y} />
+        <path class="figure__frontier" d={frontierD} />
 
         <g class="figure__oscillation" data-node="4">
           {
@@ -662,31 +775,25 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           />
           <path class="figure__catalonia-land-outline" d={catalanCoastD} style="--reveal-delay:0s" vector-effect="non-scaling-stroke" />
           {
-            catalanArcs.map((d, i) => (
-              <path
-                class="figure__catalonia-arc"
-                d={d}
-                style={`--reveal-delay:${(0.3 + i * 0.35).toFixed(2)}s`}
-                vector-effect="non-scaling-stroke"
-              />
+            catalanArcs.map((arc, i) => (
+              <>
+                <path
+                  class="figure__catalonia-arc"
+                  d={arc.d}
+                  style={`--reveal-delay:${(0.3 + i * 0.12).toFixed(2)}s`}
+                  vector-effect="non-scaling-stroke"
+                />
+                <circle
+                  class="figure__catalonia-dot"
+                  cx={arc.dest.x}
+                  cy={arc.dest.y}
+                  r="2"
+                  style={`--reveal-delay:${(0.3 + i * 0.12).toFixed(2)}s`}
+                  vector-effect="non-scaling-stroke"
+                />
+              </>
             ))
           }
-          <circle
-            class="figure__catalonia-dot"
-            cx={barcelonaPoint.x}
-            cy={barcelonaPoint.y}
-            r="2.5"
-            style="--reveal-delay:0.15s"
-            vector-effect="non-scaling-stroke"
-          />
-          <circle
-            class="figure__catalonia-dot"
-            cx={vaPoint.x}
-            cy={vaPoint.y}
-            r="2.5"
-            style="--reveal-delay:0.65s"
-            vector-effect="non-scaling-stroke"
-          />
         </g>
 
         {
@@ -821,6 +928,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
    * `--cam-scale`, que és el que feia l'efecte i l'únic que en volíem.
    */
   .figure__frontier {
+    fill: none;
     stroke: var(--accent);
     stroke-width: calc(1 / var(--cam-scale, 1));
     stroke-dasharray: calc(2 / var(--cam-scale, 1)) calc(3 / var(--cam-scale, 1));
@@ -877,6 +985,22 @@ const lastCopy = c.milestones[c.milestones.length - 1];
    * el tram que hi arriba acaba de dibuixar-se, no alhora. L'anella de paper
    * el separa del traç de sota.
    */
+  /*
+   * Els punts es dibuixen en unitats del mapa, així que la càmera també els
+   * amplia: a la fita final, amb la càmera a fons sobre Catalunya, el punt
+   * fosc tapava mig país. Cada punt es divideix, doncs, per `--cam-scale` i
+   * queda de la mateixa mida a la pantalla a totes les fites, tant si el mapa
+   * ensenya Europa sencera com una vall.
+   */
+  .figure__node,
+  .figure__fan-dot,
+  .figure__oscillation-dot,
+  .figure__catalonia-dot {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(calc(1 / var(--cam-scale, 1)));
+  }
+
   .figure__node {
     fill: var(--paper);
     stroke: var(--rule);
@@ -914,7 +1038,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     fill: var(--accent);
     stroke: var(--paper);
     stroke-width: 2;
-    transform: scale(1.4);
+    transform: scale(calc(1.4 / var(--cam-scale, 1)));
     transition-delay: var(--dur-slow);
   }
 
@@ -1034,10 +1158,13 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     opacity: 0.5;
   }
 
+  /* A la darrera fita aquest contorn és el mapa, no un afegit: ha de guanyar
+     les vores de país que hi passen per sota —la frontera d'estat el travessa
+     pel mig i el contorn no s'hi ha d'aturar. */
   .figure__catalonia-land-outline {
     fill: none;
-    stroke: var(--rule);
-    stroke-width: 1;
+    stroke: var(--ink-soft);
+    stroke-width: 1.4;
   }
 
   .figure__catalonia-arc {

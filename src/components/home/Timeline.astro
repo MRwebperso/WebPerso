@@ -264,6 +264,7 @@ const steps = milestones.map((milestone, i) => {
     if (!root || !figure || steps.length === 0) return;
 
     const svg = figure.querySelector<SVGSVGElement>('[data-timeline-svg]');
+    const hatch = figure.querySelector<SVGPatternElement>('[data-timeline-hatch]');
     const nodes = Array.from(figure.querySelectorAll<SVGElement>('[data-node]'));
     const camera = (svg?.dataset.camera ?? '').split(',').map((entry) => entry.split(':').map(Number));
 
@@ -308,6 +309,12 @@ const steps = milestones.map((milestone, i) => {
       svg?.style.setProperty('--cam-scale', String(scale));
       svg?.style.setProperty('--cam-x', String(camX));
       svg?.style.setProperty('--cam-y', String(camY));
+      // La trama del territori es mesura en unitats del mapa i la càmera
+      // l'amplia igual que tot: a les fites de zoom fort quedaven quatre
+      // ratlles escampades. Compensada per l'escala inversa, el pas que es veu
+      // és el mateix a totes les fites. `patternTransform` no és una propietat
+      // CSS animable, així que es reescriu aquí i prou.
+      hatch?.setAttribute('patternTransform', `rotate(38) scale(${(1 / scale).toFixed(4)})`);
 
       // Eix llengua.
       for (const pair of (step.dataset.langs ?? '').split(',')) {
