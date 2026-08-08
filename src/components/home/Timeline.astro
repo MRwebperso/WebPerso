@@ -295,10 +295,14 @@ const steps = milestones.map((milestone, i) => {
       if (suffixEl) suffixEl.textContent = step.dataset.yearSuffix ?? '';
       if (zoneEl) zoneEl.textContent = step.dataset.zoneLabel ?? '';
 
-      // Eix territori.
+      // Eix territori. Quatre estats i no tres: el mapa ha de poder distingir
+      // la fita d'on es ve («prev») de les que ja han quedat més enrere
+      // («past»), perquè només les dues últimes es dibuixen. Amb un sol «past»
+      // el recorregut s'anava acumulant i al final hi havia sis punts alhora.
       for (const node of nodes) {
         const at = Number(node.dataset.node);
-        node.dataset.state = at < index ? 'past' : at === index ? 'current' : 'future';
+        node.dataset.state =
+          at === index ? 'current' : at === index - 1 ? 'prev' : at < index ? 'past' : 'future';
       }
       const [scale, camX, camY] = camera[index] ?? [1, 0, 0];
       svg?.style.setProperty('--cam-scale', String(scale));

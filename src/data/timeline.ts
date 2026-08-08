@@ -51,7 +51,11 @@ export const milestones: Six<Milestone> = [
     id: 'barcelona',
     year: 2008,
     zones: ['sud'],
-    langs: { fr: 2, pt: 2, ca: 2, es: 2, en: 2, de: 0 },
+    // L'arribada a Barcelona només tanca el portuguès: el català, el castellà i
+    // l'anglès hi comencen —és el que diu el text del pas («passen a ser les
+    // llengües de cada dia»)— i no es donen per adquirits fins a la fita
+    // següent. Aplanar-ho tot a 2 aquí feia que la columna s'omplís de cop.
+    langs: { fr: 2, pt: 2, ca: 1, es: 1, en: 1, de: 0 },
   },
   {
     id: 'europa',

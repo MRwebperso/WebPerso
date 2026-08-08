@@ -7,8 +7,8 @@
  * El territori és un mapa —costa de França i la península, projectada a mà
  * des de longitud/latitud reals— amb un punt que viatja d'una fita a la
  * següent. Cada tram del viatge és el seu propi traç (`figure__route-segment`,
- * `data-node` = índex d'arribada): només el tram actiu queda tinta fosca, els
- * anteriors s'apaguen. «Projectes europeus» i la Pandèmia porten, a més, un
+ * `data-node` = índex d'arribada): només es dibuixa el tram que s'acaba de
+ * recórrer; els anteriors es desfan. «Projectes europeus» i la Pandèmia porten, a més, un
  * ram de rutes secundàries (moltes destinacions / anada i tornada Suïssa–
  * Vallespir–Alemanya) que pengen del mateix `[data-node]` que la fita
  * corresponent, així que `activate(index)` a `Timeline.astro` els sincronitza
@@ -18,9 +18,12 @@
  * allunyar-se a «Projectes europeus» perquè s'hi vegin els països veïns, i
  * s'acosta de nou a Catalunya a la fita final.
  *
- * Els punts encara no arribats («future») no es dibuixen: ni el punt ni el
- * tram que hi mena existeixen fins que `activate()` els marca «current». El
- * mapa comença, doncs, amb un sol punt fosc i cap traç.
+ * El mapa no acumula el recorregut: en tot moment hi ha, com a molt, el punt
+ * d'ara («current»), el d'on es venia («prev») i el traç que els uneix. Ni les
+ * fites que encara no s'han caminat («future») ni les que ja han quedat dues
+ * enrere («past») es dibuixen. Comença, doncs, amb un sol punt fosc i cap
+ * traç, i cada fita nova fa desaparèixer el punt i el tram més antics alhora
+ * que en neixen els seus.
  *
  * Cada element decoratiu (ram, tram, punt) entra amb el seu propi
  * `--reveal-delay`: res apareix de cop. La classe `is-priming` (afegida i
@@ -186,32 +189,19 @@ function arcD(a: Point, b: Point, bow: number): string {
   return `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
 }
 
-function quadPoint(a: Point, ctrl: Point, b: Point, t: number): Point {
-  const u = 1 - t;
-  return {
-    x: u * u * a.x + 2 * u * t * ctrl.x + t * t * b.x,
-    y: u * u * a.y + 2 * u * t * ctrl.y + t * t * b.y,
-  };
-}
-
-function quadLength(a: Point, ctrl: Point, b: Point, samples = 12): number {
-  let len = 0;
-  let prev = a;
-  for (let s = 1; s <= samples; s++) {
-    const p = quadPoint(a, ctrl, b, s / samples);
-    len += Math.hypot(p.x - prev.x, p.y - prev.y);
-    prev = p;
-  }
-  return len;
-}
-
 /** El viatge de veres: un tram per parella de fites consecutives, saltant les
  * que no es van moure. Cada tram porta el seu propi `data-node` (l'índex
- * d'arribada) i la seva pròpia longitud, perquè `activate()` el pugui
- * il·luminar sol —només el tram actiu queda fosc— sense saber res de mapes. */
+ * d'arribada), perquè `activate()` el pugui il·luminar sol —només el tram que
+ * s'acaba de recórrer es dibuixa— sense saber res de mapes.
+ *
+ * La longitud no es calcula aquí: cada tram surt amb `pathLength="1"` i el
+ * dibuix s'anima de `stroke-dashoffset: 1` a `0`. Abans se n'aproximava la
+ * llargada per corda (dotze mostres) i es passava a `stroke-dasharray`; qualsevol
+ * diferència entre l'aproximació i la corba real deixava el tram sense arribar
+ * al punt de destinació. Amb `pathLength` la mesura la fa el navegador i el
+ * traç acaba exactament al punt, sigui quin sigui el zoom de la càmera. */
 interface RouteSegment {
   d: string;
-  len: number;
   nodeIndex: number;
 }
 function buildSegments(points: Point[], bow: number): RouteSegment[] {
@@ -223,7 +213,6 @@ function buildSegments(points: Point[], bow: number): RouteSegment[] {
     const ctrl = controlFor(a, b, bow);
     segments.push({
       d: `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`,
-      len: quadLength(a, ctrl, b),
       nodeIndex: i,
     });
   }
@@ -414,7 +403,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
               class="figure__route-segment"
               data-node={seg.nodeIndex}
               d={seg.d}
-              style={`--seg-len:${seg.len.toFixed(1)}`}
+              pathLength="1"
               vector-effect="non-scaling-stroke"
             />
           ))
@@ -548,35 +537,30 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   /*
    * Cada tram és el seu propi traç, sempre a tinta plena — només la longitud
    * dibuixada (`stroke-dashoffset`) anima; el color no, perquè un tram no ha
-   * de veure's pàl·lid mentre creix (era el problema d'abans). Sense JS: tot
-   * dibuixat, com si ja s'hagués fet el viatge. Amb JS: amagat de bon
-   * començament (`is-live` per defecte), i només el tram «current» queda
-   * fosc — els anteriors s'apaguen en lloc de quedar-se tots ratllats.
+   * de veure's pàl·lid mentre creix (era el problema d'abans). `pathLength="1"`
+   * al marcatge fa que 1 sigui exactament tota la corba: el traç arriba al punt
+   * de destinació i no s'atura uns quants píxels abans.
+   *
+   * Sense JS: tot dibuixat, com si ja s'hagués fet el viatge. Amb JS: només el
+   * tram que s'acaba de recórrer existeix. Els anteriors no s'apaguen, es
+   * desfan —el mapa no acumula el recorregut sencer, ensenya el salt d'ara.
    */
   .figure__route-segment {
     fill: none;
     stroke-linejoin: round;
     stroke-linecap: round;
-    stroke: var(--ink-faint);
-    stroke-width: 1.3;
-    stroke-dasharray: var(--seg-len, 0);
+    stroke: var(--ink);
+    stroke-width: 1.8;
+    stroke-dasharray: 1;
     stroke-dashoffset: 0;
     transition: stroke-dashoffset var(--dur-slow) var(--ease-out);
   }
 
   .figure.is-live .figure__route-segment {
-    stroke-dashoffset: var(--seg-len, 0);
+    stroke-dashoffset: 1;
   }
 
   .figure.is-live .figure__route-segment[data-state='current'] {
-    stroke: var(--ink);
-    stroke-width: 1.8;
-    stroke-dashoffset: 0;
-  }
-
-  .figure.is-live .figure__route-segment[data-state='past'] {
-    stroke: var(--ink-faint);
-    stroke-width: 1.3;
     stroke-dashoffset: 0;
   }
 
@@ -601,18 +585,21 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   }
 
   /*
-   * Encara sense arribar, el punt no hi és: ni forma ni traç a esperar, com
-   * les fites que encara no s'han caminat no hi són. Només l'actual i els ja
-   * passats es veuen —el mapa comença amb un sol punt fosc.
+   * El mapa no du el compte del viatge sencer: en tot moment hi ha com a molt
+   * dos punts, el d'ara i el d'on es venia, i el tram que els uneix. Les fites
+   * encara no caminades («future») no hi són, i les que ja han quedat dues
+   * enrere («past») se'n van —el punt de sortida desapareix quan el traç
+   * següent ja ha nascut, no s'hi acumula.
    */
-  .figure.is-live .figure__node[data-state='future'] {
+  .figure.is-live .figure__node[data-state='future'],
+  .figure.is-live .figure__node[data-state='past'] {
     opacity: 0;
     fill: var(--paper);
     stroke: var(--rule);
     stroke-width: 1.2;
   }
 
-  .figure.is-live .figure__node[data-state='past'] {
+  .figure.is-live .figure__node[data-state='prev'] {
     fill: var(--ink-faint);
     stroke: var(--paper);
   }
@@ -644,6 +631,14 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     opacity: 0;
   }
 
+  /* Els rams decoratius sí que sobreviuen la fita que els ha portat —són
+     context de mapa, no el recorregut—, però atenuats. `prev` i `past` hi
+     valen igual: la distinció entre «l'anterior» i «els d'abans» només la
+     necessiten els punts i els trams. */
+  .figure.is-live .figure__fan[data-state='prev'],
+  .figure.is-live .figure__oscillation[data-state='prev'],
+  .figure.is-live .figure__catalonia[data-state='prev'],
+  .figure.is-live .figure__geo[data-state='prev'],
   .figure.is-live .figure__fan[data-state='past'],
   .figure.is-live .figure__oscillation[data-state='past'],
   .figure.is-live .figure__catalonia[data-state='past'],
@@ -731,6 +726,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     opacity: 0;
   }
 
+  .figure.is-live .figure__oscillation[data-state='prev'] .figure__oscillation-dot,
   .figure.is-live .figure__oscillation[data-state='past'] .figure__oscillation-dot {
     opacity: 1;
     fill: var(--ink-faint);
@@ -784,6 +780,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
    */
   .figure.is-priming .figure__route-segment,
   .figure.is-priming .figure__node[data-state='future'],
+  .figure.is-priming .figure__node[data-state='past'],
   .figure.is-priming .figure__fan,
   .figure.is-priming .figure__oscillation,
   .figure.is-priming .figure__catalonia,
