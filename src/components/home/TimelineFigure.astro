@@ -13,8 +13,14 @@
  * Vallespir–Alemanya) que pengen del mateix `[data-node]` que la fita
  * corresponent, així que `activate(index)` a `Timeline.astro` els sincronitza
  * sense saber que hi són. La «càmera» (`--cam-scale/x/y`, calculada aquí i
- * aplicada per `activate()`) allunya el mapa a «Projectes europeus» perquè
- * s'hi vegin els països veïns, i s'acosta a Catalunya a la fita final.
+ * aplicada per `activate()`) comença de prop a les Cevenes —un únic punt, no
+ * un territori—, s'allunya per fer lloc a Portugal i Barcelona, torna a
+ * allunyar-se a «Projectes europeus» perquè s'hi vegin els països veïns, i
+ * s'acosta de nou a Catalunya a la fita final.
+ *
+ * Els punts encara no arribats («future») no es dibuixen: ni el punt ni el
+ * tram que hi mena existeixen fins que `activate()` els marca «current». El
+ * mapa comença, doncs, amb un sol punt fosc i cap traç.
  *
  * Cada element decoratiu (ram, tram, punt) entra amb el seu propi
  * `--reveal-delay`: res apareix de cop. La classe `is-priming` (afegida i
@@ -194,20 +200,6 @@ function quadLength(a: Point, ctrl: Point, b: Point, samples = 12): number {
   return len;
 }
 
-/** El fantasma: tot el recorregut, sempre visible i fluix — el marc, no el
- * viatge. Els trams sense moviment hi passen com a corba de longitud zero:
- * inofensiu. */
-function buildGhost(points: Point[], bow: number): string {
-  let d = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
-  for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1];
-    const b = points[i];
-    const ctrl = controlFor(a, b, bow);
-    d += ` Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
-  }
-  return d;
-}
-
 /** El viatge de veres: un tram per parella de fites consecutives, saltant les
  * que no es van moure. Cada tram porta el seu propi `data-node` (l'índex
  * d'arribada) i la seva pròpia longitud, perquè `activate()` el pugui
@@ -233,7 +225,6 @@ function buildSegments(points: Point[], bow: number): RouteSegment[] {
   return segments;
 }
 
-const ghostD = buildGhost(anchors, 0.09);
 const segments = buildSegments(anchors, 0.09);
 
 // ── «Projectes europeus» (fita 3): el ram de destinacions, decoratiu i
@@ -283,8 +274,11 @@ const europeFocus = project((LON_MIN + LON_MAX) / 2, (LAT_MIN + LAT_MAX) / 2);
 const oscillationFocus: Point = { x: (chPoint.x + dePoint.x) / 2, y: (chPoint.y + dePoint.y) / 2 };
 const catalanFocus: Point = { x: (barcelonaPoint.x + vaPoint.x) / 2, y: (barcelonaPoint.y + vaPoint.y) / 2 };
 
+// La primera fita és un únic punt fosc, no un territori: la càmera hi entra
+// de prop, com a la fita final, i s'allunya a «Évora i Lisboa» per fer lloc a
+// la segona.
 const CAMERA = [
-  cameraFor(westFocus, 1.3),
+  cameraFor(cevenesPoint, 2.4),
   cameraFor(westFocus, 1.3),
   cameraFor(westFocus, 1.3),
   cameraFor(europeFocus, 0.75),
@@ -407,7 +401,6 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           />
         </g>
 
-        <path class="figure__route-ghost" d={ghostD} vector-effect="non-scaling-stroke" />
         {
           segments.map((seg) => (
             <path
@@ -545,14 +538,6 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     opacity: 0.65;
   }
 
-  .figure__route-ghost {
-    fill: none;
-    stroke: var(--rule);
-    stroke-width: 1.2;
-    stroke-linejoin: round;
-    stroke-linecap: round;
-  }
-
   /*
    * Cada tram és el seu propi traç, sempre a tinta plena — només la longitud
    * dibuixada (`stroke-dashoffset`) anima; el color no, perquè un tram no ha
@@ -589,10 +574,11 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   }
 
   /*
-   * El node comença blanc (com «future») fins i tot a la primera fita: només
-   * s'enfosqueix quan `activate()` hi posa «current», i amb un retard d'un
-   * `--dur-slow` perquè s'encengui just quan el tram que hi arriba acaba de
-   * dibuixar-se, no alhora. L'anella de paper el separa del traç de sota.
+   * El node comença blanc —l'estat per defecte, abans que `activate()` hi
+   * toqui res— fins i tot a la primera fita: només s'enfosqueix quan hi posa
+   * «current», i amb un retard d'un `--dur-slow` perquè s'encengui just quan
+   * el tram que hi arriba acaba de dibuixar-se, no alhora. L'anella de paper
+   * el separa del traç de sota.
    */
   .figure__node {
     fill: var(--paper);
@@ -603,10 +589,17 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     transition:
       fill var(--dur-base) var(--ease-out),
       stroke var(--dur-base) var(--ease-out),
-      transform var(--dur-base) var(--ease-out);
+      transform var(--dur-base) var(--ease-out),
+      opacity var(--dur-base) var(--ease-out);
   }
 
+  /*
+   * Encara sense arribar, el punt no hi és: ni forma ni traç a esperar, com
+   * les fites que encara no s'han caminat no hi són. Només l'actual i els ja
+   * passats es veuen —el mapa comença amb un sol punt fosc.
+   */
   .figure.is-live .figure__node[data-state='future'] {
+    opacity: 0;
     fill: var(--paper);
     stroke: var(--rule);
     stroke-width: 1.2;
@@ -770,11 +763,13 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   /*
    * Mentre `is-priming` hi és (només a l'arrencada, un instant), cap
    * d'aquests elements no anima el pas d'amagat a visible: `activate(0)`
-   * aplica l'estat 0 de cop. El node hi queda fora expressament —el primer
-   * punt sí que s'ha de veure blanc i enfosquir-se amb calma, no aparèixer ja
-   * fosc.
+   * aplica l'estat 0 de cop. Els punts que ja neixen «future» hi són inclosos
+   * —si no, es veurien un instant abans d'esvair-se— però només aquest estat:
+   * el punt «current» hi queda fora expressament, perquè el primer sí que
+   * s'ha de veure blanc i enfosquir-se amb calma, no aparèixer ja fosc.
    */
   .figure.is-priming .figure__route-segment,
+  .figure.is-priming .figure__node[data-state='future'],
   .figure.is-priming .figure__fan,
   .figure.is-priming .figure__oscillation,
   .figure.is-priming .figure__catalonia,
