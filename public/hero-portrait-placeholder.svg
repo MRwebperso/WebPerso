@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Marcador de posició del retrat de l'hero. Existeix perquè la pàgina de
+  demostració es pugui veure abans que la foto real sigui a `public/`, i perquè
+  la caiguda quan la imatge no carrega sigui local i no una petició a un servei
+  extern com feia l'original. Substituir la foto NO vol dir esborrar aquest
+  fitxer: segueix sent la xarxa de seguretat.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600" role="img" aria-label="Retrat no disponible">
+  <rect width="400" height="600" fill="#1c1c1c"/>
+  <g fill="#3a3a3a">
+    <circle cx="200" cy="230" r="96"/>
+    <path d="M40 600c0-88 72-160 160-160s160 72 160 160z"/>
+  </g>
+  <text x="200" y="560" text-anchor="middle" fill="#6b6b6b" font-family="system-ui, sans-serif" font-size="20">
+    hero-portrait.png
+  </text>
+</svg>

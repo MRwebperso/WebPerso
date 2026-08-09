@@ -1,0 +1,77 @@
+---
+/**
+ * Demostració de `MinimalistHero` — equivalent del `demo.tsx` de la referència.
+ *
+ * Ruta llençable, com «la-ruta» i «la-travessa»: fora de la navegació i de
+ * l'i18n, amb `noindex`. No importa `base.css` a posta: el component porta el
+ * seu propi registre visual (fons negre, sans, cercle groc) i els globals del
+ * sistema de paper càlid només hi farien soroll. Si l'hero acaba entrant al
+ * lloc de debò, aquest fitxer s'esborra.
+ *
+ * El retrat surt de `public/hero-portrait.png`. Mentre no hi sigui, cau al
+ * marcador de posició local.
+ */
+import MinimalistHero from '../components/ui/MinimalistHero.astro';
+import type { IconName } from '../components/ui/icons';
+
+const navLinks = [
+  { label: 'HOME', href: '#' },
+  { label: 'PRODUCT', href: '#' },
+  { label: 'STORE', href: '#' },
+  { label: 'ABOUT US', href: '#' },
+];
+
+/*
+ * El retall de `public/hero-portrait.png` és apaïsat (2000×1414) i el subjecte
+ * hi ocupa només un 66 % d'amplada, amb marge transparent als costats. Amb el
+ * `portraitRatio` per omissió (0,64, pensat per a un retrat vertical i ajustat
+ * com el de la referència) el cap quedaria minúscul dins del cercle; a 1,05 el
+ * subjecte fa aproximadament el diàmetre del cercle, que és la relació de
+ * l'original.
+ *
+ * No es poden igualar alhora l'alçada i l'amplada relatives de la referència:
+ * allà el subjecte és un perfil alt i estret (1:1,5) i aquí és de bust, gairebé
+ * quadrat (1,04:1). S'ha triat igualar l'amplada.
+ */
+const portrait = { width: 2000, height: 1414, ratio: 1.05 };
+
+const socialLinks: { icon: IconName; href: string; label: string }[] = [
+  { icon: 'facebook', href: '#', label: 'Facebook' },
+  { icon: 'instagram', href: '#', label: 'Instagram' },
+  { icon: 'twitter', href: '#', label: 'Twitter' },
+  { icon: 'linkedin', href: '#', label: 'LinkedIn' },
+];
+---
+
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>MinimalistHero — demostració</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <MinimalistHero
+      logoText="mnmlst."
+      navLinks={navLinks}
+      mainText="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ultrices, justo vel tempus."
+      readMoreLink="#"
+      imageSrc="/hero-portrait.png"
+      fallbackSrc="/hero-portrait-placeholder.svg"
+      imageAlt="Retrat d'en Miquel Rodrigues, retallat sobre fons fosc."
+      imageWidth={portrait.width}
+      imageHeight={portrait.height}
+      portraitRatio={portrait.ratio}
+      overlayText={{ part1: 'less is', part2: 'more.' }}
+      socialLinks={socialLinks}
+      locationText="Prats-de-Mollo-la-Preste"
+    />
+  </body>
+</html>

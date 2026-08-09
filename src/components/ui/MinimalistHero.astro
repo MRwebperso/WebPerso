@@ -1,0 +1,512 @@
+---
+/*
+ * Hero minimalista — port natiu a Astro del component React de referència.
+ *
+ * L'original demanava React + Tailwind + shadcn + framer-motion + lucide-react.
+ * Aquí no hi entra res d'això: el lloc no té React ni Tailwind, i el preflight
+ * de Tailwind entraria en conflicte amb els globals de `base.css` (`*`, `body`,
+ * `h1`). El port manté l'API de props i les temporitzacions d'entrada de
+ * framer-motion, però amb CSS: `@keyframes` + `animation-delay`.
+ *
+ * Registre visual: aquest hero és deliberadament FIDEL a la referència —fons
+ * negre, sans-serif de pes fort, cercle groc—, no al sistema de paper càlid i
+ * serif de la resta del lloc. Per tant no fa servir els tokens de color de
+ * `tokens.css`: els declara propis, acotats al component. Si algun dia ha de
+ * conviure amb la resta de seccions en una mateixa pàgina, el salt de registre
+ * és intencionat i cal que ho sigui també a l'estructura de la pàgina.
+ *
+ * Sí que fa servir `--family-sans` (IBM Plex Sans, eix 100–700), ja auto-
+ * allotjada: no cal cap font nova.
+ */
+/*
+ * Les dues úniques fulles globals que li calen, i les importa ell mateix: així
+ * funciona en una pàgina que no carregui `base.css` (com la demostració).
+ * `fonts.css` només declara `@font-face` i `tokens.css` només variables a
+ * `:root` — cap dels dos toca elements, i Astro els dedupe si la pàgina ja els
+ * porta. El que NO importa és `base.css`: els seus globals sobre `body` i `h1`
+ * són del sistema de paper càlid i aquí hi sobren.
+ */
+import '../../styles/fonts.css';
+import '../../styles/tokens.css';
+import { icons, type IconName } from './icons';
+
+interface NavLink {
+  label: string;
+  href: string;
+}
+
+interface SocialLink {
+  icon: IconName;
+  href: string;
+  label: string;
+}
+
+interface Props {
+  logoText: string;
+  navLinks: NavLink[];
+  mainText: string;
+  readMoreLink: string;
+  /* L'original tenia «Read More» escrit al codi. Aquí és una prop: el lloc és
+     bilingüe i cap text visible no pot quedar fixat dins d'un component. */
+  readMoreLabel?: string;
+  imageSrc: string;
+  imageAlt: string;
+  /* L'original queia a un placeholder d'un servei extern quan la imatge no
+     carregava. Aquí la caiguda és opcional i sempre local: cap petició a un
+     tercer des d'aquest lloc. */
+  fallbackSrc?: string;
+  /* Mides intrínseques del retall: reserven l'espai i eviten el salt de
+     maquetació mentre carrega. Cal que siguin les del fitxer real. */
+  imageWidth: number;
+  imageHeight: number;
+  /* Amplada del retrat com a fracció del diàmetre del cercle. 0,64 és la de la
+     referència, i val per a un retall estret i vertical. Un retall amb marge
+     transparent al voltant o de format apaïsat necessita un valor més alt: el
+     que compta és la mida del SUBJECTE dins del cercle, no la del fitxer. */
+  portraitRatio?: number;
+  overlayText: { part1: string; part2: string };
+  socialLinks?: SocialLink[];
+  locationText?: string;
+  class?: string;
+}
+
+const {
+  logoText,
+  navLinks,
+  mainText,
+  readMoreLink,
+  readMoreLabel = 'Read More',
+  imageSrc,
+  imageAlt,
+  fallbackSrc,
+  imageWidth,
+  imageHeight,
+  portraitRatio,
+  overlayText,
+  socialLinks = [],
+  locationText,
+  class: className,
+} = Astro.props;
+---
+
+<div
+  class:list={['hero', className]}
+  style={portraitRatio !== undefined ? `--portrait-ratio: ${portraitRatio}` : undefined}
+>
+  <header class="hero__header">
+    <div class="hero__logo anim anim--left">{logoText}</div>
+
+    <nav class="hero__nav" aria-label={logoText}>
+      {navLinks.map((link) => <a href={link.href}>{link.label}</a>)}
+    </nav>
+
+    <button type="button" class="hero__burger anim anim--right" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <div class="hero__main">
+    <div class="hero__intro anim anim--up" style="--delay: 1s">
+      <p>{mainText}</p>
+      <a class="hero__more" href={readMoreLink}>{readMoreLabel}</a>
+    </div>
+
+    <div class="hero__figure">
+      <div class="hero__circle" aria-hidden="true"></div>
+      <img
+        class="hero__portrait"
+        src={imageSrc}
+        alt={imageAlt}
+        width={imageWidth}
+        height={imageHeight}
+        fetchpriority="high"
+        onerror={fallbackSrc ? `this.onerror=null;this.src='${fallbackSrc}'` : undefined}
+      />
+    </div>
+
+    <div class="hero__display anim anim--up" style="--delay: 1.2s">
+      <h1>{overlayText.part1}<br />{overlayText.part2}</h1>
+    </div>
+  </div>
+
+  <footer class="hero__footer">
+    {
+      socialLinks.length > 0 && (
+        <div class="hero__social anim anim--up" style="--delay: 1.2s">
+          {socialLinks.map((link) => (
+            <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={link.label}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                set:html={icons[link.icon]}
+              />
+            </a>
+          ))}
+        </div>
+      )
+    }
+    {locationText && <div class="hero__location anim anim--up" style="--delay: 1.3s">{locationText}</div>}
+  </footer>
+</div>
+
+<style>
+  /* El component ha de funcionar en una pàgina que no carregui `base.css`, i
+     allà no hi ha el `box-sizing: border-box` global. Sense això, el
+     `min-height: 100svh` de sota queda a la caixa de contingut i els 96px de
+     farciment s'hi sumen: l'hero passa de 800 a 896 i la pàgina es desplaça
+     sola. Acotat als elements del component, no toca res de fora. */
+  .hero,
+  .hero *,
+  .hero *::before,
+  .hero *::after {
+    box-sizing: border-box;
+  }
+
+  .hero {
+    /* Paleta pròpia del component: no surt de tokens.css a posta (vegeu la
+       nota de capçalera). El groc és el de la referència. */
+    --hero-bg: #0a0a0a;
+    --hero-fg: #fafafa;
+    --hero-circle: #eab308;
+
+    /* El cercle és l'única mida que es declara: el retrat es deriva d'ell per
+       `--portrait-ratio`, de manera que la proporció entre els dos es manté
+       igual als tres talls sense repetir cap amplada. A la referència el retrat
+       feia 256px contra un cercle de 400 → 0,64. */
+    --circle-size: min(300px, 78vw);
+    --portrait-ratio: 0.64;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8, 2rem);
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: hidden;
+    padding: var(--space-8, 2rem);
+    background: var(--hero-bg);
+    color: var(--hero-fg);
+    font-family: var(--family-sans, 'IBM Plex Sans Variable', system-ui, sans-serif);
+  }
+
+  @media (min-width: 768px) {
+    .hero {
+      padding: var(--space-12, 3rem);
+      --circle-size: 400px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero {
+      --circle-size: 500px;
+    }
+  }
+
+  /* ── Capçalera ── */
+  .hero__header,
+  .hero__footer {
+    z-index: 30;
+    display: flex;
+    width: 100%;
+    max-width: 80rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hero__logo {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .hero__nav {
+    display: none;
+    gap: var(--space-8, 2rem);
+  }
+
+  @media (min-width: 768px) {
+    .hero__nav {
+      display: flex;
+      align-items: center;
+    }
+    .hero__burger {
+      display: none;
+    }
+  }
+
+  .hero__nav a {
+    color: color-mix(in srgb, var(--hero-fg) 60%, transparent);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .hero__nav a:hover,
+  .hero__nav a:focus-visible {
+    color: var(--hero-fg);
+  }
+
+  .hero__burger {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  .hero__burger span {
+    display: block;
+    width: 1.5rem;
+    height: 2px;
+    background: var(--hero-fg);
+  }
+
+  .hero__burger span:last-child {
+    width: 1.25rem;
+  }
+
+  /* ── Cos ── */
+  .hero__main {
+    position: relative;
+    display: grid;
+    width: 100%;
+    max-width: 80rem;
+    flex: 1;
+    grid-template-columns: 1fr;
+    align-items: center;
+    gap: var(--space-8, 2rem);
+  }
+
+  @media (min-width: 768px) {
+    .hero__main {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+  }
+
+  .hero__intro {
+    z-index: 20;
+    order: 2;
+    text-align: center;
+  }
+
+  .hero__intro p {
+    max-width: 22ch;
+    margin: 0 auto;
+    color: color-mix(in srgb, var(--hero-fg) 80%, transparent);
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+
+  .hero__more {
+    display: inline-block;
+    margin-top: var(--space-4, 1rem);
+    color: var(--hero-fg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.2em;
+  }
+
+  @media (min-width: 768px) {
+    .hero__intro {
+      order: 1;
+      text-align: left;
+    }
+    .hero__intro p {
+      margin-inline: 0;
+    }
+  }
+
+  /* ── Figura central ──
+     Els dos fills són absoluts, i això és una correcció respecte de l'original:
+     allà el retrat era en flux i, com que hi cabia de sobres dins d'una columna
+     d'`1fr`, no es notava. Amb un retall més ample —o amb `--portrait-ratio`
+     per sobre d'1— l'amplada mínima del contingut inflava la columna del mig i
+     escanyava les altres dues (el paràgraf queia a 75px i pujava a 273 d'alt).
+     Fora de flux, el retrat pot desbordar tant com calgui sense tocar la
+     graella: la columna la reserva el cercle. */
+  .hero__figure {
+    position: relative;
+    order: 1;
+    min-height: var(--circle-size);
+  }
+
+  @media (min-width: 768px) {
+    .hero__figure {
+      order: 2;
+    }
+  }
+
+  .hero__circle {
+    position: absolute;
+    z-index: 0;
+    top: 50%;
+    left: 50%;
+    width: var(--circle-size);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--hero-circle) 90%, transparent);
+    animation: hero-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  }
+
+  .hero__portrait {
+    position: absolute;
+    z-index: 10;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--circle-size) * var(--portrait-ratio));
+    height: auto;
+    /* `translate` i `scale` són propietats independents i s'apliquen en aquest
+       ordre, així que el centrat es manté després d'escalar. */
+    translate: -50% -50%;
+    /* L'`scale-150` de l'original desborda el cercle per amunt i per avall:
+       és el que fa que el retrat sembli retallat pel marc, no encabit. */
+    scale: 1.5;
+    animation: hero-rise 1s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+  }
+
+  /* ── Tipografia gran ── */
+  .hero__display {
+    z-index: 20;
+    order: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero__display h1 {
+    margin: 0;
+    color: var(--hero-fg);
+    /* Aquest titular no és del sistema: la referència demana sans-serif de pes
+       màxim, no el Newsreader que `base.css` posa a tots els h1. */
+    font-family: var(--family-sans, 'IBM Plex Sans Variable', system-ui, sans-serif);
+    font-size: clamp(3.5rem, 11vw, 8rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    text-wrap: nowrap;
+  }
+
+  @media (min-width: 768px) {
+    .hero__display {
+      justify-content: flex-start;
+    }
+  }
+
+  /* ── Peu ── */
+  .hero__social {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4, 1rem);
+  }
+
+  .hero__social a {
+    display: inline-flex;
+    color: color-mix(in srgb, var(--hero-fg) 60%, transparent);
+    transition: color 0.2s ease;
+  }
+
+  .hero__social a:hover,
+  .hero__social a:focus-visible {
+    color: var(--hero-fg);
+  }
+
+  .hero__social svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .hero__location {
+    color: color-mix(in srgb, var(--hero-fg) 80%, transparent);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  /* ── Entrades ──
+     Equivalents CSS dels `initial`/`animate` de framer-motion. Els retards de
+     l'original es passen com a `--delay` des del marcatge. */
+  .anim {
+    animation: var(--anim-name) 0.5s ease both;
+    animation-delay: var(--delay, 0s);
+  }
+
+  .anim--left {
+    --anim-name: hero-in-left;
+  }
+
+  .anim--right {
+    --anim-name: hero-in-right;
+  }
+
+  .anim--up {
+    --anim-name: hero-in-up;
+    animation-duration: 0.6s;
+  }
+
+  @keyframes hero-in-left {
+    from {
+      opacity: 0;
+      translate: -20px 0;
+    }
+  }
+
+  @keyframes hero-in-right {
+    from {
+      opacity: 0;
+      translate: 20px 0;
+    }
+  }
+
+  @keyframes hero-in-up {
+    from {
+      opacity: 0;
+      translate: 0 20px;
+    }
+  }
+
+  @keyframes hero-pop {
+    from {
+      opacity: 0;
+      scale: 0.8;
+    }
+  }
+
+  /* El retrat reposa a `translate: -50% -50%` (centrat absolut), i per tant els
+     dos fotogrames han de partir d'aquest centrat: si l'entrada tornés a `0 0`,
+     el retrat saltaria mig cos avall en acabar. */
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      translate: -50% calc(-50% + 50px);
+      scale: 1.5;
+    }
+    to {
+      opacity: 1;
+      translate: -50% -50%;
+      scale: 1.5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .anim,
+    .hero__circle,
+    .hero__portrait {
+      animation: none;
+    }
+  }
+</style>
