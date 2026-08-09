@@ -11,6 +11,12 @@ import {
   type Lang,
 } from '../i18n/utils';
 import '../styles/base.css';
+/*
+ * El tema fosc va aquí i no a `base.css` a posta: `la-ruta` i `la-travessa`
+ * carreguen `base.css` pel seu compte i han de conservar la paleta de paper.
+ * Vegeu la capçalera de `theme-dark.css`.
+ */
+import '../styles/theme-dark.css';
 // Precàrrega dels dos subconjunts llatins que sí que es faran servir sempre.
 // Vite emet el mateix fitxer que referencia el CSS de les fonts, no una còpia.
 import serifLatin from '@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2?url';

@@ -1,0 +1,62 @@
+/*
+ * Tema fosc — blanc sobre negre amb un accent groc.
+ *
+ * Per què un fitxer a part i no una edició de `tokens.css`: `tokens.css` entra
+ * per `base.css`, i `base.css` també el carreguen `la-ruta` i `la-travessa`,
+ * que són prototips d'un projecte paral·lel construïts damunt la metàfora del
+ * paper i la tinta. Invertir els tokens a l'origen els capgiraria tots dos.
+ * Carregant-lo només des de `BaseLayout`, el tema fosc arriba a les pàgines del
+ * lloc i cap dels dos prototips no es toca.
+ *
+ * Els noms dels tokens no canvien, i per tant `--paper` ara és negre i `--ink`
+ * és blanc. És deliberat: hi ha 325 referències `var(--…)` repartides en 19
+ * fitxers, i reanomenar-les per fidelitat literal seria molt de soroll a canvi
+ * de res. Els noms s'han de llegir com a rols —fons i text—, no com a colors.
+ *
+ * Contrastos calculats sobre els dos fons (WCAG 2.1, AA en cos petit = 4,5:1):
+ *
+ *                        --paper    --paper-sunk
+ *   --ink                 18,97         17,02
+ *   --ink-soft            12,08         10,84
+ *   --ink-faint            7,63          6,85
+ *   --accent              10,32          9,26
+ *
+ * El marge és més ample que el del tema clar, on `--ink-faint` anava just
+ * (5,06 i 4,63). Sobre `--accent-soft`, que només fa de fons a l'estat de
+ * ressalt del commutador de llengua: `--accent` 8,06 i `--ink-faint` 5,96.
+ */
+/*
+ * `:root:root` i no `:root`: el selector repetit puja l'especificitat a 0-2-0 i
+ * el tema guanya sense dependre de l'ordre del paquet. No és cosmètic —
+ * `MinimalistHero.astro` importa `tokens.css` pel seu compte per poder
+ * funcionar en pàgines sense `base.css`, i això fa que el bundler l'emeti
+ * després del tema. Amb un `:root` pla, els tokens clars tornaven a guanyar i
+ * del tema només hi arribava el `color-scheme`.
+ */
+:root:root {
+  /* Indica al navegador que pinti de fosc el que no controlem: controls de
+     formulari, barres de desplaçament i el fons abans del primer pintat. */
+  color-scheme: dark;
+
+  /* El negre és exactament el de l'hero (`--hero-bg`), no un negre qualsevol:
+     l'hero i la secció que ve just a sota han de fer un pla continu. */
+  --paper: #0a0a0a;
+  --paper-sunk: #17181a;
+
+  --ink: #fafafa;
+  --ink-soft: #c8cad0;
+  --ink-faint: #9ca1aa;
+
+  /* Prou visible per separar blocs sobre negre sense fer de reixa. */
+  --rule: #2c2e33;
+
+  /* El groc de l'hero passa a ser l'accent de tot el lloc, en lloc del blau
+     pissarra. És l'únic color de la paleta: la resta són neutres. */
+  --accent: #eab308;
+  --accent-soft: #2a2410;
+
+  /* L'horitzó de la marca era vermell sobre paper. Sobre negre el vermell de
+     marca (#c1272d) cau a 3,39:1 i, sobretot, obriria una segona família
+     cromàtica al costat del groc. La marca passa al groc. */
+  --mark-rule: #eab308;
+}

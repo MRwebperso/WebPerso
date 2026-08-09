@@ -42,8 +42,14 @@ interface SocialLink {
 }
 
 interface Props {
-  logoText: string;
-  navLinks: NavLink[];
+  /*
+   * Tota la cromàtica —marca, navegació, icones socials, localitat— és
+   * opcional. Muntat dins d'un lloc que ja té capçalera i peu propis, l'hero no
+   * n'ha de portar de duplicats: se n'omet la prop i la franja desapareix
+   * sencera, no queda una barra buida ocupant alçada.
+   */
+  logoText?: string;
+  navLinks?: NavLink[];
   mainText: string;
   readMoreLink: string;
   /* L'original tenia «Read More» escrit al codi. Aquí és una prop: el lloc és
@@ -67,6 +73,10 @@ interface Props {
   overlayText: { part1: string; part2: string };
   socialLinks?: SocialLink[];
   locationText?: string;
+  /* Alçada mínima del bloc. Per omissió ocupa la finestra sencera, com
+     l'original; sota una capçalera adherent convé descomptar-ne l'alçada
+     perquè el conjunt segueixi cabent d'una pantalla. */
+  minHeight?: string;
   class?: string;
 }
 
@@ -85,25 +95,45 @@ const {
   overlayText,
   socialLinks = [],
   locationText,
+  minHeight,
   class: className,
 } = Astro.props;
+
+const hasHeader = Boolean(logoText) || (navLinks?.length ?? 0) > 0;
+const hasFooter = socialLinks.length > 0 || Boolean(locationText);
+
+const vars = [
+  portraitRatio !== undefined ? `--portrait-ratio: ${portraitRatio}` : null,
+  minHeight ? `--hero-min-height: ${minHeight}` : null,
+]
+  .filter(Boolean)
+  .join('; ');
 ---
 
-<div
-  class:list={['hero', className]}
-  style={portraitRatio !== undefined ? `--portrait-ratio: ${portraitRatio}` : undefined}
->
-  <header class="hero__header">
-    <div class="hero__logo anim anim--left">{logoText}</div>
+<div class:list={['hero', className]} style={vars || undefined}>
+  {
+    hasHeader && (
+      <header class="hero__header">
+        {logoText && <div class="hero__logo anim anim--left">{logoText}</div>}
 
-    <nav class="hero__nav" aria-label={logoText}>
-      {navLinks.map((link) => <a href={link.href}>{link.label}</a>)}
-    </nav>
+        {navLinks && navLinks.length > 0 && (
+          <>
+            <nav class="hero__nav" aria-label={logoText}>
+              {navLinks.map((link) => (
+                <a href={link.href}>{link.label}</a>
+              ))}
+            </nav>
 
-    <button type="button" class="hero__burger anim anim--right" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-  </header>
+            <button type="button" class="hero__burger anim anim--right" aria-label="Open menu">
+              <span />
+              <span />
+              <span />
+            </button>
+          </>
+        )}
+      </header>
+    )
+  }
 
   <div class="hero__main">
     <div class="hero__intro anim anim--up" style="--delay: 1s">
@@ -129,30 +159,36 @@ const {
     </div>
   </div>
 
-  <footer class="hero__footer">
-    {
-      socialLinks.length > 0 && (
-        <div class="hero__social anim anim--up" style="--delay: 1.2s">
-          {socialLinks.map((link) => (
-            <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={link.label}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-                set:html={icons[link.icon]}
-              />
-            </a>
-          ))}
-        </div>
-      )
-    }
-    {locationText && <div class="hero__location anim anim--up" style="--delay: 1.3s">{locationText}</div>}
-  </footer>
+  {
+    hasFooter && (
+      <footer class="hero__footer">
+        {socialLinks.length > 0 && (
+          <div class="hero__social anim anim--up" style="--delay: 1.2s">
+            {socialLinks.map((link) => (
+              <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={link.label}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  set:html={icons[link.icon]}
+                />
+              </a>
+            ))}
+          </div>
+        )}
+        {locationText && (
+          <div class="hero__location anim anim--up" style="--delay: 1.3s">
+            {locationText}
+          </div>
+        )}
+      </footer>
+    )
+  }
 </div>
 
 <style>
@@ -188,8 +224,8 @@ const {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-8, 2rem);
-    min-height: 100vh;
-    min-height: 100svh;
+    min-height: var(--hero-min-height, 100vh);
+    min-height: var(--hero-min-height, 100svh);
     overflow: hidden;
     padding: var(--space-8, 2rem);
     background: var(--hero-bg);

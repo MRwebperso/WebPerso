@@ -7,13 +7,22 @@
  * comunicació → IA com a mètode → cronologia → casos → contacte. La línia
  * acadèmica hi és com a credencial dins de l'oferta de recerca, no com a
  * servei propi.
+ *
+ * Al davant de tot hi ha ara l'hero minimalista, que és una portada gràfica i
+ * no una secció de contingut: no aporta text nou. La frase que en surt a
+ * l'esquerra és el `title` de la presentació —el mateix a les dues llengües,
+ * ja escrit a `home.ts`— i l'enllaç «Llegir més» baixa a la presentació, que
+ * ve immediatament a sota amb el nucli invariant intacte.
  */
+import MinimalistHero from './ui/MinimalistHero.astro';
 import Hero from './home/Hero.astro';
 import Offer from './home/Offer.astro';
 import Method from './home/Method.astro';
 import Timeline from './home/Timeline.astro';
 import Cases from './home/Cases.astro';
 import Contact from './home/Contact.astro';
+import { home } from '../data/home';
+import { useTranslations } from '../i18n/ui';
 import type { Lang } from '../i18n/utils';
 
 interface Props {
@@ -21,8 +30,28 @@ interface Props {
 }
 
 const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+/*
+ * Mides reals de `public/hero-portrait.png` i calibratge del retall; la nota
+ * llarga sobre com s'ha triat el `ratio` és a `src/pages/hero-demo.astro`.
+ */
+const portrait = { width: 1414, height: 2000, ratio: 0.75 };
 ---
 
+<MinimalistHero
+  mainText={home[lang].hero.title}
+  readMoreLink="#presentacio"
+  readMoreLabel={t('hero.more')}
+  imageSrc="/hero-portrait.png"
+  fallbackSrc="/hero-portrait-placeholder.svg"
+  imageAlt={t('hero.portraitAlt')}
+  imageWidth={portrait.width}
+  imageHeight={portrait.height}
+  portraitRatio={portrait.ratio}
+  overlayText={{ part1: 'Miquel', part2: 'Rodrigues' }}
+  minHeight="calc(100svh - 4rem)"
+/>
 <Hero lang={lang} />
 <Offer lang={lang} />
 <Method lang={lang} />

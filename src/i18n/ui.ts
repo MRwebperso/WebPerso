@@ -21,6 +21,10 @@ const ca = {
   'nav.cases': 'Casos',
   'nav.contact': 'Contacte',
 
+  /* Enllaç de l'hero cap a la presentació, que ve just a sota. */
+  'hero.more': 'Llegir més',
+  'hero.portraitAlt': 'Retrat d’en Miquel Rodrigues',
+
   'lang.switch': 'Canvia de llengua',
   'lang.to': 'Versió en francès',
 
@@ -55,6 +59,9 @@ const fr: Record<UIKey, string> = {
   'nav.timeline': 'Parcours',
   'nav.cases': 'Cas',
   'nav.contact': 'Contact',
+
+  'hero.more': 'Lire la suite',
+  'hero.portraitAlt': 'Portrait de Miquel Rodrigues',
 
   'lang.switch': 'Changer de langue',
   'lang.to': 'Version en catalan',
