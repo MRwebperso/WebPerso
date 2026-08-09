@@ -22,18 +22,19 @@ const navLinks = [
 ];
 
 /*
- * El retall de `public/hero-portrait.png` és apaïsat (2000×1414) i el subjecte
- * hi ocupa només un 66 % d'amplada, amb marge transparent als costats. Amb el
- * `portraitRatio` per omissió (0,64, pensat per a un retrat vertical i ajustat
- * com el de la referència) el cap quedaria minúscul dins del cercle; a 1,05 el
- * subjecte fa aproximadament el diàmetre del cercle, que és la relació de
- * l'original.
+ * `public/hero-portrait.png` — 1414×2000, vertical i ajustat: el subjecte ocupa
+ * el 83,8 % de l'amplada del fitxer i el 92,5 % de l'alçada, centrat al 49,6 %.
+ * La seva proporció (0,641) és pràcticament la del perfil de la referència
+ * (0,667), i per això ara les dues maneres de calibrar el `portraitRatio`
+ * —igualar l'amplada relativa del subjecte o igualar-ne l'alçada— donen
+ * gairebé el mateix valor (0,764 i 0,733); amb el retall apaïsat anterior es
+ * contradeien i calia triar-ne una.
  *
- * No es poden igualar alhora l'alçada i l'amplada relatives de la referència:
- * allà el subjecte és un perfil alt i estret (1:1,5) i aquí és de bust, gairebé
- * quadrat (1,04:1). S'ha triat igualar l'amplada.
+ * A 0,75 el subjecte fa 0,94 diàmetres d'ample i 1,47 d'alt contra els 0,96 i
+ * 1,44 de la referència. Queda per sobre del 0,64 per omissió del component
+ * només perquè el fitxer conserva un 16 % de marge transparent als costats.
  */
-const portrait = { width: 2000, height: 1414, ratio: 1.05 };
+const portrait = { width: 1414, height: 2000, ratio: 0.75 };
 
 const socialLinks: { icon: IconName; href: string; label: string }[] = [
   { icon: 'facebook', href: '#', label: 'Facebook' },
