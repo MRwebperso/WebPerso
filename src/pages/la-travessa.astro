@@ -1,0 +1,552 @@
+---
+/**
+ * «La travessa» — prototip. Ruta llençable: no és a la navegació, no és a
+ * l'i18n, no la toca cap pàgina del lloc i porta `noindex`. Català només; la
+ * paritat CA–FR és un invariant del projecte i tornarà abans que això
+ * s'apropi a res publicable, però duplicar el text ara duplicaria el cost
+ * d'esbrinar si el mecanisme funciona.
+ */
+import '../styles/base.css';
+import { getCases } from '../data/cases';
+import { placeCases } from '../data/travessa';
+import Ridge from '../components/travessa/Ridge.astro';
+import Stave from '../components/travessa/Stave.astro';
+import DeskScene from '../components/travessa/DeskScene.astro';
+import CaseInset from '../components/travessa/CaseInset.astro';
+import TravessaList from '../components/travessa/TravessaList.astro';
+
+const cases = await getCases();
+
+/**
+ * `getCases()` retorna els casos ja ordenats per `order` però no en publica el
+ * número, i no es toca: és codi del lloc existent. El rang dins de la llista
+ * fa la mateixa feina i, de fet, la fa millor —`order` admet buits i el rang
+ * no—, i és el que porta el rètol de cada construcció. La posició a la carena
+ * la dona l'any; el número, l'ordre de lectura. Les dues coses alhora, que és
+ * el que demana l'espec.
+ */
+const placements = placeCases(
+  cases.map((item, i) => ({
+    id: item.id,
+    order: i + 1,
+    year: item.year,
+    kind: item.kind,
+    title: item.copy.ca.title,
+  })),
+);
+---
+
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>La travessa — prototip</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    {/*
+      Abans del primer pintat, com fa `.js` a BaseLayout: el mode escollit si
+      n'hi ha, i si no, moviment reduït i pantalles estretes cauen a la llista.
+    */}
+    <script is:inline>
+      (function () {
+        var saved = null;
+        try {
+          saved = localStorage.getItem('travessa-mode');
+        } catch (e) {
+          /* navegació privada: es queda amb el mode per defecte */
+        }
+        var fallback =
+          matchMedia('(prefers-reduced-motion: reduce)').matches || matchMedia('(max-width: 60rem)').matches
+            ? 'list'
+            : 'scroll';
+        document.documentElement.dataset.travessaMode = saved === 'list' || saved === 'scroll' ? saved : fallback;
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div class="hud">
+      <p class="hud__name ui">La travessa <span class="hud__tag">prototip</span></p>
+      <button type="button" class="hud__toggle ui" data-mode-toggle aria-pressed="false">
+        <span data-mode-toggle-label>Llegir-ho en llista</span>
+      </button>
+    </div>
+
+    <section class="scene" data-scene aria-hidden="true">
+      <div class="scene__pin">
+        <div class="stage" data-stage>
+          <Ridge cases={placements} />
+          <Stave />
+        </div>
+        <div class="deskwrap" data-deskwrap>
+          <DeskScene />
+        </div>
+      </div>
+    </section>
+
+    <p class="scene__hint ui" data-scene-hint>Desplaça’t per fer la travessa ↓</p>
+
+    <TravessaList cases={cases} />
+
+    <CaseInset cases={cases} />
+
+    <script>
+      import { langKeys, milestones, timeline } from '../data/timeline';
+      import {
+        ANCHOR,
+        LAYERS,
+        METRE,
+        cameraAt,
+        deskAtProgress,
+        deskEras,
+        deskObjects,
+        deskStateAt,
+        elevationAt,
+        handoffAt,
+        milestoneIndexForYear,
+        worldX,
+        worldY,
+        yearAtProgress,
+        type LayerName,
+      } from '../data/travessa';
+
+      const c = timeline.ca;
+      const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
+      const root = document.documentElement;
+
+      // ── Mode ────────────────────────────────────────────────────────────
+      const toggle = document.querySelector<HTMLButtonElement>('[data-mode-toggle]');
+      const toggleLabel = document.querySelector<HTMLElement>('[data-mode-toggle-label]');
+
+      function paintMode() {
+        const list = root.dataset.travessaMode === 'list';
+        if (toggleLabel) toggleLabel.textContent = list ? 'Fer la travessa' : 'Llegir-ho en llista';
+        toggle?.setAttribute('aria-pressed', String(list));
+      }
+      paintMode();
+
+      toggle?.addEventListener('click', () => {
+        const next = root.dataset.travessaMode === 'list' ? 'scroll' : 'list';
+        root.dataset.travessaMode = next;
+        try {
+          localStorage.setItem('travessa-mode', next);
+        } catch (e) {
+          /* res a fer: el mode val per a aquesta visita */
+        }
+        paintMode();
+        window.scrollTo(0, 0);
+        measure();
+        painted = -1;
+        step(performance.now());
+      });
+
+      // ── Els nusos del dibuix ────────────────────────────────────────────
+      const scene = document.querySelector<HTMLElement>('[data-scene]');
+      const stage = document.querySelector<HTMLElement>('[data-stage]');
+      const deskWrap = document.querySelector<HTMLElement>('[data-deskwrap]');
+      const gauge = document.querySelector<SVGGElement>('[data-gauge]');
+      const here = document.querySelector<SVGGElement>('[data-here]');
+      const walker = document.querySelector<SVGGElement>('[data-walker]');
+      const contact = document.querySelector<SVGLineElement>('[data-contact]');
+      const elevEl = document.querySelector<SVGTextElement>('[data-elev]');
+      const yearEl = document.querySelector<HTMLElement>('[data-year]');
+      const zoneEl = document.querySelector<HTMLElement>('[data-zone]');
+      const titleEl = document.querySelector<HTMLElement>('[data-title]');
+      const progressEl = document.querySelector<HTMLElement>('[data-progress-done]');
+      const hint = document.querySelector<HTMLElement>('[data-scene-hint]');
+
+      interface Plane {
+        fx: number;
+        fy: number;
+        el: SVGGElement;
+      }
+
+      const layers = (Object.keys(LAYERS) as LayerName[])
+        .map((name): Plane | null => {
+          const el = document.querySelector<SVGGElement>(`[data-layer="${name}"]`);
+          return el ? { fx: LAYERS[name].fx, fy: LAYERS[name].fy, el } : null;
+        })
+        .filter((plane): plane is Plane => plane !== null);
+
+      const nodes = Array.from(document.querySelectorAll<SVGGElement>('[data-node]'));
+      const caseMarks = Array.from(document.querySelectorAll<SVGGElement>('[data-case]'));
+      const lanes = new Map<string, HTMLElement>();
+      for (const lane of document.querySelectorAll<HTMLElement>('[data-lang]')) {
+        if (lane.dataset.lang) lanes.set(lane.dataset.lang, lane);
+      }
+
+      const deskMaps = Array.from(document.querySelectorAll<SVGGElement>('[data-map]'));
+      const deskThings = Array.from(document.querySelectorAll<SVGGElement>('[data-from]'));
+      const deskCaption = document.querySelector<HTMLElement>('[data-desk-caption]');
+      const deskNote = document.querySelector<HTMLElement>('[data-desk-note]');
+      const paperTag = document.querySelector<SVGTextElement>('[data-paper-tag]');
+
+      // ── El dibuix ───────────────────────────────────────────────────────
+      let deskIndex = -1;
+
+      function paintDesk(index: number) {
+        for (const map of deskMaps) {
+          map.style.opacity = Number(map.dataset.map) === index ? '1' : '0';
+        }
+        for (const thing of deskThings) {
+          const from = Number(thing.dataset.from);
+          const until = thing.dataset.until === undefined ? Infinity : Number(thing.dataset.until);
+          thing.style.opacity = index >= from && index <= until ? '1' : '0';
+        }
+        const era = deskEras[index];
+        if (deskCaption) deskCaption.textContent = era.caption;
+        if (paperTag) paperTag.textContent = era.paper;
+        if (deskNote) {
+          deskNote.textContent = deskObjects
+            .filter((o) => o.from === index)
+            .map((o) => o.label)
+            .join(' · ');
+        }
+      }
+
+      function draw(p: number) {
+        const year = yearAtProgress(p);
+        const cam = cameraAt(year);
+        const idx = milestoneIndexForYear(year);
+        const handoff = handoffAt(p);
+
+        // La càmera: un sol `translate` per pla. El pla llunyà a 0,12 amb prou
+        // feines es mou, i és el que aguanta el quadre quan es baixa de pressa.
+        for (const layer of layers) {
+          layer.el.setAttribute(
+            'transform',
+            `translate(${(cam.ax - cam.wx * layer.fx).toFixed(2)} ${(cam.ay - cam.wy * layer.fy).toFixed(2)})`,
+          );
+        }
+
+        gauge?.setAttribute('transform', `translate(0 ${(cam.ay + cam.metres * METRE).toFixed(2)})`);
+        here?.setAttribute('transform', `translate(0 ${cam.ay.toFixed(2)})`);
+        if (elevEl) elevEl.textContent = String(Math.round(cam.metres));
+
+        // El caminant es queda dret; el que s'inclina és el terra que trepitja.
+        const bob = Math.sin(cam.wx * 0.05) * 1.1;
+        walker?.setAttribute('transform', `translate(${ANCHOR.x} ${(cam.ay + bob).toFixed(2)})`);
+        const rise = worldY(elevationAt(year + 0.3)) - worldY(elevationAt(year - 0.3));
+        const run = worldX(year + 0.3) - worldX(year - 0.3);
+        const slope = clamp((Math.atan2(rise, run) * 180) / Math.PI, -34, 34);
+        contact?.setAttribute('transform', `rotate(${slope.toFixed(1)})`);
+
+        for (const node of nodes) {
+          const at = Number(node.dataset.node);
+          node.dataset.state = at < idx ? 'past' : at === idx ? 'current' : 'future';
+        }
+
+        for (const mark of caseMarks) {
+          mark.dataset.state = year >= Number(mark.dataset.at) ? 'passed' : 'upcoming';
+        }
+
+        // Al despatx, la fitxa segueix l'època de la làmina i no la carena:
+        // les sis fites es tornen a llegir, aquesta vegada des de dins.
+        const inDesk = handoff > 0.5;
+        const deskState = deskStateAt(deskAtProgress(p));
+        const shown = inDesk ? milestones[deskEras[deskState.index].index] : milestones[idx];
+        const shownCopy = c.milestones[inDesk ? deskEras[deskState.index].index : idx];
+
+        if (yearEl) yearEl.textContent = String(inDesk ? deskEras[deskState.index].year : Math.round(year));
+        if (zoneEl) {
+          zoneEl.textContent = inDesk
+            ? deskEras[deskState.index].place
+            : shown.zones.map((z) => c.zoneNames[z]).join(' i ');
+        }
+        if (titleEl) titleEl.textContent = shownCopy.title;
+
+        for (const [key, lane] of lanes) {
+          lane.dataset.state = String(shown.langs[key as (typeof langKeys)[number]]);
+        }
+
+        progressEl?.style.setProperty('--p', p.toFixed(4));
+
+        if (stage) {
+          stage.style.opacity = String(1 - handoff);
+          stage.style.transform = `scale(${(1 - handoff * 0.07).toFixed(3)})`;
+        }
+        if (deskWrap) {
+          deskWrap.style.opacity = String(handoff);
+          deskWrap.style.visibility = handoff > 0.01 ? 'visible' : 'hidden';
+        }
+        if (handoff > 0 && deskState.index !== deskIndex) {
+          deskIndex = deskState.index;
+          paintDesk(deskIndex);
+        }
+
+        if (hint) hint.style.opacity = String(clamp(1 - p * 24, 0, 1));
+      }
+
+      // ── El motor ────────────────────────────────────────────────────────
+      /*
+       * Dues decisions, i totes dues són el que fa que el quadre aguanti un
+       * desplaçament ràpid:
+       *
+       * 1. La geometria de la secció es mesura una vegada i es guarda. Per
+       *    fotograma només es llegeix `scrollY`, que no força cap càlcul de
+       *    disposició: així el que es pinta no va mai un fotograma per
+       *    darrere del panell adherit, que és el que feia lliscar el quadre.
+       *
+       * 2. El pas s'amorteix amb una constant de temps i no amb una fracció
+       *    fixa per fotograma. A 144 Hz i a 60 Hz el món arriba igual de
+       *    tard, i «igual de tard» vol dir que no depèn de la màquina.
+       *
+       * El pas el criden dues coses —el bucle de fotogrames i l'esdeveniment
+       * de desplaçament— a posta. Si el navegador atura els fotogrames (una
+       * pestanya de fons, un panell amagat), el desplaçament sol continua
+       * movent-ho: amb un interval gran, l'amortiment val gairebé u i el món
+       * hi salta directament, que és exactament el que ha de fer.
+       */
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const TAU = reduce ? 0 : 78;
+
+      let sceneTop = 0;
+      let sceneRange = 1;
+      let target = 0;
+      let current = 0;
+      let painted = -1;
+      let last = performance.now();
+
+      function measure() {
+        if (!scene) return;
+        const rect = scene.getBoundingClientRect();
+        sceneTop = rect.top + window.scrollY;
+        sceneRange = Math.max(1, scene.offsetHeight - window.innerHeight);
+      }
+
+      function step(now: number) {
+        const dt = clamp(now - last, 0, 140);
+        last = now;
+        if (root.dataset.travessaMode === 'list' || !scene) return;
+
+        target = clamp((window.scrollY - sceneTop) / sceneRange, 0, 1);
+        const k = TAU > 0 ? 1 - Math.exp(-dt / TAU) : 1;
+        current += (target - current) * k;
+        if (Math.abs(target - current) < 0.00008) current = target;
+        if (Math.abs(current - painted) < 0.00002) return;
+        painted = current;
+        draw(current);
+      }
+
+      function frame(now: number) {
+        step(now);
+        requestAnimationFrame(frame);
+      }
+
+      measure();
+      step(performance.now());
+      requestAnimationFrame(frame);
+
+      window.addEventListener('scroll', () => step(performance.now()), { passive: true });
+      window.addEventListener(
+        'resize',
+        () => {
+          measure();
+          painted = -1;
+          step(performance.now());
+        },
+        { passive: true },
+      );
+      window.addEventListener('load', () => {
+        measure();
+        painted = -1;
+        step(performance.now());
+      });
+
+      // ── L'inset: el món es queda quiet a sota ───────────────────────────
+      const inset = document.querySelector<HTMLElement>('[data-inset]');
+      const insetPanel = document.querySelector<HTMLElement>('[data-inset-panel]');
+      const panels = new Map<string, HTMLElement>();
+      for (const panel of document.querySelectorAll<HTMLElement>('[data-case-panel]')) {
+        if (panel.dataset.casePanel) panels.set(panel.dataset.casePanel, panel);
+      }
+
+      let heldScroll = 0;
+      let opener: HTMLElement | null = null;
+
+      function openCase(id: string, from: HTMLElement | null) {
+        const panel = panels.get(id);
+        if (!panel || !inset) return;
+        heldScroll = window.scrollY;
+        opener = from;
+        for (const p of panels.values()) p.hidden = p !== panel;
+        inset.hidden = false;
+        const heading = panel.querySelector('h2');
+        if (heading?.id) insetPanel?.setAttribute('aria-labelledby', heading.id);
+        // Retenir el món: sense això la carena continua avançant per darrere
+        // de l'inset i quan es tanca ja s'és a un altre lloc de la travessa.
+        root.dataset.insetOpen = 'true';
+        // El botó, no el fons: tots dos porten `data-inset-close` i el primer
+        // del document és el `div` del fons, que no és focalitzable.
+        inset.querySelector<HTMLButtonElement>('button[data-inset-close]')?.focus();
+      }
+
+      function closeCase() {
+        if (!inset || inset.hidden) return;
+        inset.hidden = true;
+        delete root.dataset.insetOpen;
+        window.scrollTo(0, heldScroll);
+        opener?.focus();
+        opener = null;
+      }
+
+      for (const mark of caseMarks) {
+        mark.addEventListener('click', () => {
+          if (mark.dataset.case) openCase(mark.dataset.case, null);
+        });
+      }
+
+      for (const button of document.querySelectorAll<HTMLElement>('[data-case-open]')) {
+        button.addEventListener('click', () => {
+          if (button.dataset.caseOpen) openCase(button.dataset.caseOpen, button);
+        });
+      }
+
+      for (const closer of document.querySelectorAll<HTMLElement>('[data-inset-close]')) {
+        closer.addEventListener('click', closeCase);
+      }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeCase();
+      });
+    </script>
+
+    <style is:global>
+      /*
+       * `clip` i no `hidden`. `overflow-x: hidden` a l'arrel converteix el
+       * document en una capsa de desplaçament pròpia i el panell adherit s'hi
+       * comporta malament: és una de les dues coses que desenganxaven el
+       * quadre. `clip` retalla igual i no crea cap capsa.
+       */
+      html {
+        overflow-x: clip;
+        /* I `smooth` heretat de base.css hi posava una segona amortiment per
+           sobre de la nostra, amb el seu propi rellotge. Una és prou. */
+        scroll-behavior: auto;
+      }
+
+      body {
+        overflow-x: clip;
+      }
+
+      html[data-inset-open],
+      html[data-inset-open] body {
+        overflow: hidden;
+      }
+
+      /* El mode llista viu a `TravessaList.astro`, un altre component: el seu
+         arrel no porta la classe d'àmbit d'aquesta pàgina i la regla ha de ser
+         global perquè l'abast. */
+      html[data-travessa-mode='scroll'] [data-mode-list] {
+        display: none;
+      }
+    </style>
+
+    <style>
+      /* ── Barra de servei ── */
+      .hud {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-3) var(--gutter);
+        pointer-events: none;
+      }
+
+      .hud__name {
+        margin: 0;
+        color: var(--ink-faint);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        font-size: 0.68rem;
+      }
+
+      .hud__tag {
+        color: var(--mark-rule);
+      }
+
+      .hud__toggle {
+        pointer-events: auto;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        padding: var(--space-2) var(--space-4);
+        color: var(--ink-soft);
+        cursor: pointer;
+      }
+
+      .hud__toggle:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      /* ── L'escena ── */
+      .scene {
+        display: none;
+        position: relative;
+        height: 780vh;
+      }
+
+      html[data-travessa-mode='scroll'] .scene {
+        display: block;
+      }
+
+      html[data-travessa-mode='list'] .scene__hint {
+        display: none;
+      }
+
+      .scene__pin {
+        position: sticky;
+        top: 0;
+        height: 100svh;
+        overflow: hidden;
+        background: var(--paper);
+      }
+
+      .stage {
+        position: absolute;
+        inset: 0;
+        transform-origin: 50% 55%;
+        will-change: transform, opacity;
+      }
+
+      .deskwrap {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: var(--space-12) var(--gutter);
+        background: var(--paper);
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .scene__hint {
+        position: fixed;
+        left: 50%;
+        bottom: var(--space-3);
+        transform: translateX(-50%);
+        z-index: 55;
+        margin: 0;
+        color: var(--ink-faint);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        font-size: 0.68rem;
+        pointer-events: none;
+      }
+
+      html[data-travessa-mode='list'] .hud {
+        position: sticky;
+        background: color-mix(in srgb, var(--paper) 90%, transparent);
+        border-bottom: 1px solid var(--rule);
+        backdrop-filter: blur(6px);
+      }
+    </style>
+  </body>
+</html>

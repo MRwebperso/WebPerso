@@ -1,0 +1,569 @@
+---
+/**
+ * El final: un despatx isomètric que envelleix. Sis estats, 1987 → 2026, el
+ * mateix enquadrament sempre. No hi ha càmera: el que canvia és el que hi ha
+ * a dins, i és per això que es llegeix com el pas del temps i no com un
+ * recorregut. La carena ja ha fet el recorregut.
+ *
+ * Tres coses hi canvien, i cadascuna diu una cosa diferent:
+ *
+ *   · **El mapa de la paret** — el territori. Es reemplaça sencer a cada
+ *     època; l'últim porta la ratlla vermella de la frontera, que és la
+ *     mateixa cota zero de la carena i la mateixa ratlla de la marca.
+ *   · **La llengua dels papers** — l'eix llengua, aquí en una sola etiqueta.
+ *   · **Els objectes** — la biografia professional. No en marxa cap: entren a
+ *     la seva època i s'hi queden, i per això l'última làmina és plena.
+ *
+ * La projecció és calculada, no punts a mà: `iso(x, y, z)` amb x cap a la
+ * dreta i avall, z cap a l'esquerra i avall, y amunt. Les dues parets són els
+ * plans `z = WALL` (dreta, hi va el mapa) i `x = WALL` (esquerra, hi va la
+ * finestra), i tot el que s'hi penja es projecta amb dos ajudants perquè cap
+ * dibuix quedi pla damunt d'una paret inclinada.
+ */
+import { deskEras } from '../../data/travessa';
+
+const VIEW = { w: 560, h: 430 };
+const ORIGIN = { x: 268, y: 214 };
+const SCALE = 46;
+const COS30 = Math.cos(Math.PI / 6);
+const SIN30 = Math.sin(Math.PI / 6);
+const WALL = -0.4;
+
+function iso(x: number, y: number, z: number): [number, number] {
+  return [
+    ORIGIN.x + (x - z) * SCALE * COS30,
+    ORIGIN.y + (x + z) * SCALE * SIN30 - y * SCALE,
+  ];
+}
+
+const pt = (p: [number, number]) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+const poly = (points: [number, number, number][]) => points.map((p) => pt(iso(...p))).join(' ');
+const path = (points: [number, number, number][], close = true) =>
+  `M${points.map((p) => pt(iso(...p))).join(' L')}${close ? ' Z' : ''}`;
+
+/** Un punt (u, v) d'un requadre penjat a la paret de la dreta (pla z = WALL). */
+const wallZ = (box: { x: number; y: number; w: number; h: number }) =>
+  (u: number, v: number): [number, number] =>
+    iso(box.x + u * box.w, box.y + v * box.h, WALL);
+
+/** El mateix per a la paret de l'esquerra (pla x = WALL). */
+const wallX = (box: { z: number; y: number; w: number; h: number }) =>
+  (u: number, v: number): [number, number] =>
+    iso(WALL, box.y + v * box.h, box.z + u * box.w);
+
+const trace = (fn: (u: number, v: number) => [number, number], uv: [number, number][], close = true) =>
+  `M${uv.map(([u, v]) => pt(fn(u, v))).join(' L')}${close ? ' Z' : ''}`;
+
+// ── L'estança ──
+const floor = poly([
+  [WALL, 0, WALL],
+  [5.4, 0, WALL],
+  [5.4, 0, 3.8],
+  [WALL, 0, 3.8],
+]);
+const wallRight = poly([
+  [WALL, 0, WALL],
+  [5.4, 0, WALL],
+  [5.4, 3.3, WALL],
+  [WALL, 3.3, WALL],
+]);
+const wallLeft = poly([
+  [WALL, 0, WALL],
+  [WALL, 0, 3.8],
+  [WALL, 3.3, 3.8],
+  [WALL, 3.3, WALL],
+]);
+
+// ── La finestra: l'horitzó pla de la marca, vist des de dins ──
+const win = wallX({ z: 0.7, y: 1.35, w: 2.1, h: 1.5 });
+const winFrame = trace(win, [
+  [0, 0],
+  [1, 0],
+  [1, 1],
+  [0, 1],
+]);
+const winSky = trace(win, [
+  [0, 0.42],
+  [1, 0.42],
+  [1, 1],
+  [0, 1],
+]);
+/** La muntanya de la marca, dins de la finestra: cim alt, vall, cim baix. */
+const winRidge = trace(
+  win,
+  [
+    [0, 0.42],
+    [0.16, 0.5],
+    [0.34, 0.86],
+    [0.52, 0.6],
+    [0.72, 0.75],
+    [0.86, 0.52],
+    [1, 0.42],
+    [1, 0],
+    [0, 0],
+  ],
+);
+const winHorizon = trace(win, [[0, 0.42], [1, 0.42]], false);
+const winBar = trace(win, [[0.5, 0], [0.5, 1]], false);
+
+// ── El mapa de la paret ──
+const mapBox = wallZ({ x: 0.95, y: 1.55, w: 2.1, h: 1.35 });
+const mapFrame = trace(mapBox, [
+  [0, 0],
+  [1, 0],
+  [1, 1],
+  [0, 1],
+]);
+
+/**
+ * Els sis territoris, en coordenades normalitzades del requadre. No pretenen
+ * ser cartografia: són la silueta que es reconeix a tres centímetres de
+ * distància, que és la mida a la qual es veurà.
+ */
+const maps: { id: string; shape: [number, number][]; extra?: string }[] = [
+  {
+    id: 'cevenes',
+    shape: [[0.2, 0.25], [0.42, 0.16], [0.68, 0.24], [0.82, 0.45], [0.74, 0.72], [0.5, 0.82], [0.28, 0.7], [0.16, 0.48]],
+    extra: trace(mapBox, [[0.26, 0.42], [0.42, 0.58], [0.58, 0.4], [0.74, 0.55]], false),
+  },
+  {
+    id: 'portugal',
+    shape: [[0.3, 0.14], [0.46, 0.16], [0.5, 0.44], [0.56, 0.62], [0.48, 0.86], [0.3, 0.84], [0.26, 0.5]],
+    extra: trace(mapBox, [[0.3, 0.14], [0.28, 0.5], [0.3, 0.84]], false),
+  },
+  {
+    id: 'europa',
+    shape: [[0.14, 0.22], [0.4, 0.12], [0.72, 0.2], [0.88, 0.42], [0.78, 0.74], [0.5, 0.86], [0.22, 0.72], [0.1, 0.46]],
+    extra: trace(mapBox, [[0.3, 0.66], [0.46, 0.34], [0.68, 0.6], [0.8, 0.3]], false),
+  },
+  {
+    id: 'catalunya',
+    shape: [[0.24, 0.22], [0.6, 0.2], [0.78, 0.44], [0.66, 0.72], [0.38, 0.8], [0.22, 0.56]],
+    extra: trace(mapBox, [[0.62, 0.24], [0.74, 0.46], [0.66, 0.7]], false),
+  },
+  {
+    id: 'alps',
+    shape: [[0.12, 0.4], [0.3, 0.68], [0.46, 0.4], [0.62, 0.72], [0.8, 0.44], [0.9, 0.6], [0.72, 0.28], [0.56, 0.5], [0.4, 0.22], [0.24, 0.5]],
+  },
+  {
+    id: 'vallespir',
+    shape: [[0.14, 0.3], [0.5, 0.2], [0.86, 0.32], [0.88, 0.72], [0.5, 0.82], [0.14, 0.7]],
+    extra: trace(mapBox, [[0.14, 0.52], [0.34, 0.46], [0.56, 0.56], [0.88, 0.5]], false),
+  },
+];
+
+// ── Els papers de sobre la taula ──
+const paperBox = { x: 1.15, z: 2.05, w: 1.05, h: 0.72 };
+const paper = path([
+  [paperBox.x, 1, paperBox.z],
+  [paperBox.x + paperBox.w, 1, paperBox.z],
+  [paperBox.x + paperBox.w, 1, paperBox.z + paperBox.h],
+  [paperBox.x, 1, paperBox.z + paperBox.h],
+]);
+const paperLines = [0.24, 0.44, 0.64, 0.84].map((f) =>
+  path(
+    [
+      [paperBox.x + 0.1, 1, paperBox.z + paperBox.h * f],
+      [paperBox.x + paperBox.w - 0.14, 1, paperBox.z + paperBox.h * f],
+    ],
+    false,
+  ),
+);
+const [paperTagX, paperTagY] = iso(paperBox.x + 0.12, 1, paperBox.z + 0.12);
+
+// ── La taula i la cadira ──
+const deskTop = poly([[0.3, 1, 0.5], [3.5, 1, 0.5], [3.5, 1, 2.9], [0.3, 1, 2.9]]);
+const deskFront = poly([[0.3, 0, 2.9], [3.5, 0, 2.9], [3.5, 1, 2.9], [0.3, 1, 2.9]]);
+const deskSide = poly([[3.5, 0, 0.5], [3.5, 0, 2.9], [3.5, 1, 2.9], [3.5, 1, 0.5]]);
+const chairSeat = poly([[1.35, 0.55, 3.2], [2.45, 0.55, 3.2], [2.45, 0.55, 3.7], [1.35, 0.55, 3.7]]);
+const chairBack = poly([[1.35, 0.55, 3.7], [2.45, 0.55, 3.7], [2.45, 1.65, 3.7], [1.35, 1.65, 3.7]]);
+
+/** Un prisma rectangular sobre el taulell: tapa, cara frontal, cara dreta. */
+function box(x: number, z: number, w: number, d: number, h: number, base = 1) {
+  return {
+    top: poly([[x, base + h, z], [x + w, base + h, z], [x + w, base + h, z + d], [x, base + h, z + d]]),
+    front: poly([[x, base, z + d], [x + w, base, z + d], [x + w, base + h, z + d], [x, base + h, z + d]]),
+    side: poly([[x + w, base, z], [x + w, base, z + d], [x + w, base + h, z + d], [x + w, base + h, z]]),
+  };
+}
+
+const objects = {
+  textbook: box(0.42, 1.9, 0.6, 0.42, 0.14),
+  file: box(2.75, 1.85, 0.6, 0.5, 0.1),
+  thesis: box(0.45, 0.75, 0.5, 0.66, 0.24),
+  notebook: box(2.8, 0.75, 0.44, 0.34, 0.08),
+  radio: box(0.45, 2.5, 0.34, 0.3, 0.42),
+};
+
+const laptopBase = poly([[1.35, 1, 1.05], [2.55, 1, 1.05], [2.55, 1, 1.85], [1.35, 1, 1.85]]);
+const laptopScreen = poly([[1.35, 1, 1.05], [2.55, 1, 1.05], [2.55, 1.78, 0.82], [1.35, 1.78, 0.82]]);
+const crtBody = box(1.5, 1.05, 1, 0.8, 0.72);
+const crtGlass = poly([[1.62, 1.18, 1.05], [2.38, 1.18, 1.05], [2.38, 1.62, 1.05], [1.62, 1.62, 1.05]]);
+
+const cameraBody = box(3.0, 2.35, 0.36, 0.26, 0.22);
+const [lensX, lensY] = iso(3.18, 1.11, 2.35);
+const [antX, antY] = iso(0.62, 1.42, 2.65);
+const [antTopX, antTopY] = iso(0.62, 2.15, 2.65);
+
+// Quatre cartells de fira, penjats al costat del mapa en dues files de dos.
+const posters = [0, 1, 2, 3].map((i) =>
+  trace(
+    wallZ({
+      x: 3.35 + Math.floor(i / 2) * 0.62,
+      y: 1.55 + (i % 2) * 0.72,
+      w: 0.52,
+      h: 0.6,
+    }),
+    [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ],
+  ),
+);
+
+const lamp = box(3.05, 1.15, 0.26, 0.26, 0.06);
+const [lampArmX, lampArmY] = iso(3.18, 1.06, 1.28);
+const [lampHeadX, lampHeadY] = iso(2.9, 1.75, 1.28);
+---
+
+<figure class="desk" data-desk>
+  <svg class="desk__svg" viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true" focusable="false">
+    <defs>
+      <pattern id="desk-gravat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(41)">
+        <line x1="0" y1="0" x2="0" y2="6" class="d-hatch"></line>
+      </pattern>
+    </defs>
+
+    <polygon class="d-wall" points={wallRight}></polygon>
+    <polygon class="d-wall d-wall--left" points={wallLeft}></polygon>
+    <polygon class="d-floor" points={floor}></polygon>
+
+    {/* ── La finestra: sempre la mateixa, sempre el mateix horitzó ── */}
+    <path class="d-win-glass" d={winSky}></path>
+    <path class="d-win-ridge" d={winRidge} fill="url(#desk-gravat)"></path>
+    <path class="d-win-horizon" d={winHorizon}></path>
+    <path class="d-win-bar" d={winBar}></path>
+    <path class="d-win-frame" d={winFrame} fill="none"></path>
+
+    {/* ── El mapa: un per època ── */}
+    <path class="d-map-paper" d={mapFrame}></path>
+    {
+      maps.map((m, i) => (
+        <g class="d-map" data-map={i} style={i === 0 ? '' : 'opacity:0'}>
+          <path class="d-map-land" d={trace(mapBox, m.shape)} />
+          {m.extra && (
+            <path class:list={['d-map-line', { 'd-map-line--frontier': m.id === 'vallespir' }]} d={m.extra} fill="none" />
+          )}
+        </g>
+      ))
+    }
+    <path class="d-map-frame" d={mapFrame} fill="none"></path>
+
+    {/* ── Cartells de fira (2026) ── */}
+    <g class="d-obj" data-from="5">
+      {posters.map((d) => <path class="d-poster" d={d} />)}
+    </g>
+
+    {/* ── Mobiliari ── */}
+    <polygon class="d-chair" points={chairBack}></polygon>
+    <polygon class="d-desk-side" points={deskSide}></polygon>
+    <polygon class="d-desk-front" points={deskFront}></polygon>
+    <polygon class="d-desk-top" points={deskTop}></polygon>
+
+    {/* ── El llum: hi és des del principi ── */}
+    <g class="d-lamp">
+      <polygon class="d-obj-side" points={lamp.side}></polygon>
+      <polygon class="d-obj-front" points={lamp.front}></polygon>
+      <polygon class="d-obj-top" points={lamp.top}></polygon>
+      <line class="d-lamp-arm" x1={lampArmX} y1={lampArmY} x2={lampHeadX} y2={lampHeadY}></line>
+      <circle class="d-lamp-head" cx={lampHeadX} cy={lampHeadY} r="6"></circle>
+    </g>
+
+    {/* ── La màquina de treballar: cap, després un tub, després un portàtil ── */}
+    <g class="d-obj" data-from="2" data-until="2" style="opacity:0">
+      <polygon class="d-obj-side" points={crtBody.side}></polygon>
+      <polygon class="d-obj-front" points={crtBody.front}></polygon>
+      <polygon class="d-obj-top" points={crtBody.top}></polygon>
+      <polygon class="d-screen" points={crtGlass}></polygon>
+    </g>
+    <g class="d-obj" data-from="3" style="opacity:0">
+      <polygon class="d-screen" points={laptopScreen}></polygon>
+      <polygon class="d-obj-top" points={laptopBase}></polygon>
+    </g>
+
+    {/* ── Els papers, amb la llengua del moment ── */}
+    <g class="d-papers">
+      <path class="d-paper" d={paper}></path>
+      {paperLines.map((d) => <path class="d-paper-line" d={d} />)}
+      <text class="d-paper-tag" x={paperTagX} y={paperTagY} data-paper-tag>FR</text>
+    </g>
+
+    {/* ── El que s'acumula ── */}
+    <g class="d-obj" data-from="1" style="opacity:0">
+      <polygon class="d-obj-side" points={objects.textbook.side}></polygon>
+      <polygon class="d-obj-front" points={objects.textbook.front}></polygon>
+      <polygon class="d-obj-top d-obj-top--book" points={objects.textbook.top}></polygon>
+    </g>
+
+    <g class="d-obj" data-from="2" style="opacity:0">
+      <polygon class="d-obj-side" points={objects.file.side}></polygon>
+      <polygon class="d-obj-front" points={objects.file.front}></polygon>
+      <polygon class="d-obj-top" points={objects.file.top}></polygon>
+    </g>
+
+    <g class="d-obj" data-from="3" style="opacity:0">
+      <polygon class="d-obj-side" points={objects.thesis.side}></polygon>
+      <polygon class="d-obj-front d-obj-front--ruled" points={objects.thesis.front}></polygon>
+      <polygon class="d-obj-top" points={objects.thesis.top}></polygon>
+    </g>
+
+    <g class="d-obj" data-from="4" style="opacity:0">
+      <polygon class="d-obj-side" points={objects.notebook.side}></polygon>
+      <polygon class="d-obj-front" points={objects.notebook.front}></polygon>
+      <polygon class="d-obj-top" points={objects.notebook.top}></polygon>
+    </g>
+
+    <g class="d-obj" data-from="4" style="opacity:0">
+      <polygon class="d-obj-side" points={cameraBody.side}></polygon>
+      <polygon class="d-obj-front" points={cameraBody.front}></polygon>
+      <polygon class="d-obj-top" points={cameraBody.top}></polygon>
+      <circle class="d-lens" cx={lensX} cy={lensY} r="4.5"></circle>
+    </g>
+
+    <g class="d-obj" data-from="5" style="opacity:0">
+      <polygon class="d-obj-side" points={objects.radio.side}></polygon>
+      <polygon class="d-obj-front" points={objects.radio.front}></polygon>
+      <polygon class="d-obj-top" points={objects.radio.top}></polygon>
+      <line class="d-antenna" x1={antX} y1={antY} x2={antTopX} y2={antTopY}></line>
+      <circle class="d-antenna-tip" cx={antTopX} cy={antTopY} r="2.6"></circle>
+    </g>
+
+    <polygon class="d-chair" points={chairSeat}></polygon>
+  </svg>
+
+  {/* El peu i la nota els escriu l'script: la primera làmina és la taula buida. */}
+  <figcaption class="desk__caption ui" data-desk-caption>{deskEras[0].caption}</figcaption>
+  <p class="desk__objects ui" data-desk-note></p>
+</figure>
+
+<style>
+  .desk {
+    margin: 0;
+    width: min(100%, 34rem);
+  }
+
+  .desk__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    font-family: var(--font-ui);
+    overflow: visible;
+  }
+
+  .d-hatch {
+    stroke: var(--rule);
+    stroke-width: 1;
+  }
+
+  .d-wall {
+    fill: var(--paper);
+    stroke: var(--rule);
+    stroke-width: 1;
+  }
+
+  .d-wall--left {
+    fill: var(--paper-sunk);
+  }
+
+  .d-floor {
+    fill: var(--paper-sunk);
+    stroke: var(--rule);
+    stroke-width: 1;
+  }
+
+  /* ── Finestra ── */
+  .d-win-glass {
+    fill: var(--paper);
+  }
+
+  .d-win-ridge {
+    opacity: 0.75;
+  }
+
+  .d-win-horizon {
+    stroke: var(--mark-rule);
+    stroke-width: 1.6;
+    opacity: 0.8;
+    fill: none;
+  }
+
+  .d-win-bar,
+  .d-win-frame {
+    stroke: var(--ink-faint);
+    stroke-width: 1.4;
+    fill: none;
+  }
+
+  /* ── Mapa ── */
+  .d-map-paper {
+    fill: var(--paper);
+  }
+
+  .d-map-frame {
+    stroke: var(--ink);
+    stroke-width: 1.6;
+  }
+
+  .d-map {
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+
+  .d-map-land {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-width: 1.2;
+  }
+
+  .d-map-line {
+    stroke: var(--accent);
+    stroke-width: 1;
+    opacity: 0.7;
+  }
+
+  /* La frontera del darrer mapa és la mateixa ratlla de la marca. */
+  .d-map-line--frontier {
+    stroke: var(--mark-rule);
+    stroke-width: 1.6;
+    stroke-dasharray: 4 3;
+    opacity: 1;
+  }
+
+  .d-poster {
+    fill: var(--paper);
+    stroke: var(--ink-faint);
+    stroke-width: 1.1;
+  }
+
+  /* ── Mobiliari ── */
+  .d-desk-top {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+
+  .d-desk-front {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.3;
+  }
+
+  .d-desk-side {
+    fill: var(--paper-sunk);
+    stroke: var(--ink);
+    stroke-width: 1.3;
+  }
+
+  .d-chair {
+    fill: var(--paper-sunk);
+    stroke: var(--ink-faint);
+    stroke-width: 1.2;
+  }
+
+  /* ── Objectes ── */
+  .d-obj {
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+
+  .d-obj-top {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.2;
+  }
+
+  .d-obj-top--book {
+    fill: var(--accent-soft);
+  }
+
+  .d-obj-front {
+    fill: var(--paper-sunk);
+    stroke: var(--ink);
+    stroke-width: 1.2;
+  }
+
+  .d-obj-front--ruled {
+    fill: url(#desk-gravat);
+  }
+
+  .d-obj-side {
+    fill: var(--paper-sunk);
+    stroke: var(--ink);
+    stroke-width: 1.1;
+  }
+
+  .d-screen {
+    fill: var(--ink);
+    opacity: 0.85;
+  }
+
+  .d-lens {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.4;
+  }
+
+  .d-antenna,
+  .d-lamp-arm {
+    stroke: var(--ink);
+    stroke-width: 1.4;
+  }
+
+  .d-antenna-tip {
+    fill: var(--mark-rule);
+  }
+
+  .d-lamp-head {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.3;
+  }
+
+  /* ── Papers ── */
+  .d-paper {
+    fill: var(--paper);
+    stroke: var(--ink-faint);
+    stroke-width: 1.1;
+  }
+
+  .d-paper-line {
+    stroke: var(--rule);
+    stroke-width: 1.4;
+    fill: none;
+  }
+
+  .d-paper-tag {
+    fill: var(--accent);
+    font-size: 10px;
+    font-weight: var(--w-medium);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Peus ── */
+  .desk__caption {
+    margin-top: var(--space-4);
+    text-align: center;
+    color: var(--ink);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    font-size: 0.78rem;
+  }
+
+  .desk__objects {
+    margin-top: var(--space-2);
+    text-align: center;
+    color: var(--ink-faint);
+    font-variant: small-caps;
+    min-height: 1.4em;
+  }
+</style>

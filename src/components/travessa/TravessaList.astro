@@ -1,0 +1,237 @@
+---
+/**
+ * Mode llista: la lectura sense scrollytelling, en igualtat amb l'altra
+ * (espec, «Two modes»). La columna vertebral és la cronologia —mateix text
+ * que `Timeline.astro`, en català només—, i cada cas hi penja pel tram on
+ * cau el seu any. L'ordre dels casos dins d'un tram és `order`, no l'any: és
+ * el mateix «keep both» que la carena.
+ */
+import { langKeys, milestones, timeline } from '../../data/timeline';
+import { milestoneIndexForYear } from '../../data/travessa';
+import type { CaseRecord } from '../../data/cases';
+
+interface Props {
+  cases: CaseRecord[];
+}
+
+const { cases } = Astro.props;
+const c = timeline.ca;
+
+const eras = milestones.map((milestone, i) => ({
+  milestone,
+  copy: c.milestones[i],
+  working: langKeys.filter((key) => milestone.langs[key] === 2).map((key) => c.langNames[key]),
+  acquired: langKeys.filter((key) => milestone.langs[key] === 1).map((key) => c.langNames[key]),
+  // `cases` ja ve ordenat per `order` des de `getCases()`; el filtre no ho desfà.
+  cases: cases.filter((item) => milestoneIndexForYear(item.year) === i),
+}));
+---
+
+<div class="tlist" data-mode-list>
+  <ol class="tlist__eras">
+    {
+      eras.map(({ milestone, copy, working, acquired, cases: eraCases }) => (
+        <li class="tlist__era">
+          <p class="tlist__year nums">
+            {milestone.year}
+            {copy.yearSuffix && <span class="tlist__suffix">{copy.yearSuffix}</span>}
+          </p>
+          <h2>{copy.title}</h2>
+
+          <dl class="tlist__axes ui">
+            <dt>{c.axisLabels.zone}</dt>
+            <dd>{copy.zoneLabel}</dd>
+            {working.length > 0 && (
+              <Fragment>
+                {/* timeline.ts ha canviat d'etiquetes sota nostre: ara 2 és
+                    «adquirida» i 1 «en aprenentatge». S'hi adapta, no es reverteix. */}
+                <dt>{c.axisLabels.acquired}</dt>
+                <dd>{working.join(', ')}</dd>
+              </Fragment>
+            )}
+            {acquired.length > 0 && (
+              <Fragment>
+                <dt>{c.axisLabels.learning}</dt>
+                <dd>{acquired.join(', ')}</dd>
+              </Fragment>
+            )}
+          </dl>
+
+          <p class="tlist__body">{copy.body}</p>
+
+          {copy.aside && (
+            <p class="tlist__aside">
+              <span class="tlist__aside-label ui">{copy.aside.label}</span>
+              {copy.aside.body}
+            </p>
+          )}
+
+          {eraCases.length > 0 && (
+            <ol class="tlist__cases">
+              {eraCases.map((item) => (
+                <li class="tlist__case">
+                  <p class="tlist__case-period nums">{item.copy.ca.period}</p>
+                  <p class="tlist__case-title">{item.copy.ca.title}</p>
+                  <p class="tlist__case-summary">{item.copy.ca.summary}</p>
+                  <button type="button" class="tlist__case-open ui" data-case-open={item.id}>
+                    Llegeix el cas →
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+
+  <p class="tlist__ending ui">Avui, des d’un despatx a Prats de Molló.</p>
+</div>
+
+<style>
+  .tlist {
+    max-width: var(--content);
+    margin-inline: auto;
+    padding: clamp(var(--space-8), 6vh, var(--space-16)) var(--gutter) var(--space-24);
+  }
+
+  .tlist[hidden] {
+    display: none;
+  }
+
+  .tlist__eras {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tlist__era {
+    border-top: 1px solid var(--rule);
+    padding-block: var(--space-12);
+  }
+
+  .tlist__era:first-child {
+    border-top: none;
+  }
+
+  .tlist__year {
+    font-size: var(--step-2);
+    line-height: 1;
+    font-weight: var(--w-light);
+    color: var(--ink-faint);
+  }
+
+  .tlist__suffix {
+    font-size: var(--step--1);
+    margin-left: var(--space-2);
+    white-space: nowrap;
+  }
+
+  .tlist__era h2 {
+    margin-top: var(--space-2);
+    max-width: 26ch;
+  }
+
+  .tlist__axes {
+    margin: var(--space-6) 0 0;
+    display: grid;
+    grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr);
+    gap: var(--space-1) var(--space-4);
+    padding-block: var(--space-3);
+    border-block: 1px solid var(--rule);
+    max-width: var(--measure);
+  }
+
+  .tlist__axes dt {
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    line-height: 1.7;
+  }
+
+  .tlist__axes dd {
+    margin: 0;
+    color: var(--ink-soft);
+    font-variant: small-caps;
+  }
+
+  .tlist__body {
+    margin-top: var(--space-6);
+    max-width: var(--measure);
+    color: var(--ink-soft);
+  }
+
+  .tlist__aside {
+    margin-top: var(--space-6);
+    max-width: var(--measure-narrow);
+    padding-inline-start: var(--space-4);
+    border-inline-start: 1px solid var(--rule);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .tlist__aside-label {
+    display: block;
+    margin-bottom: var(--space-1);
+    color: var(--accent);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: var(--w-medium);
+  }
+
+  .tlist__cases {
+    list-style: none;
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-6);
+    padding-inline-start: var(--space-6);
+    border-inline-start: 2px solid var(--accent-soft);
+  }
+
+  .tlist__case-period {
+    font-size: 0.72rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .tlist__case-title {
+    margin-top: var(--space-1);
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    max-width: 30ch;
+  }
+
+  .tlist__case-summary {
+    margin-top: var(--space-2);
+    max-width: var(--measure-narrow);
+    color: var(--ink-soft);
+  }
+
+  .tlist__case-open {
+    margin-top: var(--space-3);
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: var(--rule);
+  }
+
+  .tlist__case-open:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .tlist__ending {
+    margin-top: var(--space-16);
+    color: var(--ink-faint);
+    text-align: center;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    font-size: 0.78rem;
+  }
+</style>

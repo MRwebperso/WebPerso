@@ -1,0 +1,742 @@
+---
+/**
+ * El món de la travessa, en quatre plans i un marc que no es mou mai.
+ *
+ * ── On és l'ancoratge ─────────────────────────────────────────────────────
+ * La cosa que es podia perdre en un desplaçament ràpid era el punt de
+ * referència: si tot el que hi ha a pantalla es mou alhora, l'ull no té on
+ * agafar-se i el quadre sembla que llisqui. Aquí hi ha quatre coses que no es
+ * mouen —o gairebé—, i totes quatre són visibles sempre:
+ *
+ *   1. El marc de la planxa i les seves marques de cantonada. Fix en píxels.
+ *   2. El caminant. Fix a l'ancoratge: és el món el que li passa per sota.
+ *   3. L'horitzó llunyà, amb paral·laxi 0,12. Es mou una dotzena part.
+ *   4. El regle d'altitud del marge, que llisca però no deixa mai la vora.
+ *
+ * Tot això és a l'espai de la finestra, fora dels grups que la càmera mou.
+ *
+ * ── Per què una sola planxa ───────────────────────────────────────────────
+ * `#carena` és el camí de la carena tancat per sota, i el fan servir quatre
+ * coses: la massa omplerta, el traç de dalt, el retall de les cotes i les
+ * corbes de nivell —que són aquest mateix camí desplaçat avall i retallat a
+ * dins de la massa—. És així com es gravava: una planxa, moltes passades.
+ *
+ * Tot el dibuix és `aria-hidden`. El que cal per llegir la peça és text, i és
+ * al mode llista.
+ */
+import {
+  MAX_METRES,
+  LAYERS,
+  VIEW,
+  WORLD_W,
+  backdropD,
+  frontierPosts,
+  layerWidth,
+  levels,
+  milestoneMarks,
+  ridgeMassD,
+  ridgeNodes,
+  worldY,
+  type CasePlacement,
+} from '../../data/travessa';
+import { timeline } from '../../data/timeline';
+
+interface Props {
+  cases: CasePlacement[];
+}
+
+const { cases } = Astro.props;
+const c = timeline.ca;
+
+const carena = ridgeMassD();
+const farD = backdropD(layerWidth(LAYERS.far.fx), 3, 130, 22, 9);
+const midD = backdropD(layerWidth(LAYERS.mid.fx), 17, 360, 240, 3.2);
+
+/**
+ * El primer pla: una franja per sota del caminant, prou irregular per fer
+ * notar la velocitat i prou fosca per no competir amb la carena. Suma de dos
+ * sinus, sense soroll: aquí no hi ha terreny que representar, només marxa.
+ */
+const nearW = layerWidth(LAYERS.near.fx);
+/** Alçada de la franja dins del seu pla: sempre arran del marge inferior. */
+const NEAR_Y = 232;
+const nearEdge = (x: number) => NEAR_Y + Math.sin(x * 0.0135) * 16 + Math.sin(x * 0.047 + 1.3) * 7;
+const nearD = (() => {
+  const parts: string[] = [];
+  for (let x = -40; x <= nearW; x += 22) {
+    parts.push(`${parts.length === 0 ? 'M' : 'L'}${x},${nearEdge(x).toFixed(1)}`);
+  }
+  parts.push(`L${nearW},900`, 'L-40,900', 'Z');
+  return parts.join(' ');
+})();
+
+/** Mates i pedres del primer pla, escampades amb un pas irregular però fix. */
+const tufts = Array.from({ length: Math.floor(nearW / 96) }, (_, i) => {
+  const x = 40 + i * 96 + ((i * 37) % 41);
+  const y = nearEdge(x);
+  const h = 9 + ((i * 13) % 7);
+  return `M${x},${y.toFixed(1)} l-${(h * 0.5).toFixed(1)},-${h} M${x},${y.toFixed(1)} l0,-${(h * 1.25).toFixed(1)} M${x},${y.toFixed(1)} l${(h * 0.55).toFixed(1)},-${(h * 0.85).toFixed(1)}`;
+}).join(' ');
+
+/** Corbes de nivell: la mateixa planxa, baixada. L'espaiat s'obre cap avall. */
+const formOffsets = [13, 30, 52, 80, 116];
+
+/**
+ * Prou endins perquè sobrevisqui al retall lateral de `slice` a les pantalles
+ * més quadrades (4:3 s'hi menja una seixantena d'unitats per banda).
+ */
+const gaugeX = 104;
+const tickLevels = [0, ...levels];
+---
+
+<div class="world" data-world>
+  <svg
+    class="world__svg"
+    viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
+    preserveAspectRatio="xMidYMid slice"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <defs>
+      <path id="carena" d={carena}></path>
+
+      <clipPath id="massa">
+        <use href="#carena"></use>
+      </clipPath>
+
+      <clipPath id="plate-clip">
+        <rect x="0" y="0" width={VIEW.w} height={VIEW.h}></rect>
+      </clipPath>
+
+      <pattern id="gravat" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(41)">
+        <line x1="0" y1="0" x2="0" y2="8" class="w-hatch"></line>
+      </pattern>
+
+      <pattern id="gravat-fi" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
+        <line x1="0" y1="0" x2="0" y2="5" class="w-hatch w-hatch--fi"></line>
+      </pattern>
+
+      <linearGradient id="cel" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--paper-sunk)"></stop>
+        <stop offset="62%" stop-color="var(--paper)"></stop>
+      </linearGradient>
+    </defs>
+
+    {/* El cel. L'única cosa que no es mou gens, ni tan sols de dotze en una. */}
+    <rect x="0" y="0" width={VIEW.w} height={VIEW.h} fill="url(#cel)"></rect>
+    {
+      [0, 1, 2, 3, 4].map((i) => (
+        <line class="w-sky-rule" x1="0" x2={VIEW.w} y1={34 + i * 26} y2={34 + i * 26} />
+      ))
+    }
+
+    {/* ── Teló de fons: l'horitzó pla de la marca ── */}
+    <g data-layer="far">
+      <path class="w-far" d={farD} fill="url(#gravat-fi)"></path>
+      <path class="w-far-line" d={farD} fill="none"></path>
+    </g>
+
+    {/* ── Segona serra ── */}
+    <g data-layer="mid">
+      <path class="w-mid" d={midD}></path>
+      <path class="w-mid-line" d={midD} fill="none"></path>
+    </g>
+
+    {/* ── La carena ── */}
+    <g data-layer="main">
+      <use href="#carena" class="w-mass" fill="url(#gravat)"></use>
+
+      <g clip-path="url(#massa)">
+        {
+          levels.map((m) => (
+            <line class="w-level" x1="0" x2={WORLD_W} y1={worldY(m)} y2={worldY(m)} />
+          ))
+        }
+        {
+          formOffsets.map((dy) => (
+            <use href="#carena" class="w-form" fill="none" transform={`translate(0,${dy})`} />
+          ))
+        }
+      </g>
+
+      <use href="#carena" class="w-line" fill="none"></use>
+
+      {/*
+        La cota zero, en vermell. És la ratlla plana de la marca, i és l'únic
+        vermell de la peça: només es veu quan la travessa passa arran de mar
+        —Lisboa, Barcelona—, que és exactament quan vol dir alguna cosa.
+      */}
+      <line class="w-datum" x1="0" x2={WORLD_W} y1="0" y2="0"></line>
+      {
+        [0.18, 0.42, 0.66, 0.9].map((f) => (
+          <text class="w-datum-label" x={WORLD_W * f} y="-8">
+            nivell del mar
+          </text>
+        ))
+      }
+
+      {
+        frontierPosts.map((post) => (
+          <g class="w-frontier">
+            <line x1={post.x} x2={post.x} y1={post.y + 8} y2={post.y - 128} />
+            <path
+              class="w-frontier-stone"
+              d={`M${post.x - 7},${post.y + 4} L${post.x - 7},${post.y - 12} L${post.x},${post.y - 19} L${post.x + 7},${post.y - 12} L${post.x + 7},${post.y + 4} Z`}
+            />
+            <text class="w-frontier-label" x={post.x + 12} y={post.y - 96}>
+              {c.frontier}
+            </text>
+          </g>
+        ))
+      }
+
+      {
+        ridgeNodes.map((node) => (
+          <g class="w-node" data-node={node.index} data-state="future">
+            <line x1={node.x} x2={node.x} y1={node.y} y2={node.y - 54} />
+            <circle cx={node.x} cy={node.y - 54} r="6" />
+            <text class="w-node-year nums" x={node.x} y={node.y - 68}>
+              {node.label}
+            </text>
+          </g>
+        ))
+      }
+
+      {
+        cases.map((item) => {
+          const top = item.y - (item.tier === 0 ? 96 : 142);
+          return (
+            <g
+              class="w-case"
+              data-case={item.id}
+              data-era={item.eraIndex}
+              data-at={item.atYear.toFixed(2)}
+              data-state="upcoming"
+            >
+              {item.structure === 'cairn' && (
+                <path
+                  class="w-case-glyph"
+                  d={`M${item.x - 11},${item.y} L${item.x + 11},${item.y} L${item.x + 6},${item.y - 12} L${item.x + 8},${item.y - 20} L${item.x},${item.y - 30} L${item.x - 8},${item.y - 20} L${item.x - 6},${item.y - 12} Z`}
+                />
+              )}
+              {item.structure === 'mast' && (
+                <path
+                  class="w-case-glyph"
+                  d={`M${item.x},${item.y} L${item.x},${item.y - 34} L${item.x + 15},${item.y - 29} L${item.x},${item.y - 24} M${item.x - 9},${item.y} L${item.x},${item.y - 26} L${item.x + 9},${item.y}`}
+                  fill="none"
+                />
+              )}
+              {item.structure === 'pillar' && (
+                <path
+                  class="w-case-glyph"
+                  d={`M${item.x - 8},${item.y} L${item.x - 6},${item.y - 24} L${item.x - 10},${item.y - 24} L${item.x - 10},${item.y - 30} L${item.x + 10},${item.y - 30} L${item.x + 10},${item.y - 24} L${item.x + 6},${item.y - 24} L${item.x + 8},${item.y} Z`}
+                />
+              )}
+
+              <line class="w-case-lead" x1={item.x} x2={item.x} y1={item.y - 32} y2={top + 6} />
+              <circle class="w-case-badge" cx={item.x} cy={top - 5} r="10" />
+              <text class="w-case-order nums" x={item.x} y={top - 1}>
+                {item.order}
+              </text>
+              <text class="w-case-label" x={item.x} y={top - 20}>
+                {item.label}
+              </text>
+              <rect
+                class="w-case-hit"
+                x={item.x - 46}
+                y={top - 30}
+                width="92"
+                height={item.y - top + 36}
+              ></rect>
+            </g>
+          );
+        })
+      }
+    </g>
+
+    {/* ── Primer pla ── */}
+    <g data-layer="near">
+      <path class="w-near" d={nearD}></path>
+      <path class="w-near-tufts" d={tufts} fill="none"></path>
+    </g>
+
+    {/* ══ Espai de finestra: res d'aquí avall no el mou la càmera ══ */}
+    <g clip-path="url(#plate-clip)">
+      <g class="w-gauge" data-gauge>
+        {/* Prou llarg per cobrir la finestra sencera a qualsevol altitud: el
+            grup llisca amunt i avall i el regle no hi pot tenir extrems. */}
+        <line class="w-gauge-rule" x1={gaugeX} x2={gaugeX} y1={worldY(MAX_METRES) - 800} y2="500"></line>
+        {
+          tickLevels.map((m) => (
+            <g class:list={['w-gauge-tick', { 'w-gauge-tick--major': m % 500 === 0 }]}>
+              <line x1={gaugeX} x2={gaugeX + (m % 500 === 0 ? 13 : 6)} y1={worldY(m)} y2={worldY(m)} />
+              {m % 500 === 0 && (
+                <text class="w-gauge-label nums" x={gaugeX - 7} y={worldY(m) + 4}>
+                  {m}
+                </text>
+              )}
+            </g>
+          ))
+        }
+      </g>
+
+      <g class="w-here" data-here>
+        <path class="w-here-arrow" d={`M${gaugeX + 4},0 l13,-6 l0,12 Z`}></path>
+        <text class="w-here-value nums" x={gaugeX + 22} y="5" data-elev>0</text>
+        <text class="w-here-unit" x={gaugeX + 22} y="20">m</text>
+      </g>
+
+      {/*
+        El caminant. Sempre al mateix punt de la finestra —només el biaix de
+        banda el fa pujar o baixar, i lentament—: si es mou, és perquè s'ha
+        mogut la frontera, no perquè s'hagi desplaçat la pàgina.
+      */}
+      <g class="w-walker" data-walker>
+        <line class="w-walker-contact" data-contact x1="-16" x2="16" y1="0" y2="0"></line>
+        <path
+          class="w-walker-body"
+          d="M0,0 l-4,-9 l1,-8 l-4,-7 M0,0 l4,-8 l0,-9 M-3,-17 l6,0 l1,-8 l-8,0 Z M0,-25 a4,4 0 1,0 0.1,0 M-4,-24 l-6,3 M8,-2 l0,-24"
+        ></path>
+      </g>
+    </g>
+  </svg>
+
+  {/*
+    El marc de la planxa. En HTML i no en SVG a posta: així les seves vores són
+    les vores de la finestra en píxels, sense dependre de com `slice` retalla
+    el `viewBox`. És l'ancoratge dur.
+  */}
+  <div class="plate" aria-hidden="true">
+    <span class="plate__corner plate__corner--tl"></span>
+    <span class="plate__corner plate__corner--tr"></span>
+    <span class="plate__corner plate__corner--bl"></span>
+    <span class="plate__corner plate__corner--br"></span>
+
+    <div class="cartouche">
+      <p class="cartouche__year nums" data-year>1987</p>
+      <p class="cartouche__zone ui" data-zone>Europa</p>
+      <p class="cartouche__title ui" data-title>Les Cevenes</p>
+    </div>
+
+    <p class="plate__legend ui">La travessa · 1987 – 2026 · cotes en metres</p>
+
+    <div class="progress">
+      <span class="progress__done" data-progress-done></span>
+      {
+        milestoneMarks.map((mark) => (
+          <span class="progress__mark" style={`--at:${mark.at}`}>
+            <span class="progress__mark-year nums">{mark.year}</span>
+          </span>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .world {
+    position: absolute;
+    inset: 0;
+  }
+
+  .world__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-ui);
+  }
+
+  /* ── Trames del gravat ── */
+  .w-hatch {
+    stroke: var(--rule);
+    stroke-width: 1;
+  }
+
+  .w-hatch--fi {
+    stroke: var(--rule);
+    opacity: 0.55;
+  }
+
+  .w-sky-rule {
+    stroke: var(--rule);
+    stroke-width: 0.8;
+    opacity: 0.5;
+  }
+
+  /* ── Plans de fons ── */
+  .w-far {
+    opacity: 0.5;
+  }
+
+  .w-far-line {
+    stroke: var(--ink-faint);
+    stroke-width: 1.1;
+    opacity: 0.55;
+  }
+
+  .w-mid {
+    fill: var(--paper-sunk);
+  }
+
+  .w-mid-line {
+    stroke: var(--ink-faint);
+    stroke-width: 1.3;
+    opacity: 0.8;
+  }
+
+  /* ── La carena ── */
+  .w-mass {
+    opacity: 0.75;
+  }
+
+  .w-level {
+    stroke: var(--rule);
+    stroke-width: 1;
+    stroke-dasharray: 14 9;
+    opacity: 0.85;
+  }
+
+  .w-form {
+    stroke: var(--rule);
+    stroke-width: 1.2;
+  }
+
+  .w-line {
+    stroke: var(--ink);
+    stroke-width: 2.4;
+    stroke-linejoin: round;
+  }
+
+  .w-datum {
+    stroke: var(--mark-rule);
+    stroke-width: 1.6;
+    stroke-dasharray: 9 7;
+    opacity: 0.75;
+  }
+
+  .w-datum-label {
+    fill: var(--mark-rule);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-anchor: middle;
+    opacity: 0.75;
+  }
+
+  /* ── Frontera ── */
+  .w-frontier line {
+    stroke: var(--accent);
+    stroke-width: 1.4;
+    stroke-dasharray: 5 5;
+  }
+
+  .w-frontier-stone {
+    fill: var(--paper);
+    stroke: var(--accent);
+    stroke-width: 1.6;
+  }
+
+  .w-frontier-label {
+    fill: var(--accent);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  /* ── Fites ── */
+  .w-node line {
+    stroke: var(--ink-faint);
+    stroke-width: 1.3;
+  }
+
+  .w-node circle {
+    fill: var(--paper);
+    stroke: var(--ink-faint);
+    stroke-width: 2;
+    transition: fill var(--dur-base) var(--ease-out);
+  }
+
+  .w-node-year {
+    fill: var(--ink-faint);
+    font-size: 14px;
+    text-anchor: middle;
+    opacity: 0.55;
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+
+  .w-node[data-state='past'] circle {
+    fill: var(--ink-faint);
+  }
+
+  .w-node[data-state='past'] .w-node-year,
+  .w-node[data-state='current'] .w-node-year {
+    opacity: 1;
+  }
+
+  .w-node[data-state='current'] circle {
+    fill: var(--accent);
+    stroke: var(--accent);
+    r: 8;
+  }
+
+  .w-node[data-state='current'] .w-node-year {
+    fill: var(--ink);
+    font-weight: var(--w-medium);
+  }
+
+  /* ── Casos ── */
+  .w-case-glyph {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+  }
+
+  .w-case-lead {
+    stroke: var(--rule);
+    stroke-width: 1.2;
+  }
+
+  .w-case-badge {
+    fill: var(--paper);
+    stroke: var(--ink-faint);
+    stroke-width: 1.4;
+  }
+
+  .w-case-order {
+    fill: var(--ink-faint);
+    font-size: 12px;
+    text-anchor: middle;
+  }
+
+  .w-case-label {
+    fill: var(--ink);
+    font-size: 15px;
+    text-anchor: middle;
+  }
+
+  .w-case-hit {
+    fill: transparent;
+    cursor: pointer;
+  }
+
+  .w-case {
+    opacity: 0.34;
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+
+  .w-case[data-state='passed'] {
+    opacity: 1;
+  }
+
+  .w-case[data-state='passed'] .w-case-glyph {
+    stroke: var(--accent);
+  }
+
+  .w-case[data-state='passed'] .w-case-badge {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+
+  .w-case[data-state='passed'] .w-case-order {
+    fill: var(--paper);
+  }
+
+  .w-case:hover .w-case-label {
+    fill: var(--accent);
+    text-decoration: underline;
+  }
+
+  /* ── Primer pla ── */
+  .w-near {
+    fill: var(--ink);
+    opacity: 0.1;
+  }
+
+  .w-near-tufts {
+    stroke: var(--ink);
+    stroke-width: 1.4;
+    opacity: 0.3;
+    stroke-linecap: round;
+  }
+
+  /* ── Regle d'altitud i caminant: espai de finestra ── */
+  .w-gauge-rule {
+    stroke: var(--ink-faint);
+    stroke-width: 1.2;
+  }
+
+  .w-gauge-tick line {
+    stroke: var(--ink-faint);
+    stroke-width: 1;
+    opacity: 0.6;
+  }
+
+  .w-gauge-tick--major line {
+    opacity: 1;
+    stroke-width: 1.4;
+  }
+
+  .w-gauge-label {
+    fill: var(--ink-faint);
+    font-size: 12px;
+    text-anchor: end;
+  }
+
+  .w-here-arrow {
+    fill: var(--accent);
+  }
+
+  .w-here-value {
+    fill: var(--ink);
+    font-size: 19px;
+    font-weight: var(--w-medium);
+  }
+
+  .w-here-unit {
+    fill: var(--ink-faint);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .w-walker-contact {
+    stroke: var(--ink);
+    stroke-width: 1.4;
+    opacity: 0.35;
+  }
+
+  .w-walker-body {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ── El marc de la planxa ── */
+  .plate {
+    position: absolute;
+    inset: clamp(0.75rem, 1.6vmin, 1.4rem);
+    border: 1px solid var(--ink-faint);
+    outline: 3px solid var(--paper);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--ink-faint);
+    pointer-events: none;
+  }
+
+  .plate__corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 0 solid var(--ink);
+  }
+
+  .plate__corner--tl {
+    top: -1px;
+    left: -1px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+  }
+  .plate__corner--tr {
+    top: -1px;
+    right: -1px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+  }
+  .plate__corner--bl {
+    bottom: -1px;
+    left: -1px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+  }
+  .plate__corner--br {
+    bottom: -1px;
+    right: -1px;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+  }
+
+  .cartouche {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-6);
+    text-align: right;
+    background: color-mix(in srgb, var(--paper) 82%, transparent);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .cartouche__year {
+    font-size: var(--step-4);
+    font-weight: var(--w-light);
+    line-height: 1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cartouche__zone {
+    margin-top: var(--space-1);
+    color: var(--accent);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+  }
+
+  .cartouche__title {
+    margin-top: var(--space-1);
+    color: var(--ink-soft);
+    font-variant: small-caps;
+  }
+
+  .plate__legend {
+    position: absolute;
+    left: var(--space-6);
+    bottom: var(--space-4);
+    margin: 0;
+    color: var(--ink-faint);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    font-size: 0.68rem;
+  }
+
+  .progress {
+    position: absolute;
+    right: var(--space-6);
+    bottom: var(--space-6);
+    width: min(26rem, 38vw);
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .progress__done {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--p, 0) * 100%);
+    background: var(--ink);
+  }
+
+  .progress__mark {
+    position: absolute;
+    top: -3px;
+    left: calc(var(--at) * 100%);
+    width: 1px;
+    height: 7px;
+    background: var(--ink-faint);
+  }
+
+  .progress__mark-year {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 62rem) {
+    .progress,
+    .plate__legend {
+      display: none;
+    }
+  }
+</style>

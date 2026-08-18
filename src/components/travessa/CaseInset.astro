@@ -1,0 +1,169 @@
+---
+/**
+ * Un sol inset per als sis casos: cada fitxa hi és sempre, oculta amb
+ * `hidden`, i l'script només en commuta la visibilitat. Sense injectar text
+ * per JS — el contingut ja hi és al marcatge, com demana l'espec («carrying
+ * the existing 3-chapter text»).
+ */
+import type { CaseRecord } from '../../data/cases';
+
+interface Props {
+  cases: CaseRecord[];
+}
+
+const { cases } = Astro.props;
+---
+
+<div class="inset" data-inset hidden>
+  <div class="inset__backdrop" data-inset-close></div>
+  <div class="inset__panel" role="dialog" aria-modal="true" data-inset-panel>
+    <button type="button" class="inset__close ui" data-inset-close aria-label="Tanca el cas">Tanca ✕</button>
+
+    {
+      cases.map((item) => {
+        const copy = item.copy.ca;
+        return (
+          <article class="inset__case" data-case-panel={item.id} hidden>
+            <p class="inset__period nums">{copy.period}</p>
+            <h2 id={`inset-title-${item.id}`}>{copy.title}</h2>
+            <p class="inset__summary">{copy.summary}</p>
+            <p class="inset__territory ui">{copy.territory}</p>
+
+            <ol class="inset__chapters">
+              {copy.chapters.map((chapter, i) => (
+                <li class="inset__chapter">
+                  <p class="inset__chapter-num nums">{String(i + 1).padStart(2, '0')}</p>
+                  <div>
+                    <h3>{chapter.title}</h3>
+                    <p>{chapter.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </article>
+        );
+      })
+    }
+  </div>
+</div>
+
+<style>
+  .inset {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    padding: var(--space-6);
+  }
+
+  .inset[hidden] {
+    display: none;
+  }
+
+  .inset__backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--ink) 45%, transparent);
+  }
+
+  .inset__panel {
+    position: relative;
+    max-width: 38rem;
+    max-height: min(80vh, 46rem);
+    overflow-y: auto;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: var(--space-8);
+    box-shadow: 0 1.5rem 3rem color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+
+  .inset__close {
+    position: sticky;
+    top: 0;
+    float: right;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: var(--space-2) var(--space-3);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  .inset__close:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .inset__case[hidden] {
+    display: none;
+  }
+
+  .inset__period {
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .inset__case h2 {
+    margin-top: var(--space-2);
+    font-size: var(--step-3);
+    max-width: 28ch;
+    clear: right;
+  }
+
+  .inset__summary {
+    margin-top: var(--space-4);
+    color: var(--ink);
+    max-width: var(--measure-narrow);
+  }
+
+  .inset__territory {
+    margin-top: var(--space-2);
+    color: var(--ink-faint);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+  }
+
+  .inset__chapters {
+    list-style: none;
+    margin: var(--space-8) 0 0;
+    padding: 0;
+  }
+
+  .inset__chapter {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-6);
+    border-top: 1px solid var(--rule);
+  }
+
+  .inset__chapter-num {
+    margin: 0;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .inset__chapter h3 {
+    font-size: var(--step-0);
+    max-width: 24ch;
+  }
+
+  .inset__chapter p {
+    margin-top: var(--space-2);
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 30rem) {
+    .inset__panel {
+      padding: var(--space-6);
+    }
+
+    .inset__chapter {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+  }
+</style>

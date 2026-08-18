@@ -1,0 +1,944 @@
+---
+/**
+ * «La Ruta» — prototip v0 (espiga barata, per triar direcció).
+ *
+ * Ruta llençable: fora de la navegació i de l'i18n, amb `noindex`. Objectiu
+ * de l'espiga: provar la unió OutRun-en-tinta (carretera pseudo-3D en canvas
+ * sota una làmina de paper i tramat), el motor de desplaçament portat de la
+ * travessa, els senyals de llengua derivats de `timeline.ts` i el tall
+ * TRAM → DESPATX. Tot art figuratiu és marcador de posició gris amb el nom
+ * de la ranura imprès (§8): res d'ambigu no ha de sobreviure a la revisió.
+ *
+ * Decisions preses pel defecte de l'espec: D1 català només (cadenes noves en
+ * un sol lloc), D2 el tram «europa» es construeix, D3 sense font de píxels,
+ * D5 /la-ruta/, D6 sense so.
+ */
+import '../styles/base.css';
+import { getCases } from '../data/cases';
+import { stagesFor, stageForYear } from '../data/ruta';
+import { langKeys, timeline } from '../data/timeline';
+import TravessaList from '../components/travessa/TravessaList.astro';
+import CaseInset from '../components/travessa/CaseInset.astro';
+
+const cases = await getCases();
+const stages = stagesFor('ca');
+const c = timeline.ca;
+
+// Cada cas s'asseu al despatx de la seva època per any; l'ordre de lectura
+// (`order`) el conserva el mode llista. Les dues coses alhora, com a la v1.
+const deskCases = stages.map((s) =>
+  cases
+    .filter((item) => stageForYear(item.year) === s.index)
+    .map((item) => ({
+      id: item.id,
+      label: item.copy.ca.title.length > 26 ? `${item.copy.ca.title.slice(0, 25)}…` : item.copy.ca.title,
+    })),
+);
+---
+
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LA RUTA · 1987 ▸ 2026 — prototip</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    {/* Abans del primer pintat: mode desat si n'hi ha; si no, moviment reduït
+        i pantalles estretes cauen al mode llista. Mateix patró que la v1. */}
+    <script is:inline>
+      (function () {
+        var saved = null;
+        try {
+          saved = localStorage.getItem('ruta-mode');
+        } catch (e) {
+          /* navegació privada: mode per defecte */
+        }
+        var fallback =
+          matchMedia('(prefers-reduced-motion: reduce)').matches || matchMedia('(max-width: 60rem)').matches
+            ? 'list'
+            : 'scroll';
+        document.documentElement.dataset.rutaMode = saved === 'list' || saved === 'scroll' ? saved : fallback;
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div class="hud">
+      <p class="hud__name ui">LA RUTA <span class="hud__years">1987 ▸ 2026</span> <span class="hud__tag">prototip</span></p>
+      <p class="hud__place ui" data-hud-place></p>
+      <div class="hud__actions">
+        <button type="button" class="hud__btn ui" data-autoplay aria-pressed="false">▶ auto</button>
+        <button type="button" class="hud__btn ui" data-mode-toggle aria-pressed="false">
+          <span data-mode-toggle-label>Llegir-ho en llista</span>
+        </button>
+      </div>
+    </div>
+
+    <section class="scene" data-scene aria-hidden="true">
+      <div class="scene__pin" data-pin>
+        <canvas class="road" data-road></canvas>
+
+        <div class="desks">
+          {
+            stages.map((s, i) => (
+              <figure class="desk" data-desk={i} hidden>
+                <svg viewBox="0 0 960 540" role="img" aria-label={`Despatx ${s.yearLabel}`}>
+                  {/* Finestra: el paisatge de l'època. Ranura, no dibuix. */}
+                  <rect x="80" y="56" width="280" height="190" class="ph" />
+                  <text x="220" y="140" class="ph__label" text-anchor="middle">{s.desk.window}</text>
+                  <text x="220" y="164" class="ph__sub" text-anchor="middle">{s.place}</text>
+                  {/* La taula: la mateixa forma, angle i enquadrament a totes sis. */}
+                  <path d="M150 386 L810 386 L764 476 L196 476 Z" class="ph ph--desk" />
+                  <rect x="206" y="476" width="18" height="50" class="ph ph--desk" />
+                  <rect x="736" y="476" width="18" height="50" class="ph ph--desk" />
+                  {/* El personatge: silueta grisa, ranura impresa. */}
+                  <circle cx="600" cy="216" r="46" class="ph" />
+                  <ellipse cx="600" cy="330" rx="72" ry="82" class="ph" />
+                  <text x="600" y="330" class="ph__label" text-anchor="middle">{s.desk.char}</text>
+                  <text x="600" y="352" class="ph__sub" text-anchor="middle">{s.desk.verb}</text>
+                  {/* Objectes de l'època, sobre la taula. */}
+                  {s.desk.objects.map((o, j) => (
+                    <g>
+                      <rect x={180 + j * 140} y={342} width={124} height={40} class="ph" />
+                      <text x={242 + j * 140} y={366} class="ph__label" text-anchor="middle">{o}</text>
+                    </g>
+                  ))}
+                </svg>
+                <figcaption class="desk__meta ui">
+                  <span class="desk__year">{s.yearLabel}</span>
+                  <strong>{s.title}</strong>
+                </figcaption>
+                {deskCases[i].length > 0 && (
+                  <div class="desk__cases">
+                    {deskCases[i].map((item) => (
+                      <button type="button" class="ui" data-case-open={item.id} tabindex="-1">
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </figure>
+            ))
+          }
+        </div>
+
+        <div class="attract" data-attract>
+          <p class="attract__kicker ui">un viatge de treball en sis etapes</p>
+          <h1 class="attract__title">LA RUTA</h1>
+          <p class="attract__years ui">1987 ▸ 2026</p>
+        </div>
+
+        <p class="banner ui" data-banner hidden></p>
+
+        <ol class="langs" data-langs>
+          {
+            langKeys.map((key) => (
+              <li data-lang={key} data-state="0">
+                <span>{c.langNames[key]}</span>
+              </li>
+            ))
+          }
+        </ol>
+
+        <p class="fps ui" data-fps hidden></p>
+
+        {/* La làmina: gra de paper + tramat sobre TOT el quadre. És el que fa
+            que la geometria procedimental i l'art dibuixat visquin al mateix
+            món imprès (§9.1). */}
+        <div class="inkoverlay" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <p class="scene__hint ui" data-scene-hint>Desplaça’t per conduir ↓</p>
+
+    <TravessaList cases={cases} />
+
+    <CaseInset cases={cases} />
+
+    <script>
+      import { langKeys, milestones, timeline, type LangKey, type LangState } from '../data/timeline';
+      import { ROAD_LEN, stagesFor, type Sign, type Stage } from '../data/ruta';
+
+      const stages = stagesFor('ca');
+      const c = timeline.ca;
+      const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
+      const root = document.documentElement;
+
+      const INK = '#16171a';
+      const PAPER = '#faf8f4';
+      const GREEN = '#2e7d4f';
+      const BLUE = '#3a5fa0';
+      const GREY = '#a2a09a'; // silueta de marcador de posició
+
+      // ── Mode ────────────────────────────────────────────────────────────
+      const toggle = document.querySelector<HTMLButtonElement>('[data-mode-toggle]');
+      const toggleLabel = document.querySelector<HTMLElement>('[data-mode-toggle-label]');
+
+      function paintMode() {
+        const list = root.dataset.rutaMode === 'list';
+        if (toggleLabel) toggleLabel.textContent = list ? 'Fer la ruta' : 'Llegir-ho en llista';
+        toggle?.setAttribute('aria-pressed', String(list));
+      }
+      paintMode();
+
+      toggle?.addEventListener('click', () => {
+        const next = root.dataset.rutaMode === 'list' ? 'scroll' : 'list';
+        root.dataset.rutaMode = next;
+        try {
+          localStorage.setItem('ruta-mode', next);
+        } catch (e) {
+          /* res a fer: el mode val per a aquesta visita */
+        }
+        stopAuto();
+        paintMode();
+        window.scrollTo(0, 0);
+        measure();
+        painted = -1;
+        step(performance.now());
+      });
+
+      // ── Partitura: atracció · despatx · (tram · despatx) × 5 ───────────
+      interface Seg {
+        kind: 'attract' | 'drive' | 'desk';
+        stage: number;
+        from: number;
+        to: number;
+      }
+
+      const segs: Seg[] = (() => {
+        const parts: { kind: Seg['kind']; stage: number; w: number }[] = [
+          { kind: 'attract', stage: 0, w: 0.7 },
+          { kind: 'desk', stage: 0, w: 1 },
+        ];
+        for (let i = 1; i < stages.length; i++) {
+          parts.push({ kind: 'drive', stage: i, w: 1.9 });
+          parts.push({ kind: 'desk', stage: i, w: 1 });
+        }
+        const total = parts.reduce((sum, p) => sum + p.w, 0);
+        let acc = 0;
+        return parts.map((p) => {
+          const from = acc / total;
+          acc += p.w;
+          return { kind: p.kind, stage: p.stage, from, to: acc / total };
+        });
+      })();
+
+      // ── Nusos del dibuix ────────────────────────────────────────────────
+      const scene = document.querySelector<HTMLElement>('[data-scene]');
+      const pin = document.querySelector<HTMLElement>('[data-pin]');
+      const canvas = document.querySelector<HTMLCanvasElement>('[data-road]');
+      const ctx = canvas?.getContext('2d') ?? null;
+      const attract = document.querySelector<HTMLElement>('[data-attract]');
+      const banner = document.querySelector<HTMLElement>('[data-banner]');
+      const placeEl = document.querySelector<HTMLElement>('[data-hud-place]');
+      const hint = document.querySelector<HTMLElement>('[data-scene-hint]');
+      const fpsEl = document.querySelector<HTMLElement>('[data-fps]');
+      const desks = Array.from(document.querySelectorAll<HTMLElement>('[data-desk]'));
+      const langSlots = new Map<string, HTMLElement>();
+      for (const slot of document.querySelectorAll<HTMLElement>('[data-lang]')) {
+        if (slot.dataset.lang) langSlots.set(slot.dataset.lang, slot);
+      }
+
+      // ── La carretera: pseudo-3D clàssic, per línia de pantalla ──────────
+      const NEAR = 6; // distància de món a la vora inferior del quadre
+      const BAND = 14; // amplada d'una franja (ratlles i herba alternen amb això)
+      const VIEW = 480; // fins on es veu un senyal
+
+      function sizeCanvas() {
+        if (!canvas || !pin) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.round(pin.clientWidth * dpr));
+        canvas.height = Math.max(1, Math.round(pin.clientHeight * dpr));
+      }
+
+      function drawSign(sign: Sign, d: number, W: number, H: number, horizon: number, curve: number, side: 1 | -1) {
+        if (!ctx) return;
+        const t = clamp(NEAR / d, 0, 1);
+        const y = horizon + t * (H - horizon);
+        const cx = W / 2 + curve * Math.pow(1 - t, 2) * W * 0.35;
+        const half = t * W * 0.44;
+        const name = c.langNames[sign.lang].toUpperCase();
+
+        if (sign.kind === 'entrada') {
+          // Senyal verd d'entrada de país, al voral.
+          const w = clamp(t * W * 0.34, 8, W * 0.34);
+          const h = w * 0.42;
+          const x = cx + side * (half + w * 0.22) - w / 2;
+          ctx.fillStyle = INK;
+          ctx.fillRect(x + w / 2 - w * 0.02, y - h, w * 0.04, h);
+          ctx.fillStyle = GREEN;
+          ctx.fillRect(x, y - h * 2.1, w, h);
+          ctx.strokeStyle = PAPER;
+          ctx.lineWidth = Math.max(1, w * 0.02);
+          ctx.strokeRect(x + w * 0.04, y - h * 2.1 + h * 0.09, w * 0.92, h * 0.82);
+          ctx.fillStyle = PAPER;
+          ctx.font = `700 ${Math.max(7, w * 0.13)}px 'IBM Plex Sans Variable', sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(name, x + w / 2, y - h * 1.55);
+        } else {
+          // Pòrtic blau d'autopista: creua tota la calçada, immens.
+          const w = half * 2.3;
+          const h = clamp(t * H * 0.14, 6, H * 0.14);
+          const top = y - clamp(t * H * 0.52, 10, H * 0.52);
+          ctx.fillStyle = INK;
+          ctx.fillRect(cx - w / 2, top, Math.max(1.5, w * 0.015), y - top);
+          ctx.fillRect(cx + w / 2 - Math.max(1.5, w * 0.015), top, Math.max(1.5, w * 0.015), y - top);
+          ctx.fillStyle = BLUE;
+          ctx.fillRect(cx - w / 2, top, w, h);
+          ctx.fillStyle = PAPER;
+          ctx.font = `700 ${Math.max(8, h * 0.5)}px 'IBM Plex Sans Variable', sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(name, cx, top + h * 0.66);
+        }
+      }
+
+      function drawCar(stage: Stage, camZ: number, W: number, H: number) {
+        if (!ctx) return;
+        // Silueta grisa amb la ranura impresa: art per encaixar, no per jutjar.
+        const w = clamp(W * 0.24, 120, 360);
+        const h = w * 0.42;
+        const x = W / 2 - w / 2 + stage.theme.curve * W * 0.02;
+        const y = H * 0.9 - h + Math.sin(camZ * 0.6) * H * 0.004;
+        ctx.fillStyle = GREY;
+        ctx.fillRect(x + w * 0.12, y, w * 0.76, h * 0.45); // cabina
+        ctx.fillRect(x, y + h * 0.38, w, h * 0.45); // cos
+        ctx.fillStyle = INK;
+        ctx.fillRect(x + w * 0.1, y + h * 0.78, w * 0.16, h * 0.2);
+        ctx.fillRect(x + w * 0.74, y + h * 0.78, w * 0.16, h * 0.2);
+        ctx.fillStyle = PAPER;
+        ctx.font = `600 ${Math.max(9, w * 0.062)}px 'IBM Plex Sans Variable', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`char/${stage.id}/driving`, x + w / 2, y + h * 0.66);
+      }
+
+      function renderDrive(stageIndex: number, camZ: number) {
+        if (!ctx || !canvas) return;
+        const W = canvas.width;
+        const H = canvas.height;
+        const stage = stages[stageIndex];
+        const th = stage.theme;
+        const horizon = Math.round(H * 0.42);
+
+        // Cel en bandes planes; el tramat el posa la làmina de sobre.
+        ctx.fillStyle = th.skyTop;
+        ctx.fillRect(0, 0, W, Math.round(horizon * 0.55));
+        ctx.fillStyle = th.skyLow;
+        ctx.fillRect(0, Math.round(horizon * 0.55), W, horizon - Math.round(horizon * 0.55) + 1);
+        if (th.sun) {
+          ctx.fillStyle = '#e8703a';
+          ctx.beginPath();
+          ctx.arc(W * 0.72, horizon, H * 0.13, Math.PI, 0);
+          ctx.fill();
+        }
+
+        // Carretera per línia: distància 1/t, franges pel mòdul de la Z de món.
+        for (let y = horizon; y < H; y++) {
+          const t = (y - horizon + 1) / (H - horizon);
+          const d = NEAR / t;
+          const band = Math.floor((camZ + d) / BAND) % 2 === 0;
+          const cx = W / 2 + th.curve * Math.pow(1 - t, 2) * W * 0.35;
+          const half = t * W * 0.44 + 2;
+          ctx.fillStyle = band ? th.groundA : th.groundB;
+          ctx.fillRect(0, y, W, 1);
+          ctx.fillStyle = band ? th.roadA : th.roadB;
+          ctx.fillRect(cx - half, y, half * 2, 1);
+          const edge = Math.max(1, half * 0.02);
+          ctx.fillStyle = INK;
+          ctx.fillRect(cx - half, y, edge, 1);
+          ctx.fillRect(cx + half - edge, y, edge, 1);
+          if (band) ctx.fillRect(cx - Math.max(0.5, half * 0.015), y, Math.max(1, half * 0.03), 1);
+        }
+
+        // Senyals, de lluny a prop, alternant el voral.
+        const visible = stage.signs
+          .map((sign, i) => ({ sign, d: sign.z - camZ, side: (i % 2 === 0 ? 1 : -1) as 1 | -1 }))
+          .filter((s) => s.d > 4 && s.d < VIEW)
+          .sort((a, b) => b.d - a.d);
+        for (const { sign, d, side } of visible) {
+          if (sign.kind === 'portic') drawSign(sign, d, W, H, horizon, th.curve, side);
+          else drawSign(sign, d, W, H, horizon, th.curve, side);
+        }
+
+        drawCar(stage, camZ, W, H);
+      }
+
+      // ── HUD: inventari de llengües ──────────────────────────────────────
+      function paintLangs(langs: Record<LangKey, LangState>) {
+        for (const key of langKeys) {
+          const slot = langSlots.get(key);
+          if (slot) slot.dataset.state = String(langs[key]);
+        }
+      }
+
+      function langsAt(seg: Seg, camZ: number): Record<LangKey, LangState> {
+        if (seg.kind !== 'drive') return milestones[seg.stage].langs;
+        // En ruta: l'estat de sortida, més cada senyal ja passat.
+        const shown = { ...milestones[seg.stage - 1].langs };
+        for (const sign of stages[seg.stage].signs) {
+          if (camZ >= sign.z) shown[sign.lang] = sign.to;
+        }
+        return shown;
+      }
+
+      // ── El dibuix ───────────────────────────────────────────────────────
+      let shownDesk = -1;
+      let bannerText = '';
+
+      function draw(p: number) {
+        const seg = segs.find((s) => p < s.to) ?? segs[segs.length - 1];
+        const t = clamp((p - seg.from) / (seg.to - seg.from), 0, 1);
+        const stage = stages[seg.stage];
+
+        // Tall net TRAM ↔ DESPATX: arcade, explícit, barat.
+        const deskIndex = seg.kind === 'desk' ? seg.stage : -1;
+        if (deskIndex !== shownDesk) {
+          shownDesk = deskIndex;
+          desks.forEach((d, i) => {
+            d.hidden = i !== deskIndex;
+          });
+        }
+
+        if (seg.kind !== 'desk') {
+          const camZ = seg.kind === 'attract' ? 0 : t * ROAD_LEN;
+          renderDrive(seg.stage, camZ);
+          paintLangs(langsAt(seg, camZ));
+        } else {
+          paintLangs(milestones[seg.stage].langs);
+        }
+
+        if (attract) attract.style.opacity = seg.kind === 'attract' ? String(clamp(1 - t * 1.6, 0, 1)) : '0';
+
+        // Rètols d'arcade a les costures: ETAPA en arribar, CHECKPOINT en sortir.
+        let text = '';
+        if (seg.kind === 'desk' && t < 0.14) text = `ETAPA ${seg.stage + 1} · ${stage.title.toUpperCase()} · ${stage.yearLabel}`;
+        if (seg.kind === 'drive' && t < 0.08) text = 'CHECKPOINT';
+        if (banner && text !== bannerText) {
+          bannerText = text;
+          banner.textContent = text;
+          banner.hidden = text === '';
+        }
+
+        if (placeEl) placeEl.textContent = `${stage.yearLabel} · ${stage.place}`;
+        if (hint) hint.style.opacity = String(clamp(1 - p * 24, 0, 1));
+      }
+
+      // ── El motor: portat de la travessa, on va quedar verificat ─────────
+      /*
+       * 1. La geometria es mesura una vegada; per fotograma només `scrollY`.
+       * 2. Amortiment amb constant de temps, no fracció fixa per fotograma.
+       * 3. El pas el criden el bucle de fotogrames I l'esdeveniment de
+       *    desplaçament: si el navegador atura els fotogrames, el
+       *    desplaçament sol continua movent el món.
+       */
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const TAU = reduce ? 0 : 78;
+
+      let sceneTop = 0;
+      let sceneRange = 1;
+      let target = 0;
+      let current = 0;
+      let painted = -1;
+      let last = performance.now();
+
+      function measure() {
+        if (!scene) return;
+        const rect = scene.getBoundingClientRect();
+        sceneTop = rect.top + window.scrollY;
+        sceneRange = Math.max(1, scene.offsetHeight - window.innerHeight);
+        sizeCanvas();
+      }
+
+      function step(now: number) {
+        const dt = clamp(now - last, 0, 140);
+        last = now;
+        if (root.dataset.rutaMode === 'list' || !scene) return;
+
+        target = clamp((window.scrollY - sceneTop) / sceneRange, 0, 1);
+        const k = TAU > 0 ? 1 - Math.exp(-dt / TAU) : 1;
+        current += (target - current) * k;
+        if (Math.abs(target - current) < 0.00008) current = target;
+        if (Math.abs(current - painted) < 0.00002) return;
+        painted = current;
+        draw(current);
+      }
+
+      // Comptador de temps de fotograma, només en desenvolupament (§13).
+      let worst = 0;
+      let fpsStamp = performance.now();
+      const devFps = import.meta.env.DEV && fpsEl;
+
+      function frame(now: number) {
+        const t0 = performance.now();
+        step(now);
+        if (devFps) {
+          worst = Math.max(worst, performance.now() - t0);
+          if (now - fpsStamp > 500) {
+            fpsEl.textContent = `màx ${worst.toFixed(1)} ms`;
+            fpsEl.hidden = false;
+            worst = 0;
+            fpsStamp = now;
+          }
+        }
+        requestAnimationFrame(frame);
+      }
+
+      measure();
+      step(performance.now());
+      requestAnimationFrame(frame);
+
+      window.addEventListener('scroll', () => step(performance.now()), { passive: true });
+      window.addEventListener(
+        'resize',
+        () => {
+          measure();
+          painted = -1;
+          step(performance.now());
+        },
+        { passive: true },
+      );
+      window.addEventListener('load', () => {
+        measure();
+        painted = -1;
+        step(performance.now());
+      });
+
+      // ── Reproducció automàtica: mirar la ruta sense tocar res ──────────
+      const autoBtn = document.querySelector<HTMLButtonElement>('[data-autoplay]');
+      let auto = false;
+
+      function paintAuto() {
+        autoBtn?.setAttribute('aria-pressed', String(auto));
+        if (autoBtn) autoBtn.textContent = auto ? '❚❚ atura' : '▶ auto';
+      }
+
+      function stopAuto() {
+        auto = false;
+        paintAuto();
+      }
+
+      function autoTick() {
+        if (!auto) return;
+        window.scrollBy(0, 5);
+        if (window.scrollY >= sceneTop + sceneRange) stopAuto();
+        else requestAnimationFrame(autoTick);
+      }
+
+      autoBtn?.addEventListener('click', () => {
+        auto = !auto;
+        paintAuto();
+        if (auto) requestAnimationFrame(autoTick);
+      });
+
+      // Qualsevol gest manual talla l'automàtic: la mà mana.
+      for (const ev of ['wheel', 'touchstart', 'keydown'] as const) {
+        window.addEventListener(ev, () => auto && stopAuto(), { passive: true });
+      }
+
+      // ── L'inset del cas: el món es queda quiet a sota (portat de v1) ────
+      const inset = document.querySelector<HTMLElement>('[data-inset]');
+      const insetPanel = document.querySelector<HTMLElement>('[data-inset-panel]');
+      const panels = new Map<string, HTMLElement>();
+      for (const panel of document.querySelectorAll<HTMLElement>('[data-case-panel]')) {
+        if (panel.dataset.casePanel) panels.set(panel.dataset.casePanel, panel);
+      }
+
+      let heldScroll = 0;
+      let opener: HTMLElement | null = null;
+
+      function openCase(id: string, from: HTMLElement | null) {
+        const panel = panels.get(id);
+        if (!panel || !inset) return;
+        heldScroll = window.scrollY;
+        opener = from;
+        stopAuto();
+        for (const p of panels.values()) p.hidden = p !== panel;
+        inset.hidden = false;
+        const heading = panel.querySelector('h2');
+        if (heading?.id) insetPanel?.setAttribute('aria-labelledby', heading.id);
+        root.dataset.insetOpen = 'true';
+        // El botó, no el fons: tots dos porten `data-inset-close` i el primer
+        // del document és el `div` del fons, que no és focalitzable.
+        inset.querySelector<HTMLButtonElement>('button[data-inset-close]')?.focus();
+      }
+
+      function closeCase() {
+        if (!inset || inset.hidden) return;
+        inset.hidden = true;
+        delete root.dataset.insetOpen;
+        window.scrollTo(0, heldScroll);
+        opener?.focus();
+        opener = null;
+      }
+
+      for (const button of document.querySelectorAll<HTMLElement>('[data-case-open]')) {
+        button.addEventListener('click', () => {
+          if (button.dataset.caseOpen) openCase(button.dataset.caseOpen, button);
+        });
+      }
+
+      for (const closer of document.querySelectorAll<HTMLElement>('[data-inset-close]')) {
+        closer.addEventListener('click', closeCase);
+      }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeCase();
+      });
+    </script>
+
+    <style is:global>
+      /* `clip` i no `hidden`: `hidden` a l'arrel crea una capsa de
+         desplaçament pròpia i desenganxa el panell adherit (§9.2). */
+      html {
+        overflow-x: clip;
+        /* base.css posa `smooth` global: seria una segona amortiment amb el
+           seu propi rellotge per sota de la nostra. Una és prou. */
+        scroll-behavior: auto;
+      }
+
+      body {
+        overflow-x: clip;
+      }
+
+      html[data-inset-open],
+      html[data-inset-open] body {
+        overflow: hidden;
+      }
+
+      /* El mode llista viu a TravessaList, un altre component: regla global. */
+      html[data-ruta-mode='scroll'] [data-mode-list] {
+        display: none;
+      }
+    </style>
+
+    <style>
+      /* ── Barra de servei ── */
+      .hud {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-3) var(--gutter);
+        pointer-events: none;
+      }
+
+      .hud__name {
+        margin: 0;
+        color: var(--ink);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        font-size: 0.68rem;
+        font-weight: 700;
+      }
+
+      .hud__years {
+        color: var(--ink-faint);
+        font-weight: 400;
+      }
+
+      .hud__tag {
+        color: var(--mark-rule);
+        font-weight: 400;
+      }
+
+      .hud__place {
+        margin: 0;
+        color: var(--ink-faint);
+        font-size: 0.68rem;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+      }
+
+      .hud__actions {
+        display: flex;
+        gap: var(--space-2);
+      }
+
+      .hud__btn {
+        pointer-events: auto;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        padding: var(--space-2) var(--space-4);
+        color: var(--ink-soft);
+        cursor: pointer;
+      }
+
+      .hud__btn:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      html[data-ruta-mode='list'] .hud__place,
+      html[data-ruta-mode='list'] [data-autoplay] {
+        display: none;
+      }
+
+      /* ── L'escena ── */
+      .scene {
+        display: none;
+        position: relative;
+        height: 900vh;
+      }
+
+      html[data-ruta-mode='scroll'] .scene {
+        display: block;
+      }
+
+      html[data-ruta-mode='list'] .scene__hint {
+        display: none;
+      }
+
+      .scene__pin {
+        position: sticky;
+        top: 0;
+        height: 100svh;
+        overflow: hidden;
+        background: var(--paper);
+      }
+
+      .road {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ── Despatxos ── */
+      .desk {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        margin: 0;
+        padding: var(--space-10) var(--gutter) var(--space-12);
+        background: var(--paper);
+      }
+
+      .desk[hidden] {
+        display: none;
+      }
+
+      .desk svg {
+        width: min(92%, 88svh * 1.78);
+        height: auto;
+      }
+
+      /* Marcadors de posició (§8): gris pla, nom de ranura imprès. Res que
+         es pugui confondre amb art acabat. */
+      .desk :global(.ph) {
+        fill: #b9b7b1;
+      }
+
+      .desk :global(.ph--desk) {
+        fill: #a2a09a;
+      }
+
+      .desk :global(.ph__label) {
+        fill: var(--ink);
+        font-family: var(--font-ui);
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .desk :global(.ph__sub) {
+        fill: var(--ink-soft);
+        font-family: var(--font-ui);
+        font-size: 12px;
+      }
+
+      .desk__meta {
+        position: absolute;
+        left: var(--gutter);
+        bottom: var(--space-10);
+        margin: 0;
+        display: flex;
+        gap: var(--space-3);
+        align-items: baseline;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--ink-faint);
+      }
+
+      .desk__meta strong {
+        color: var(--ink);
+      }
+
+      .desk__cases {
+        position: absolute;
+        right: var(--gutter);
+        bottom: var(--space-10);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: var(--space-2);
+        max-width: 44%;
+      }
+
+      .desk__cases button {
+        background: var(--paper);
+        border: 1px solid var(--ink);
+        padding: var(--space-1) var(--space-3);
+        font-size: 0.68rem;
+        color: var(--ink);
+        cursor: pointer;
+        box-shadow: 2px 2px 0 var(--ink);
+      }
+
+      .desk__cases button:hover {
+        color: var(--mark-rule);
+        border-color: var(--mark-rule);
+      }
+
+      /* ── Pantalla d'atracció ── */
+      .attract {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: grid;
+        place-content: center;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      .attract__kicker {
+        margin: 0;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--ink-soft);
+      }
+
+      .attract__title {
+        margin: var(--space-2) 0;
+        font-family: var(--font-display);
+        font-size: clamp(3rem, 12vw, 7rem);
+        line-height: 1;
+        color: var(--ink);
+      }
+
+      .attract__years {
+        margin: 0;
+        font-size: 0.9rem;
+        letter-spacing: 0.3em;
+        color: var(--mark-rule);
+      }
+
+      /* ── Rètol d'etapa ── */
+      .banner {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 38%;
+        z-index: 4;
+        margin: 0;
+        padding: var(--space-3) 0;
+        background: var(--ink);
+        color: var(--paper);
+        text-align: center;
+        font-size: clamp(0.9rem, 2.4vw, 1.4rem);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      /* ── Inventari de llengües ── */
+      .langs {
+        position: absolute;
+        left: var(--gutter);
+        bottom: var(--space-3);
+        z-index: 6;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-3);
+        margin: 0;
+        padding: var(--space-2) var(--space-3);
+        list-style: none;
+        background: color-mix(in srgb, var(--paper) 88%, transparent);
+        border: 1px solid var(--rule);
+      }
+
+      .langs li {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-family: var(--font-ui);
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-soft);
+      }
+
+      .langs li::before {
+        content: '';
+        width: 0.62rem;
+        height: 0.62rem;
+        border: 1.5px solid var(--ink);
+        border-radius: 50%;
+      }
+
+      .langs li[data-state='0'] {
+        opacity: 0.35;
+      }
+
+      .langs li[data-state='1']::before {
+        background: linear-gradient(to top, var(--ink) 50%, transparent 50%);
+      }
+
+      .langs li[data-state='2']::before {
+        background: var(--ink);
+      }
+
+      /* ── Comptador de fotograma (només dev) ── */
+      .fps {
+        position: absolute;
+        right: var(--gutter);
+        bottom: var(--space-3);
+        z-index: 6;
+        margin: 0;
+        font-size: 0.62rem;
+        color: var(--ink-faint);
+      }
+
+      /* ── La làmina de paper i tramat ── */
+      .inkoverlay {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        mix-blend-mode: multiply;
+        opacity: 0.55;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7'%3E%3Cpath d='M-1 8 L8 -1' stroke='%2316171a' stroke-width='0.65' opacity='0.13'/%3E%3C/svg%3E"),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.09 0 0 0 0 0.09 0 0 0 0 0.07 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+      }
+
+      /* ── Pista de desplaçament ── */
+      .scene__hint {
+        position: fixed;
+        left: 50%;
+        bottom: var(--space-3);
+        transform: translateX(-50%);
+        z-index: 55;
+        margin: 0;
+        color: var(--ink-faint);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        font-size: 0.68rem;
+        pointer-events: none;
+      }
+
+      html[data-ruta-mode='list'] .hud {
+        position: sticky;
+        background: color-mix(in srgb, var(--paper) 90%, transparent);
+        border-bottom: 1px solid var(--rule);
+        backdrop-filter: blur(6px);
+      }
+    </style>
+  </body>
+</html>

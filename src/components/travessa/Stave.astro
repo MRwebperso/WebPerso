@@ -1,0 +1,148 @@
+---
+/**
+ * L'eix llengua, al marge inferior de la planxa. Sis carrils en l'ordre
+ * d'entrada a la trajectòria (`langKeys`), amb el mateix vocabulari de tres
+ * estats que fa servir el diagrama de la portada —res, anella, disc—: aquí no
+ * hi ha cap «secció d'habilitats», és aquest carril i prou.
+ *
+ * Va en HTML i no en SVG perquè és marge, no món: no el toca la càmera, i és
+ * una de les coses que no es mouen mai mentre la carena passa.
+ */
+import { langKeys, milestones, timeline } from '../../data/timeline';
+
+const c = timeline.ca;
+const first = milestones[0];
+---
+
+<div class="stave" data-stave aria-hidden="true">
+  <p class="stave__label ui">Llengües</p>
+  <ul class="stave__lanes">
+    {
+      langKeys.map((key) => (
+        <li class="stave__lane" data-lang={key} data-state={first.langs[key]}>
+          <span class="stave__pip" />
+          <span class="stave__name ui">{c.langNames[key]}</span>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="stave__key ui">
+    <span class="stave__key-item"><span class="stave__pip" data-state="1"></span>{c.stateLabels.learning}</span>
+    <span class="stave__key-item"><span class="stave__pip" data-state="2"></span>{c.stateLabels.acquired}</span>
+  </p>
+</div>
+
+<style>
+  .stave {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-8);
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    background: color-mix(in srgb, var(--paper) 84%, transparent);
+    border: 1px solid var(--rule);
+    max-width: calc(100% - 2 * var(--space-6));
+  }
+
+  .stave__label {
+    margin: 0;
+    color: var(--ink-faint);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    font-size: 0.64rem;
+    white-space: nowrap;
+  }
+
+  .stave__lanes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .stave__lane {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink-faint);
+    transition: color var(--dur-base) var(--ease-out);
+  }
+
+  .stave__lane[data-state='0'] {
+    opacity: 0.45;
+  }
+
+  .stave__lane[data-state='2'] {
+    color: var(--ink);
+  }
+
+  .stave__name {
+    font-variant: small-caps;
+    letter-spacing: 0.03em;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .stave__pip {
+    flex: none;
+    display: inline-block;
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    transition:
+      background var(--dur-base) var(--ease-out),
+      border-color var(--dur-base) var(--ease-out);
+  }
+
+  [data-state='0'] > .stave__pip,
+  .stave__pip[data-state='0'] {
+    border-color: var(--rule);
+    border-style: dotted;
+  }
+
+  [data-state='1'] > .stave__pip,
+  .stave__pip[data-state='1'] {
+    border-color: var(--ink-faint);
+  }
+
+  [data-state='2'] > .stave__pip,
+  .stave__pip[data-state='2'] {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .stave__key {
+    display: flex;
+    gap: var(--space-3);
+    margin: 0;
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--rule);
+    color: var(--ink-faint);
+    font-size: 0.66rem;
+    white-space: nowrap;
+  }
+
+  .stave__key-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  @media (max-width: 74rem) {
+    .stave__key {
+      display: none;
+    }
+  }
+
+  @media (max-width: 52rem) {
+    .stave__label {
+      display: none;
+    }
+  }
+</style>
