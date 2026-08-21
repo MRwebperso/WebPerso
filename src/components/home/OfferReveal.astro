@@ -1,0 +1,358 @@
+---
+/**
+ * Les dues línies de l'oferta com una sola imatge que es parteix.
+ *
+ * La peça no afegeix cap text: pren les dues entrades de
+ * `home[lang].communication.offers` i les reparteix en dues capes que ocupen el
+ * mateix rectangle. La de sobre (comunicació) és la que es veu mentre la imatge
+ * és opaca; la de sota (dossiers i recerca) només existeix a mesura que el
+ * desplaçament menja la capa superior de dreta a esquerra. La costura és una
+ * regla vertical, i el text de cada capa hi queda tallat: és el mateix gest que
+ * una comparativa d'abans i després, però sense maneta ni arrossegament, perquè
+ * aquí el control és el desplaçament de la pàgina i no un giny més a la portada.
+ *
+ * Per què l'ancoratge del text és al costat contrari en cada capa: la costura
+ * arrenca a la vora dreta i baixa cap a l'esquerra, així que el text de la capa
+ * de sota s'ha d'escriure a la dreta —és el primer que es descobreix— i el de
+ * la de sobre a l'esquerra, que és l'últim que desapareix. Amb els dos textos
+ * centrats, mitja carrera no ensenyaria res llegible.
+ *
+ * Degradació: sense JS, amb moviment reduït o per sota de 48rem, l'escenari
+ * perd l'adherència i les dues capes es despleguen com dos blocs apilats amb el
+ * text sencer. La llista és sempre un `<ol>` de dos `<li>`: qui llegeix amb
+ * lector de pantalla no veu mai una sola de les dues línies, sigui quin sigui
+ * el mode.
+ */
+import { home } from '../../data/home';
+import type { Lang } from '../../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const [comm, research] = home[lang].communication.offers;
+---
+
+<div class="stage" data-offer-reveal>
+  <div class="stage__pin">
+    <ol class="layers">
+      {/* Capa de sota: es descobreix. Va primer al DOM perquè l'ordre de
+          lectura ha de coincidir amb el de `offers`; qui es pinta a sobre ho
+          decideix el `z-index`, no el flux. */}
+      <li class="layer layer--under">
+        <div class="scene scene--research" aria-hidden="true">
+          <svg viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice" role="presentation">
+            <defs>
+              <pattern id="or-rule" width="64" height="18" patternUnits="userSpaceOnUse">
+                <path d="M0 17.5H64" fill="none" stroke="currentColor" stroke-width="1" opacity="0.35"></path>
+              </pattern>
+            </defs>
+            <rect width="640" height="400" fill="url(#or-rule)"></rect>
+            {/* Corbes de nivell sobre pauta de full: la recerca de context és
+                territori llegit per capes, i el motiu ho diu sense escriure-ho. */}
+            <g fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55">
+              <path d="M-20 330 C 90 288, 180 320, 268 268 S 470 236, 660 190"></path>
+              <path d="M-20 288 C 100 244, 196 276, 286 222 S 486 192, 660 148"></path>
+              <path d="M-20 246 C 112 202, 214 232, 306 178 S 500 150, 660 108"></path>
+              <path d="M-20 204 C 126 162, 232 190, 326 136 S 514 110, 660 70"></path>
+            </g>
+            <g stroke="currentColor" stroke-width="1.4" opacity="0.85">
+              <path d="M78 118 V 60 M78 60 H 214" fill="none"></path>
+              <circle cx="78" cy="118" r="4.5" fill="currentColor" stroke="none"></circle>
+            </g>
+          </svg>
+        </div>
+        <div class="copy copy--right">
+          <p class="copy__num nums">02</p>
+          <h3>{research.title}</h3>
+          <p class="copy__body">{research.body}</p>
+          <p class="copy__deliverables ui">
+            <span class="eyebrow">{research.deliverablesLabel}</span>
+            <span>{research.deliverables.join(' · ')}</span>
+          </p>
+        </div>
+      </li>
+
+      {/* Capa de sobre: és la imatge opaca del principi i la que es retalla. */}
+      <li class="layer layer--over">
+        <div class="scene scene--comm" aria-hidden="true">
+          <svg viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice" role="presentation">
+            {/* Difusió: un punt d'emissió i tres fronts. Prou abstracte per no
+                acabar semblant una icona de xarxes socials. */}
+            <g fill="none" stroke="currentColor">
+              <circle cx="150" cy="250" r="58" stroke-width="1.4" opacity="0.5"></circle>
+              <circle cx="150" cy="250" r="112" stroke-width="1.4" opacity="0.34"></circle>
+              <circle cx="150" cy="250" r="176" stroke-width="1.4" opacity="0.2"></circle>
+              <path d="M150 250 L 372 128 L 596 178" stroke-width="1.6" opacity="0.8"></path>
+            </g>
+            <g fill="currentColor">
+              <circle cx="150" cy="250" r="6"></circle>
+              <circle cx="372" cy="128" r="4"></circle>
+              <circle cx="596" cy="178" r="4"></circle>
+            </g>
+          </svg>
+        </div>
+        <div class="copy copy--left">
+          <p class="copy__num nums">01</p>
+          <h3>{comm.title}</h3>
+          <p class="copy__body">{comm.body}</p>
+          <p class="copy__deliverables ui">
+            <span class="eyebrow">{comm.deliverablesLabel}</span>
+            <span>{comm.deliverables.join(' · ')}</span>
+          </p>
+        </div>
+      </li>
+    </ol>
+    <div class="seam" aria-hidden="true"></div>
+  </div>
+</div>
+
+<style>
+  /*
+   * `--p` és el progrés del desplaçament dins de l'escenari, de 0 a 1. L'escriu
+   * el guió a l'arrel de la peça i tot el moviment en surt: no hi ha cap altra
+   * propietat animada, i per fotograma només canvia una variable.
+   */
+  .stage {
+    --p: 0;
+    grid-column: 1 / -1;
+    margin-top: var(--space-12);
+  }
+
+  /* Mateix repartiment que la cronologia: quan la graella de secció obre el
+     raïl d'etiqueta, la peça arrenca a la columna de contingut i el raïl queda
+     lliure per continuar adherit. */
+  @media (min-width: 62rem) {
+    .stage {
+      grid-column: 2 / -1;
+    }
+  }
+
+  .stage__pin {
+    position: relative;
+    border-block: 1px solid var(--rule);
+  }
+
+  .layers {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .layer {
+    position: relative;
+    padding-block: var(--space-8);
+  }
+
+  .layer + .layer {
+    border-top: 1px solid var(--rule);
+  }
+
+  /* Mode apilat —el que es veu sense JS, amb moviment reduït o en pantalla
+     estreta—: l'escena queda com una franja sobre cada bloc, prou baixa per no
+     empènyer el text fora de la primera pantalla. */
+  .scene {
+    height: 7rem;
+    margin-bottom: var(--space-6);
+    color: var(--accent);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .scene svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .copy {
+    max-width: var(--measure-narrow);
+  }
+
+  .copy__num {
+    margin: 0 0 var(--space-2);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .copy__body {
+    margin-top: var(--space-3);
+  }
+
+  .copy__deliverables {
+    margin-top: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    color: var(--ink-soft);
+  }
+
+  .seam {
+    display: none;
+  }
+
+  /*
+   * Mode escenari. Només s'activa quan el guió marca `data-mode="scroll"`, així
+   * que l'adherència i la superposició absoluta no existeixen fins que hi ha
+   * algú que les pilota.
+   */
+  .stage[data-mode='scroll'] {
+    /* 260svh: 1,6 pantalles de recorregut útil un cop descomptada la que ocupa
+       el panell adherit. Per sota de 240 el text de la capa de sota s'ha
+       d'acabar de llegir massa de pressa. */
+    height: 260svh;
+  }
+
+  .stage[data-mode='scroll'] .stage__pin {
+    position: sticky;
+    top: calc(4rem + var(--space-8));
+    height: calc(100svh - 8rem);
+    min-height: 30rem;
+    overflow: hidden;
+  }
+
+  .stage[data-mode='scroll'] .layers,
+  .stage[data-mode='scroll'] .layer {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .stage[data-mode='scroll'] .layer--under {
+    z-index: 1;
+  }
+
+  /* El fons opac de la capa superior és el que fa que la de sota no es
+     transparenti: sense ell no hi hauria costura, sinó dos textos superposats. */
+  .stage[data-mode='scroll'] .layer--over {
+    z-index: 2;
+    background: var(--paper);
+    /* A `--p` 0 no s'amaga res: la capa de sobre és la imatge opaca. */
+    clip-path: inset(0 calc(var(--p) * 100%) 0 0);
+  }
+
+  .stage[data-mode='scroll'] .scene {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    margin: 0;
+    opacity: 0.28;
+  }
+
+  .stage[data-mode='scroll'] .copy {
+    position: absolute;
+    bottom: var(--space-8);
+    max-width: min(38ch, 46%);
+  }
+
+  .stage[data-mode='scroll'] .copy--left {
+    left: 0;
+  }
+
+  .stage[data-mode='scroll'] .copy--right {
+    right: 0;
+    text-align: right;
+  }
+
+  .stage[data-mode='scroll'] .copy--right .copy__deliverables {
+    align-items: flex-end;
+  }
+
+  .stage[data-mode='scroll'] .seam {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(100% - var(--p) * 100%);
+    z-index: 3;
+    width: 1px;
+    /* Vermell de marca: aquí és element gràfic i no text, i a 5,59:1 sobre
+       `--paper` queda per damunt del 3:1 que li toca. */
+    background: var(--mark-rule);
+    /* Als extrems la costura coincideix amb la vora del panell i allà només fa
+       soroll: s'esvaeix en els primers i els últims cinc centèsims. */
+    opacity: clamp(0, calc(min(var(--p), 1 - var(--p)) * 20), 1);
+  }
+</style>
+
+<script>
+  /*
+   * Motor portat de `/la-ruta/`, retallat al que cal aquí: la geometria es
+   * mesura una vegada, per fotograma només es llegeix `scrollY`, i l'amortiment
+   * va per constant de temps i no per fracció fixa de fotograma. El pas el
+   * criden alhora el bucle de fotogrames i l'esdeveniment de desplaçament,
+   * perquè si el navegador atura els fotogrames el desplaçament sol ha de
+   * continuar movent la costura.
+   */
+  const stage = document.querySelector<HTMLElement>('[data-offer-reveal]');
+  const pin = stage?.querySelector<HTMLElement>('.stage__pin');
+
+  if (stage && pin) {
+    const narrow = matchMedia('(max-width: 48rem)');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
+
+    let top = 0;
+    let range = 1;
+    let current = 0;
+    let painted = -1;
+    let last = performance.now();
+
+    function measure() {
+      top = stage!.getBoundingClientRect().top + window.scrollY;
+      range = Math.max(1, stage!.offsetHeight - pin!.offsetHeight);
+    }
+
+    function paint(p: number) {
+      if (Math.abs(p - painted) < 0.0005) return;
+      painted = p;
+      stage!.style.setProperty('--p', p.toFixed(4));
+    }
+
+    function step(now: number) {
+      const dt = clamp(now - last, 0, 140);
+      last = now;
+      if (stage!.dataset.mode !== 'scroll') return;
+      const target = clamp((window.scrollY - top) / range, 0, 1);
+      // 90 ms de constant de temps: prou per llegir-se com a resistència i no
+      // com a retard. És el valor que ja fa servir la travessa.
+      current += (target - current) * (1 - Math.exp(-dt / 90));
+      if (Math.abs(target - current) < 0.0002) current = target;
+      paint(current);
+    }
+
+    function frame(now: number) {
+      step(now);
+      requestAnimationFrame(frame);
+    }
+
+    function sync() {
+      if (!reduce.matches && !narrow.matches) {
+        stage!.dataset.mode = 'scroll';
+        measure();
+      } else {
+        delete stage!.dataset.mode;
+        // En sortir del mode escenari la variable ha de tornar a zero: amb un
+        // valor residual, el retall quedaria escrit al mode apilat.
+        current = 0;
+        painted = -1;
+        paint(0);
+      }
+    }
+
+    sync();
+    reduce.addEventListener('change', sync);
+    narrow.addEventListener('change', sync);
+    /*
+     * El canvi de mida passa per `sync` i no directament per `measure`: hi ha
+     * situacions —redimensionat emulat, canvi d'orientació— en què el
+     * `change` de la consulta de mitjans no arriba, i sense això l'escenari es
+     * quedaria adherit en una pantalla on ja no hi cap.
+     */
+    addEventListener('resize', sync);
+    addEventListener('scroll', () => step(performance.now()), { passive: true });
+    requestAnimationFrame(frame);
+  }
+</script>
