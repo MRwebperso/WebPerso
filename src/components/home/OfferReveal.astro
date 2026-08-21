@@ -1,29 +1,38 @@
 ---
 /**
- * Les dues línies de l'oferta com una sola imatge que es parteix.
+ * Les dues línies de l'oferta com una sola imatge partida per una maneta.
  *
- * La peça no afegeix cap text: pren les dues entrades de
+ * La peça no afegeix cap text de contingut: pren les dues entrades de
  * `home[lang].communication.offers` i les reparteix en dues capes que ocupen el
- * mateix rectangle. La de sobre (comunicació) és la que es veu mentre la imatge
- * és opaca; la de sota (dossiers i recerca) només existeix a mesura que el
- * desplaçament menja la capa superior de dreta a esquerra. La costura és una
- * regla vertical, i el text de cada capa hi queda tallat: és el mateix gest que
- * una comparativa d'abans i després, però sense maneta ni arrossegament, perquè
- * aquí el control és el desplaçament de la pàgina i no un giny més a la portada.
+ * mateix rectangle. Totes dues dibuixen exactament la mateixa muntanya —la
+ * geometria és una sola constant, `FRONT_PTS` i `BACK_PTS`— i només en canvia
+ * l'acabat: a l'esquerra és una imatge acabada (cel, sol, siluetes plenes, or
+ * de marca), a la dreta és el plànol de la mateixa cosa (pauta, eixos, carena
+ * com a línia de dades, vèrtexs i acotacions). Aquesta és la tesi de la secció
+ * en una imatge: la peça acabada i la recerca que la sosté són el mateix
+ * terreny llegit de dues maneres.
  *
- * Per què l'ancoratge del text és al costat contrari en cada capa: la costura
- * arrenca a la vora dreta i baixa cap a l'esquerra, així que el text de la capa
- * de sota s'ha d'escriure a la dreta —és el primer que es descobreix— i el de
- * la de sobre a l'esquerra, que és l'últim que desapareix. Amb els dos textos
- * centrats, mitja carrera no ensenyaria res llegible.
+ * Per què la maneta i no el desplaçament de la pàgina (decisió de l'usuari,
+ * 21/08/2026): amb el control lligat a l'scroll, per rellegir una frase cal
+ * moure la pàgina i es perd el lloc. Amb la maneta, el lector es queda quiet,
+ * obre la banda que li interessa i la torna a tancar. La costura descansa al
+ * mig: d'entrada es llegeixen els dos titulars i els dos cossos, i els
+ * lliurables de cada banda només apareixen quan s'hi empeny —és la part que es
+ * guarda per a qui té prou curiositat per obrir-la.
  *
- * Degradació: sense JS, amb moviment reduït o per sota de 48rem, l'escenari
- * perd l'adherència i les dues capes es despleguen com dos blocs apilats amb el
- * text sencer. La llista és sempre un `<ol>` de dos `<li>`: qui llegeix amb
- * lector de pantalla no veu mai una sola de les dues línies, sigui quin sigui
- * el mode.
+ * Per què el ratolí per sobre i no només l'arrossegament: el gest ha de costar
+ * zero. El clic manté, el teclat manté, i el ratolí que se'n va torna la
+ * costura al mig tot sol.
+ *
+ * Degradació: sense JS o per sota de 48rem no hi ha maneta i les dues capes es
+ * despleguen com dos blocs apilats amb el text sencer. Amb moviment reduït la
+ * maneta hi és, però sense amortiment: el moviment el fa la mà de qui llegeix,
+ * i això no és una animació que se li imposi. La llista és sempre un `<ol>` de
+ * dos `<li>` amb els dos textos al DOM: qui llegeix amb lector de pantalla no
+ * en perd cap, sigui quin sigui el mode.
  */
 import { home } from '../../data/home';
+import { useTranslations } from '../../i18n/ui';
 import type { Lang } from '../../i18n/utils';
 
 interface Props {
@@ -31,98 +40,243 @@ interface Props {
 }
 
 const { lang } = Astro.props;
+const t = useTranslations(lang);
 const [comm, research] = home[lang].communication.offers;
+
+/*
+ * Geometria compartida. Les dues escenes surten d'aquests dos perfils, així que
+ * la muntanya de la dreta no pot desalinear-se de la de l'esquerra ni per
+ * descuit: la costura talla una imatge contínua i no dues de semblants.
+ *
+ * Marc de 640×420 amb `slice`: la relació 1,52 és més estreta que la del panell
+ * (~2), de manera que el retall sempre és vertical —cel a dalt, base de les
+ * siluetes a sota— i mai horitzontal, que és el que s'enduria les vores just on
+ * hi ha la partició.
+ */
+const FRONT_PTS = [
+  [0, 352],
+  [104, 296],
+  [200, 326],
+  [300, 262],
+  [392, 304],
+  [498, 250],
+  [640, 300],
+];
+const BACK_PTS = [
+  [0, 302],
+  [92, 244],
+  [164, 276],
+  [258, 190],
+  [346, 246],
+  [436, 168],
+  [520, 226],
+  [640, 178],
+];
+const poly = (pts: number[][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ');
+const area = (pts: number[][]) => `${poly(pts)} L640 420 L0 420 Z`;
+/*
+ * El sol va amunt i a la dreta del marc, no a l'esquerra. Dues raons, i totes
+ * dues mesurades: al seu lloc natural —sobre la primera carena, a l'esquerra—
+ * la massa clara queda exactament darrere del titular de la capa 01, i el
+ * blanc hi cau a 2,8:1. A la dreta del marc, en canvi, la columna de text no hi
+ * arriba mai (acaba a x≈306 del marc i el disc comença a 434), i de passada el
+ * sol queda amagat rere la costura mentre no s'obre la banda: qui empeny cap a
+ * la dreta descobreix el sol i, a la mateixa posició, la capa del plànol ja
+ * n'ensenyava el cercle de construcció. És la peça que demostra que les dues
+ * bandes són el mateix dibuix.
+ */
+const SUN = { cx: 470, cy: 86, r: 36 };
 ---
 
-<div class="stage" data-offer-reveal>
-  <div class="stage__pin">
+<div class="stage" data-offer-split>
+  <div class="stage__pin" data-pin>
     <ol class="layers">
-      {/* Capa de sota: es descobreix. Va primer al DOM perquè l'ordre de
-          lectura ha de coincidir amb el de `offers`; qui es pinta a sobre ho
-          decideix el `z-index`, no el flux. */}
-      <li class="layer layer--under">
-        <div class="scene scene--research" aria-hidden="true">
-          <svg viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice" role="presentation">
+      {/* Capa 01 — la imatge acabada. Ocupa de la vora esquerra a la costura. */}
+      <li class="layer layer--render">
+        <div class="scene scene--render" aria-hidden="true">
+          <svg viewBox="0 0 640 420" preserveAspectRatio="xMidYMid slice" role="presentation" focusable="false">
             <defs>
-              <pattern id="or-rule" width="64" height="18" patternUnits="userSpaceOnUse">
-                <path d="M0 17.5H64" fill="none" stroke="currentColor" stroke-width="1" opacity="0.35"></path>
+              {/*
+                Tots els degradats van amb `currentColor` i opacitat, mai amb un
+                hexadecimal: així l'escena es pinta amb `--accent` i sobreviu a
+                un canvi de tema. L'única excepció és la silueta del davant, que
+                ha de ser més fosca que el cel i per tant es pinta amb `--paper`.
+              */}
+              {/* El cel pot arribar molt avall en or sense tocar el text: on hi
+                  ha número i titular —el terç alt de l'esquerra— el degradat
+                  encara va per sota del 10 %, i allà el blanc es manté a 18:1.
+                  El que sí que l'encendria és una massa clara a mitja alçada, i
+                  per això el sol és a l'altra punta del marc. */}
+              <linearGradient id="or-sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="currentColor" stop-opacity="0.04"></stop>
+                <stop offset="0.45" stop-color="currentColor" stop-opacity="0.16"></stop>
+                <stop offset="0.75" stop-color="currentColor" stop-opacity="0.34"></stop>
+                <stop offset="1" stop-color="currentColor" stop-opacity="0.52"></stop>
+              </linearGradient>
+              <radialGradient id="or-glow">
+                <stop offset="0" stop-color="currentColor" stop-opacity="0.42"></stop>
+                <stop offset="0.5" stop-color="currentColor" stop-opacity="0.12"></stop>
+                <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+              </radialGradient>
+              {/* La serralada del fons ha de quedar per damunt del cel a la
+                  seva alçada —0,38 contra 0,16 dalt— perquè es llegeixi com a
+                  boirina llunyana i no com una segona silueta. */}
+              <linearGradient id="or-far" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="currentColor" stop-opacity="0.38"></stop>
+                <stop offset="1" stop-color="currentColor" stop-opacity="0.26"></stop>
+              </linearGradient>
+            </defs>
+            <rect width="640" height="420" fill="url(#or-sky)"></rect>
+            <circle cx={SUN.cx} cy={SUN.cy} r="150" fill="url(#or-glow)"></circle>
+            <circle cx={SUN.cx} cy={SUN.cy} r={SUN.r} fill="currentColor" opacity="0.72"></circle>
+            <path d={area(BACK_PTS)} fill="url(#or-far)"></path>
+            <path d={poly(BACK_PTS)} fill="none" stroke="currentColor" stroke-opacity="0.45" stroke-width="1.4"></path>
+            {/* Silueta del davant: `--paper` gairebé opac. És l'únic pla que ha
+                de llegir-se com a massa i no com a tinta. */}
+            <path d={area(FRONT_PTS)} fill="var(--paper)" opacity="0.94"></path>
+            <path d={poly(FRONT_PTS)} fill="none" stroke="currentColor" stroke-opacity="0.7" stroke-width="1.6"></path>
+          </svg>
+        </div>
+        <div class="copy copy--left">
+          <p class="copy__num nums">01</p>
+          <h3>{comm.title}</h3>
+          <p class="copy__body detail">{comm.body}</p>
+          <p class="copy__deliverables ui detail detail--late">
+            <span class="eyebrow">{comm.deliverablesLabel}</span>
+            <span>{comm.deliverables.join(' · ')}</span>
+          </p>
+        </div>
+      </li>
+
+      {/* Capa 02 — el plànol de la mateixa muntanya. De la costura a la dreta. */}
+      <li class="layer layer--wire">
+        <div class="scene scene--wire" aria-hidden="true">
+          <svg viewBox="0 0 640 420" preserveAspectRatio="xMidYMid slice" role="presentation" focusable="false">
+            <defs>
+              <pattern id="or-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+                <path d="M32 0V32M0 32H32" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.4"></path>
               </pattern>
             </defs>
-            <rect width="640" height="400" fill="url(#or-rule)"></rect>
-            {/* Corbes de nivell sobre pauta de full: la recerca de context és
-                territori llegit per capes, i el motiu ho diu sense escriure-ho. */}
-            <g fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55">
-              <path d="M-20 330 C 90 288, 180 320, 268 268 S 470 236, 660 190"></path>
-              <path d="M-20 288 C 100 244, 196 276, 286 222 S 486 192, 660 148"></path>
-              <path d="M-20 246 C 112 202, 214 232, 306 178 S 500 150, 660 108"></path>
-              <path d="M-20 204 C 126 162, 232 190, 326 136 S 514 110, 660 70"></path>
+            <rect width="640" height="420" fill="url(#or-grid)"></rect>
+            {/* Eixos: el que converteix la carena en una sèrie de dades. */}
+            <path d="M28 24V376H620" fill="none" stroke="currentColor" stroke-width="1" opacity="0.55"></path>
+            {/* El sol, aquí, és un cercle de construcció amb el seu centre. */}
+            <g opacity="0.6">
+              <circle
+                cx={SUN.cx}
+                cy={SUN.cy}
+                r={SUN.r}
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.1"
+                stroke-dasharray="5 6"></circle>
+              <path
+                d={`M${SUN.cx} ${SUN.cy - 14}V${SUN.cy + 14}M${SUN.cx - 14} ${SUN.cy}H${SUN.cx + 14}`}
+                stroke="currentColor"
+                stroke-width="1"></path>
             </g>
-            <g stroke="currentColor" stroke-width="1.4" opacity="0.85">
-              <path d="M78 118 V 60 M78 60 H 214" fill="none"></path>
-              <circle cx="78" cy="118" r="4.5" fill="currentColor" stroke="none"></circle>
+            {/* Serralada del fons: sèrie secundària, discontínua. */}
+            <path d={poly(BACK_PTS)} fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="7 7" opacity="0.5"
+            ></path>
+            {/* Carena principal: la línia. */}
+            <path
+              d={poly(FRONT_PTS)}
+              fill="none"
+              stroke="var(--ink)"
+              stroke-width="2.2"
+              stroke-linejoin="round"
+              stroke-linecap="round"></path>
+            {/* Acotacions: només existeixen quan la banda s'obre. Sense elles el
+                plànol es llegeix igual; amb elles, hi ha una recompensa per
+                haver empès la costura. */}
+            <g class="wire-notes">
+              <g stroke="currentColor" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.5">
+                {FRONT_PTS.slice(1, -1).map(([x, y]) => <path d={`M${x} ${y}V376`}></path>)}
+              </g>
+              {/* Acotació de l'alçada del cim principal. Una de sola: la
+                  segona marca que hi havia, a l'eix esquerre, es llegia com un
+                  tros de línia perdut i no com una cota. */}
+              <g stroke="currentColor" stroke-width="1" opacity="0.6">
+                <path d="M596 250H608M596 376H608M602 250V376"></path>
+              </g>
+            </g>
+            <g fill="var(--paper-sunk)" stroke="var(--ink)" stroke-width="1.5">
+              {FRONT_PTS.map(([x, y]) => <circle cx={x} cy={y} r="3.4"></circle>)}
             </g>
           </svg>
         </div>
         <div class="copy copy--right">
           <p class="copy__num nums">02</p>
           <h3>{research.title}</h3>
-          <p class="copy__body">{research.body}</p>
-          <p class="copy__deliverables ui">
+          <p class="copy__body detail">{research.body}</p>
+          <p class="copy__deliverables ui detail detail--late">
             <span class="eyebrow">{research.deliverablesLabel}</span>
             <span>{research.deliverables.join(' · ')}</span>
           </p>
         </div>
       </li>
-
-      {/* Capa de sobre: és la imatge opaca del principi i la que es retalla. */}
-      <li class="layer layer--over">
-        <div class="scene scene--comm" aria-hidden="true">
-          <svg viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice" role="presentation">
-            {/* Difusió: un punt d'emissió i tres fronts. Prou abstracte per no
-                acabar semblant una icona de xarxes socials. */}
-            <g fill="none" stroke="currentColor">
-              <circle cx="150" cy="250" r="58" stroke-width="1.4" opacity="0.5"></circle>
-              <circle cx="150" cy="250" r="112" stroke-width="1.4" opacity="0.34"></circle>
-              <circle cx="150" cy="250" r="176" stroke-width="1.4" opacity="0.2"></circle>
-              <path d="M150 250 L 372 128 L 596 178" stroke-width="1.6" opacity="0.8"></path>
-            </g>
-            <g fill="currentColor">
-              <circle cx="150" cy="250" r="6"></circle>
-              <circle cx="372" cy="128" r="4"></circle>
-              <circle cx="596" cy="178" r="4"></circle>
-            </g>
-          </svg>
-        </div>
-        <div class="copy copy--left">
-          <p class="copy__num nums">01</p>
-          <h3>{comm.title}</h3>
-          <p class="copy__body">{comm.body}</p>
-          <p class="copy__deliverables ui">
-            <span class="eyebrow">{comm.deliverablesLabel}</span>
-            <span>{comm.deliverables.join(' · ')}</span>
-          </p>
-        </div>
-      </li>
     </ol>
-    <div class="seam" aria-hidden="true"></div>
+
+    <div
+      class="handle"
+      data-handle
+      role="slider"
+      tabindex="0"
+      aria-label={t('offer.split')}
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="50"
+      aria-orientation="horizontal"
+    >
+      <span class="handle__grip" aria-hidden="true">
+        <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+          <path
+            d="M9.5 8 5.5 12l4 4M14.5 8l4 4-4 4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </span>
+    </div>
+
+    <p class="hint eyebrow" aria-hidden="true">{t('offer.hint')}</p>
   </div>
 </div>
 
 <style>
   /*
-   * `--p` és el progrés del desplaçament dins de l'escenari, de 0 a 1. L'escriu
-   * el guió a l'arrel de la peça i tot el moviment en surt: no hi ha cap altra
-   * propietat animada, i per fotograma només canvia una variable.
+   * `--x` és la posició de la costura, de 0 a 1, i és l'única cosa que escriu
+   * el guió. El retall de les dues capes, la posició de la maneta i el revelat
+   * dels lliurables en surten per càlcul de CSS: per fotograma només canvia una
+   * variable.
    */
   .stage {
-    --p: 0;
+    --x: 0.5;
+    /*
+     * Rampes de revelat, tres per banda i encadenades. En repòs cada capa
+     * ensenya el número i el titular i prou; el cos arriba primer i els
+     * lliurables després, que és l'ordre en què es llegirien igualment.
+     *
+     * El vel va per davant de tots dos i s'acaba de tancar a 0,57, abans que
+     * el cos comenci a aparèixer a 0,54 i molt abans que sigui llegible: així
+     * no hi ha cap moment amb text a mig aparèixer sobre la imatge sense
+     * protegir. Totes tres s'acaben cap a 0,76, prou lluny del topall perquè
+     * no calgui empènyer fins al final per llegir l'última línia.
+     */
+    --veil-render: clamp(0, calc((var(--x) - 0.5) * 14), 1);
+    --open-render: clamp(0, calc((var(--x) - 0.54) * 8.3), 1);
+    --more-render: clamp(0, calc((var(--x) - 0.64) * 8.3), 1);
+    --veil-wire: clamp(0, calc((0.5 - var(--x)) * 14), 1);
+    --open-wire: clamp(0, calc((0.46 - var(--x)) * 8.3), 1);
+    --more-wire: clamp(0, calc((0.36 - var(--x)) * 8.3), 1);
     grid-column: 1 / -1;
     margin-top: var(--space-12);
   }
 
   /* Mateix repartiment que la cronologia: quan la graella de secció obre el
-     raïl d'etiqueta, la peça arrenca a la columna de contingut i el raïl queda
-     lliure per continuar adherit. */
+     raïl d'etiqueta, la peça arrenca a la columna de contingut. */
   @media (min-width: 62rem) {
     .stage {
       grid-column: 2 / -1;
@@ -149,15 +303,30 @@ const [comm, research] = home[lang].communication.offers;
     border-top: 1px solid var(--rule);
   }
 
-  /* Mode apilat —el que es veu sense JS, amb moviment reduït o en pantalla
-     estreta—: l'escena queda com una franja sobre cada bloc, prou baixa per no
-     empènyer el text fora de la primera pantalla. */
+  /* Mode apilat —sense JS o en pantalla estreta—: l'escena queda com una franja
+     sobre cada bloc, prou baixa per no empènyer el text fora de la pantalla. */
+  /* Mode apilat: la franja va a 2:1 i no a una alçada fixa. Amb el retall per
+     `slice`, una franja molt ampla i baixa només ensenyaria una tira del mig
+     del dibuix; a 2:1, en una pantalla de telèfon hi cap el sol i les dues
+     carenes gairebé senceres. El sostre d'11rem evita que en una tauleta la
+     franja es mengi la primera pantalla. */
   .scene {
-    height: 7rem;
+    aspect-ratio: 2 / 1;
+    max-height: 11rem;
     margin-bottom: var(--space-6);
-    color: var(--accent);
-    opacity: 0.5;
+    opacity: 0.55;
     pointer-events: none;
+  }
+
+  .scene--render {
+    color: var(--accent);
+  }
+
+  /* El plànol es queda en neutres i l'or es reserva a la imatge acabada: és la
+     mateixa disciplina d'un sol accent que té la resta del lloc, i de passada
+     separa les dues bandes sense obrir una segona família cromàtica. */
+  .scene--wire {
+    color: var(--ink-faint);
   }
 
   .scene svg {
@@ -188,171 +357,363 @@ const [comm, research] = home[lang].communication.offers;
     color: var(--ink-soft);
   }
 
-  .seam {
+  .handle,
+  .hint {
     display: none;
   }
 
   /*
-   * Mode escenari. Només s'activa quan el guió marca `data-mode="scroll"`, així
-   * que l'adherència i la superposició absoluta no existeixen fins que hi ha
-   * algú que les pilota.
+   * Mode partit. Només existeix quan el guió marca `data-mode="split"`, així que
+   * la superposició absoluta no arriba mai a una pàgina sense algú que la
+   * piloti.
    */
-  .stage[data-mode='scroll'] {
-    /* 260svh: 1,6 pantalles de recorregut útil un cop descomptada la que ocupa
-       el panell adherit. Per sota de 240 el text de la capa de sota s'ha
-       d'acabar de llegir massa de pressa. */
-    height: 260svh;
-  }
-
-  .stage[data-mode='scroll'] .stage__pin {
-    position: sticky;
-    top: calc(4rem + var(--space-8));
-    height: calc(100svh - 8rem);
-    min-height: 30rem;
+  .stage[data-mode='split'] .stage__pin {
+    /* 32rem de terra: és l'alçada que demana el bloc de text més alt —número,
+       titular a dues línies, cos i lliurables— amb els lliurables ja comptats,
+       encara que estiguin tancats. Reservar-los l'espai des del principi és el
+       que fa que obrir-los no mogui res de lloc. */
+    height: clamp(32rem, 70svh, 42rem);
     overflow: hidden;
+    cursor: ew-resize;
+    /* El gest horitzontal és nostre; el vertical continua sent de la pàgina. */
+    touch-action: pan-y;
   }
 
-  .stage[data-mode='scroll'] .layers,
-  .stage[data-mode='scroll'] .layer {
+  .stage[data-mode='split'] .layers,
+  .stage[data-mode='split'] .layer {
     position: absolute;
     inset: 0;
     padding: 0;
     border: 0;
   }
 
-  .stage[data-mode='scroll'] .layer--under {
-    z-index: 1;
+  /*
+   * Les dues capes es reparteixen el rectangle sense encavalcar-se: el que
+   * amaga l'una és exactament el que ensenya l'altra. Cada capa fixa aquí les
+   * seves quatre variables —fons, vel, cos, lliurables— i tot el que hi ha a
+   * dins les hereta; així les regles de detall no han de saber en quina banda
+   * són ni repetir-se dues vegades.
+   */
+  .stage[data-mode='split'] .layer--render {
+    --layer-bg: var(--paper);
+    --veil: var(--veil-render);
+    --open: var(--open-render);
+    --more: var(--more-render);
+    background: var(--layer-bg);
+    clip-path: inset(0 calc((1 - var(--x)) * 100%) 0 0);
   }
 
-  /* El fons opac de la capa superior és el que fa que la de sota no es
-     transparenti: sense ell no hi hauria costura, sinó dos textos superposats. */
-  .stage[data-mode='scroll'] .layer--over {
-    z-index: 2;
-    background: var(--paper);
-    /* A `--p` 0 no s'amaga res: la capa de sobre és la imatge opaca. */
-    clip-path: inset(0 calc(var(--p) * 100%) 0 0);
+  .stage[data-mode='split'] .layer--wire {
+    --layer-bg: var(--paper-sunk);
+    --veil: var(--veil-wire);
+    --open: var(--open-wire);
+    --more: var(--more-wire);
+    background: var(--layer-bg);
+    clip-path: inset(0 0 0 calc(var(--x) * 100%));
   }
 
-  .stage[data-mode='scroll'] .scene {
+  .stage[data-mode='split'] .scene {
     position: absolute;
     inset: 0;
-    height: auto;
+    aspect-ratio: auto;
+    max-height: none;
     margin: 0;
-    opacity: 0.28;
+    opacity: 1;
   }
 
-  .stage[data-mode='scroll'] .copy {
+  .stage[data-mode='split'] .scene--wire {
+    opacity: 0.75;
+  }
+
+  /*
+   * Vel. Només existeix quan la banda s'obre, i fa el mateix intercanvi que la
+   * peça sencera: en repòs mana la imatge i el poc text que hi ha —número i
+   * titular— viu a la franja alta, on el cel encara és gairebé negre (19:1 a
+   * l'esquerra; a la dreta el pitjor punt és el titular sobre el cercle de
+   * construcció del sol, 7,1:1). Quan la banda s'obre, apareix el cos, que sí
+   * que travessa la carena, i el vel el segueix.
+   *
+   * Amb el vel tancat el pitjor punt del cos és la serralada del fons a un
+   * terç d'or: 7,7:1 en `--ink-soft`. A la dreta el vel serveix sobretot per
+   * apagar la línia blanca de la carena, que si no travessaria el text: al 88 %
+   * de vel, hi queda al 12 %.
+   */
+  .stage[data-mode='split'] .layer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--veil);
+    background: linear-gradient(
+      to top,
+      var(--layer-bg) 0%,
+      color-mix(in srgb, var(--layer-bg) 92%, transparent) 30%,
+      color-mix(in srgb, var(--layer-bg) 72%, transparent) 62%,
+      color-mix(in srgb, var(--layer-bg) 35%, transparent) 84%,
+      transparent 100%
+    );
+  }
+
+  .stage[data-mode='split'] .copy {
     position: absolute;
     bottom: var(--space-8);
-    max-width: min(38ch, 46%);
+    z-index: 1;
+    /* 44%: amb la costura al mig cap dels dos textos no queda tallat, i per
+       tant d'entrada es llegeixen els dos sencers menys els lliurables. */
+    max-width: min(38ch, 44%);
   }
 
-  .stage[data-mode='scroll'] .copy--left {
-    left: 0;
+  .stage[data-mode='split'] .copy--left {
+    left: var(--space-8);
   }
 
-  .stage[data-mode='scroll'] .copy--right {
-    right: 0;
+  .stage[data-mode='split'] .copy--right {
+    right: var(--space-8);
     text-align: right;
   }
 
-  .stage[data-mode='scroll'] .copy--right .copy__deliverables {
+  .stage[data-mode='split'] .copy--right .copy__deliverables {
     align-items: flex-end;
   }
 
-  .stage[data-mode='scroll'] .seam {
+  /*
+   * La recompensa. El cos i els lliurables ocupen el seu lloc des del principi
+   * encara que no es vegin: si l'espai no estigués reservat, obrir la banda
+   * empenyeria el titular amunt i la peça saltaria a cada moviment de la mà.
+   */
+  .stage[data-mode='split'] .detail {
+    opacity: var(--open);
+    transform: translateY(calc((1 - var(--open)) * 0.5rem));
+  }
+
+  .stage[data-mode='split'] .detail--late {
+    --open: var(--more);
+  }
+
+  /* Les acotacions del plànol van amb els lliurables: són l'últim tram i la
+     part que només veu qui ha obert la banda del tot. */
+  .stage[data-mode='split'] .wire-notes {
+    opacity: var(--more);
+  }
+
+  .stage[data-mode='split'] .handle {
     display: block;
     position: absolute;
     top: 0;
     bottom: 0;
-    left: calc(100% - var(--p) * 100%);
-    z-index: 3;
+    left: calc(var(--x) * 100%);
+    z-index: 2;
     width: 1px;
-    /* Vermell de marca: aquí és element gràfic i no text, i a 5,59:1 sobre
-       `--paper` queda per damunt del 3:1 que li toca. */
+    /* Or de marca: aquí és element gràfic i no text. */
     background: var(--mark-rule);
-    /* Als extrems la costura coincideix amb la vora del panell i allà només fa
-       soroll: s'esvaeix en els primers i els últims cinc centèsims. */
-    opacity: clamp(0, calc(min(var(--p), 1 - var(--p)) * 20), 1);
+    cursor: ew-resize;
+  }
+
+  .handle:focus-visible {
+    outline: none;
+  }
+
+  .handle__grip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--mark-rule);
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--mark-rule);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--mark-rule) 10%, transparent);
+  }
+
+  .handle:focus-visible .handle__grip {
+    box-shadow:
+      0 0 0 3px var(--paper),
+      0 0 0 5px var(--mark-rule);
+  }
+
+  .handle__grip svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .stage[data-mode='split'] .hint {
+    display: block;
+    position: absolute;
+    top: var(--space-6);
+    left: 50%;
+    translate: -50% 0;
+    z-index: 2;
+    margin: 0;
+    padding-inline: var(--space-3);
+    color: var(--ink-faint);
+    pointer-events: none;
+    /* Un cop s'ha entès el gest, la instrucció sobra. */
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+
+  .stage[data-touched] .hint {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hint {
+      transition: none;
+    }
   }
 </style>
 
 <script>
   /*
-   * Motor portat de `/la-ruta/`, retallat al que cal aquí: la geometria es
-   * mesura una vegada, per fotograma només es llegeix `scrollY`, i l'amortiment
-   * va per constant de temps i no per fracció fixa de fotograma. El pas el
-   * criden alhora el bucle de fotogrames i l'esdeveniment de desplaçament,
-   * perquè si el navegador atura els fotogrames el desplaçament sol ha de
-   * continuar movent la costura.
+   * Pilot de la costura. Tres entrades —ratolí per sobre, arrossegament i
+   * teclat— sobre un sol estat: `target` és on ha d'anar la costura i `current`
+   * on és. L'amortiment va per constant de temps (90 ms, el mateix valor que la
+   * travessa) i el bucle de fotogrames només corre mentre les dues no
+   * coincideixen: en repòs no hi ha cap `requestAnimationFrame` viu.
    */
-  const stage = document.querySelector<HTMLElement>('[data-offer-reveal]');
-  const pin = stage?.querySelector<HTMLElement>('.stage__pin');
+  const stage = document.querySelector<HTMLElement>('[data-offer-split]');
+  const pin = stage?.querySelector<HTMLElement>('[data-pin]');
+  const handle = stage?.querySelector<HTMLElement>('[data-handle]');
 
-  if (stage && pin) {
+  if (stage && pin && handle) {
     const narrow = matchMedia('(max-width: 48rem)');
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
     const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
-    let top = 0;
-    let range = 1;
-    let current = 0;
-    let painted = -1;
-    let last = performance.now();
+    /* Repòs al mig: els dos titulars i els dos cossos llegibles alhora. */
+    const REST = 0.5;
+    /* Als extrems queda una franja de l'altra capa. Amb 0 o 1 la maneta se
+       n'aniria mig fora del panell, que té el desbordament amagat. */
+    const MIN = 0.05;
+    const MAX = 0.95;
 
-    function measure() {
-      top = stage!.getBoundingClientRect().top + window.scrollY;
-      range = Math.max(1, stage!.offsetHeight - pin!.offsetHeight);
-    }
+    let target = REST;
+    let current = REST;
+    let painted = -1;
+    let running = false;
+    let last = 0;
+    let dragging = false;
+    /* Amb el teclat o amb el dit, la costura es queda on l'han deixat. Només el
+       ratolí que se'n va la torna al mig, perquè allà sí que hi ha un gest clar
+       de marxar. */
+    let held = false;
+    let lastPointer = 'mouse';
 
     function paint(p: number) {
-      if (Math.abs(p - painted) < 0.0005) return;
+      if (Math.abs(p - painted) < 0.0004) return;
       painted = p;
-      stage!.style.setProperty('--p', p.toFixed(4));
+      stage!.style.setProperty('--x', p.toFixed(4));
     }
 
     function step(now: number) {
       const dt = clamp(now - last, 0, 140);
       last = now;
-      if (stage!.dataset.mode !== 'scroll') return;
-      const target = clamp((window.scrollY - top) / range, 0, 1);
-      // 90 ms de constant de temps: prou per llegir-se com a resistència i no
-      // com a retard. És el valor que ja fa servir la travessa.
-      current += (target - current) * (1 - Math.exp(-dt / 90));
-      if (Math.abs(target - current) < 0.0002) current = target;
+      current += (target - current) * (reduce.matches ? 1 : 1 - Math.exp(-dt / 90));
+      if (Math.abs(target - current) < 0.0004) current = target;
       paint(current);
+      running = current !== target;
+      if (running) requestAnimationFrame(step);
     }
 
-    function frame(now: number) {
-      step(now);
-      requestAnimationFrame(frame);
+    function kick() {
+      if (running) return;
+      running = true;
+      last = performance.now();
+      requestAnimationFrame(step);
     }
+
+    function aim(v: number, byUser = true) {
+      target = clamp(v, MIN, MAX);
+      handle!.setAttribute('aria-valuenow', String(Math.round(target * 100)));
+      if (byUser) stage!.dataset.touched = '';
+      kick();
+    }
+
+    function at(e: PointerEvent) {
+      const r = pin!.getBoundingClientRect();
+      return (e.clientX - r.left) / r.width;
+    }
+
+    pin.addEventListener('pointerdown', (e) => {
+      if (stage.dataset.mode !== 'split') return;
+      lastPointer = e.pointerType;
+      dragging = true;
+      held = e.pointerType !== 'mouse';
+      aim(at(e));
+      /* La captura és una comoditat —deixa arrossegar fora del panell— i no
+         una condició: si el navegador la rebutja, el gest ha de continuar. */
+      try {
+        pin.setPointerCapture(e.pointerId);
+      } catch {}
+    });
+
+    pin.addEventListener('pointermove', (e) => {
+      if (stage.dataset.mode !== 'split') return;
+      lastPointer = e.pointerType;
+      /* Sense botó premut només mana el ratolí: un dit que passa per sobre no
+         existeix, i un que arrossega ja ha passat per `pointerdown`. */
+      if (!dragging && e.pointerType !== 'mouse') return;
+      /* El ratolí que torna a entrar recupera el comandament encara que abans
+         l'hagués fixat el teclat. */
+      if (!dragging) held = false;
+      aim(at(e));
+    });
+
+    function release(e: PointerEvent) {
+      dragging = false;
+      if (pin!.hasPointerCapture(e.pointerId)) pin!.releasePointerCapture(e.pointerId);
+    }
+
+    pin.addEventListener('pointerup', release);
+    pin.addEventListener('pointercancel', release);
+
+    pin.addEventListener('pointerleave', () => {
+      if (dragging || held || lastPointer !== 'mouse') return;
+      aim(REST, false);
+    });
+
+    handle.addEventListener('keydown', (e) => {
+      let v: number | null = null;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') v = target - 0.04;
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') v = target + 0.04;
+      else if (e.key === 'PageDown') v = target - 0.16;
+      else if (e.key === 'PageUp') v = target + 0.16;
+      else if (e.key === 'Home') v = MIN;
+      else if (e.key === 'End') v = MAX;
+      if (v === null) return;
+      e.preventDefault();
+      held = true;
+      aim(v);
+    });
 
     function sync() {
-      if (!reduce.matches && !narrow.matches) {
-        stage!.dataset.mode = 'scroll';
-        measure();
-      } else {
+      if (narrow.matches) {
         delete stage!.dataset.mode;
-        // En sortir del mode escenari la variable ha de tornar a zero: amb un
-        // valor residual, el retall quedaria escrit al mode apilat.
-        current = 0;
+        /* En sortir del mode partit la variable ha de tornar al repòs: amb un
+           valor residual, el retall quedaria escrit al mode apilat. */
+        target = current = REST;
         painted = -1;
-        paint(0);
+        held = false;
+        paint(REST);
+      } else {
+        stage!.dataset.mode = 'split';
       }
     }
 
     sync();
-    reduce.addEventListener('change', sync);
     narrow.addEventListener('change', sync);
-    /*
-     * El canvi de mida passa per `sync` i no directament per `measure`: hi ha
-     * situacions —redimensionat emulat, canvi d'orientació— en què el
-     * `change` de la consulta de mitjans no arriba, i sense això l'escenari es
-     * quedaria adherit en una pantalla on ja no hi cap.
-     */
+    /* El canvi de mida passa per `sync` i no només per la consulta de mitjans:
+       hi ha situacions —redimensionat emulat, canvi d'orientació— en què el
+       `change` no arriba. */
     addEventListener('resize', sync);
-    addEventListener('scroll', () => step(performance.now()), { passive: true });
-    requestAnimationFrame(frame);
+    /* I una segona lectura quan la pàgina ha acabat de carregar: el guió corre
+       en acabar d'analitzar el document, i si l'amplada encara no és la
+       definitiva —barra de desplaçament que apareix, marc que es redimensiona
+       mentre carrega— la primera lectura pot deixar la peça apilada en una
+       pantalla on hi cabria de sobres. */
+    addEventListener('load', sync);
   }
 </script>

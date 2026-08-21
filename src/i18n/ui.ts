@@ -25,6 +25,10 @@ const ca = {
   'hero.more': 'Llegir més',
   'hero.portraitAlt': 'Retrat d’en Miquel Rodrigues',
 
+  /* Maneta de la peça de l'oferta: la costura que reparteix les dues línies. */
+  'offer.split': 'Repartiment entre les dues línies de l’oferta',
+  'offer.hint': 'Arrossega la línia per veure’n més',
+
   'lang.switch': 'Canvia de llengua',
   'lang.to': 'Versió en francès',
 
@@ -62,6 +66,9 @@ const fr: Record<UIKey, string> = {
 
   'hero.more': 'Lire la suite',
   'hero.portraitAlt': 'Portrait de Miquel Rodrigues',
+
+  'offer.split': 'Répartition entre les deux volets de l’offre',
+  'offer.hint': 'Faites glisser la ligne pour en voir plus',
 
   'lang.switch': 'Changer de langue',
   'lang.to': 'Version en catalan',
