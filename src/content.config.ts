@@ -1,6 +1,8 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { caseCategories } from './data/case-categories';
 import { caseKinds } from './data/case-kinds';
+import { skillUses } from './data/case-skills';
 import { langKeys } from './data/timeline';
 
 /**
@@ -55,9 +57,42 @@ const chapter = z.object({
   body: text,
 });
 
+/**
+ * Una competència de la targeta: la intensitat és un fet compartit i el nom va
+ * en les dues llengües dins del mateix objecte. La paritat, doncs, és
+ * estructural i no cal cap comprovació creuada.
+ */
+const skill = z.object({
+  use: z.enum(skillUses),
+  ca: text,
+  fr: text,
+});
+
+/**
+ * Una entitat de l'encàrrec. La sigla no es tradueix —és nom propi i és el que
+ * es dibuixa al cercle—; el nom sencer, que surt al `title` emergent, sí.
+ */
+const org = z.object({
+  abbr: z.string().trim().min(1).max(4),
+  ca: text,
+  fr: text,
+});
+
 /** Text d'un cas en una llengua. Les dues llengües compleixen aquest mateix. */
 const copy = z.object({
   title: text,
+  /**
+   * Títol curt de la targeta del carril, i subtítol d'una línia.
+   *
+   * Dos camps més i no una retallada automàtica de `title`: els títols dels
+   * casos porten l'aposició que la pàgina necessita —«Alt Vallespir: una
+   * destinació de frontera en quatre llengües»— i la targeta no té ni l'espai
+   * ni la funció de dir-la sencera. Partir-la a mà deixa que el títol nomeni
+   * l'entitat i el subtítol digui la promesa; tallar-la per caràcters deixaria
+   * frases mutilades a la portada.
+   */
+  cardTitle: text,
+  cardSubtitle: text,
   /** Una frase: què és el cas. Surt a la fitxa de la portada i a la capçalera. */
   summary: text,
   /** En quin marc es va fer i per a qui. */
@@ -91,7 +126,30 @@ const cases = defineCollection({
        */
       order: z.number().int().positive(),
       kind: z.enum(caseKinds),
-      /** Any d'inici. Documenta, no ordena i no es publica. */
+      /** Línia de feina. Diu de què va el cas; `kind`, en quin règim es va fer. */
+      category: z.enum(caseCategories),
+      /**
+       * Les tres competències que la targeta ensenya en obrir-se.
+       *
+       * Tres exactament, i no una llista lliure: la targeta en dibuixa tres i
+       * una quarta hi cauria fora. La paritat CA–FR aquí no la comprova cap
+       * `superRefine` perquè no cal —el nom va en un sol objecte amb les dues
+       * llengües a dins, i `use` és un fet compartit. Un cas amb la competència
+       * escrita només en català no compila.
+       */
+      skills: z
+        .tuple([skill, skill, skill]),
+      /**
+       * Entitats de l'encàrrec, per les sigles del cul de la targeta. Fins a
+       * tres: la quarta ja no es distingeix a la pila de cercles encavalcats.
+       */
+      orgs: z.array(org).min(1).max(3),
+      /**
+       * Any d'inici. No es publica mai tal qual —el que es llegeix és
+       * `period`, que admet «→ avui»—, però des del carril de la portada sí que
+       * ordena: les targetes van del més recent al més antic, i els empats els
+       * desfà `order`. `order` continua manant a la navegació entre casos.
+       */
       year: z.number().int(),
       /**
        * Llengües de treball del cas. Vocabulari del registre de la cronologia,

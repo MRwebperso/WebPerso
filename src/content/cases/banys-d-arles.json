@@ -1,13 +1,40 @@
 {
   "order": 4,
   "kind": "position",
+  "category": "communication",
   "year": 2023,
   "langs": [
     "fr",
     "ca"
   ],
+  "skills": [
+    {
+      "use": "central",
+      "ca": "Comunicació institucional",
+      "fr": "Communication institutionnelle"
+    },
+    {
+      "use": "regular",
+      "ca": "Reorganització de servei",
+      "fr": "Réorganisation du service"
+    },
+    {
+      "use": "ocasional",
+      "ca": "Traducció CA–FR",
+      "fr": "Traduction CA–FR"
+    }
+  ],
+  "orgs": [
+    {
+      "abbr": "BA",
+      "ca": "Ajuntament dels Banys d’Arles i Palaldà",
+      "fr": "Mairie d’Amélie-les-Bains-Palalda"
+    }
+  ],
   "ca": {
     "title": "Els Banys d’Arles: tres mesos i un servei per endreçar",
+    "cardTitle": "Els Banys d’Arles",
+    "cardSubtitle": "Comunicació institucional de l’Ajuntament",
     "summary": "Un pas curt pel servei de comunicació d’un ajuntament termal, amb la comunicació institucional de l’alcaldia a fer cada setmana i el servei mateix a reestructurar.",
     "context": "Servei de Comunicació, Ajuntament dels Banys d’Arles i Palaldà",
     "role": "Comunicació institucional i reestructuració del servei",
@@ -36,6 +63,8 @@
   },
   "fr": {
     "title": "Amélie-les-Bains : trois mois et un service à remettre en ordre",
+    "cardTitle": "Amélie-les-Bains",
+    "cardSubtitle": "Communication institutionnelle de la mairie",
     "summary": "Un passage court au service communication d’une mairie thermale, avec la communication institutionnelle de la municipalité à assurer chaque semaine et le service lui-même à restructurer.",
     "context": "Service Communication, Mairie d’Amélie-les-Bains-Palalda",
     "role": "Communication institutionnelle et restructuration du service",

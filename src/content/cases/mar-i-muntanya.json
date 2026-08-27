@@ -1,13 +1,45 @@
 {
   "order": 2,
   "kind": "associative",
+  "category": "communication",
   "year": 2026,
   "langs": [
     "fr",
     "ca"
   ],
+  "skills": [
+    {
+      "use": "central",
+      "ca": "Identitat de marca",
+      "fr": "Identité de marque"
+    },
+    {
+      "use": "regular",
+      "ca": "Web amb CMS",
+      "fr": "Web avec CMS"
+    },
+    {
+      "use": "central",
+      "ca": "Redacció de dossiers",
+      "fr": "Rédaction de dossiers"
+    }
+  ],
+  "orgs": [
+    {
+      "abbr": "CLM",
+      "ca": "Cultures, Llengües i Memòries del Vallespir",
+      "fr": "Cultures, Langues et Mémoires du Vallespir"
+    },
+    {
+      "abbr": "ST",
+      "ca": "Som Turisme (Alt Empordà)",
+      "fr": "Som Turisme (Alt Empordà)"
+    }
+  ],
   "ca": {
     "title": "Mar i Muntanya, a Taula!",
+    "cardTitle": "Mar i Muntanya, a Taula!",
+    "cardSubtitle": "Marca transfronterera i web bilingüe",
     "summary": "Una marca de comunicació bilingüe per a quatre fires gastronòmiques fora de temporada, dues al nord i dues al sud, que per separat no arriben enlloc.",
     "context": "CLM, amb Som Turisme (Alt Empordà)",
     "role": "Marca, web bilingüe, xarxes i redacció del dossier",
@@ -36,6 +68,8 @@
   },
   "fr": {
     "title": "Mar i Muntanya, a Taula !",
+    "cardTitle": "Mar i Muntanya, a Taula !",
+    "cardSubtitle": "Marque transfrontalière et web bilingue",
     "summary": "Une marque de communication bilingue pour quatre foires gastronomiques hors saison, deux au nord et deux au sud, qui séparément ne portent nulle part.",
     "context": "CLM, avec Som Turisme (Alt Empordà)",
     "role": "Marque, site bilingue, réseaux et rédaction du dossier",

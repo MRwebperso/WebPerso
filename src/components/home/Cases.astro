@@ -1,20 +1,49 @@
 ---
 /**
- * Selecció de casos a la portada. Sense filtres: amb aquest volum de contingut
- * un filtre buit només crida l'atenció sobre el buit (secció 4.3 del brief).
+ * Selecció de casos a la portada: carril cronològic.
  *
- * Jerarquia de la secció 2.2: totes les fitxes tenen el mateix tractament
- * —mateixa mida, mateix pes, mateixa posició a la graella— i obre la llista un
- * lloc de treball, pel camp `order` de cada cas. L'etiqueta del marc
- * queda a sota del títol, on es llegeix sempre, mai com a distintiu que faci
- * pesar més una fitxa que una altra.
+ * Substitueix la graella de dues columnes. El que la graella no podia fer i el
+ * carril sí és dir en quin ordre va passar tot: les fitxes van del més recent
+ * al més antic, un filet les travessa a la mateixa alçada i cada fitxa hi
+ * posa la seva osca. La graella deixava la cronologia a la secció del costat i
+ * els casos com una llista sense temps.
  *
- * El retard de revelació va per columna i no per posició absoluta: en una
- * graella de dues columnes, escalonar fins a la sisena fitxa faria esperar la
- * fila de baix mig segon després d'haver entrat en pantalla.
+ * Jerarquia de la secció 2.2 del brief: totes les fitxes tenen el mateix
+ * tractament —mateixa amplada, mateix pes, mateix contingut— i cap distintiu no
+ * en fa pesar una més que una altra. L'etiqueta del marc (`kind`) continua a la
+ * fitxa, ara al cul en repòs, que és on es llegeix sense competir amb el títol:
+ * és el mecanisme de la frontera CLM/individual i no es pot perdre pel camí.
+ *
+ * ┌──────────────────────────────────────────────────────────────────────────┐
+ * │ ELS DOS ESTATS D'UNA FITXA                                               │
+ * └──────────────────────────────────────────────────────────────────────────┘
+ *
+ * En repòs: període, títol en groc, subtítol i marc. En obrir-se: el títol
+ * passa a blanc, i el subtítol i el marc deixen lloc a les tres competències
+ * amb la seva gradació, les sigles de les entitats i el botó de categoria.
+ * Groc el que dorm i blanc el que mires: amb els dos encesos alhora, la fitxa
+ * activa no guanyava res.
+ *
+ * Els dos blocs comparteixen cel·la de graella i s'ancoren al cantell de baix,
+ * o sigui que es creuen sense empènyer res i l'alçada de la fitxa no depèn de
+ * quin dels dos es veu.
+ *
+ * El detall porta `z-index` i el repòs no rep esdeveniments de punter. No és
+ * decoració: el repòs amagat es queda amb `opacity: 0`, i això li obre context
+ * d'apilament mentre que el detall obert (opacitat 1, `transform: none`) no en
+ * té cap. Per l'ordre de pintat de CSS, el context s'imprimeix per damunt del
+ * bloc en flux encara que vagi abans al document, i el bloc invisible
+ * s'empassava el cursor abans que arribés al botó.
+ *
+ * Un sol enllaç per fitxa i és el botó, sense capa que faci clicable tota la
+ * superfície: amb la capa, el botó es veuria premut només per tenir el cursor
+ * dins de la targeta. El repartiment és explícit —s'obre passant-hi per sobre,
+ * s'entra pel botó— i el botó porta `aria-label` amb el títol del cas, perquè
+ * un enllaç que es digui només «recerca» no vol dir res fora de context.
  */
 import Section from '../Section.astro';
-import { caseLabels, getCases } from '../../data/cases';
+import { caseLabels, getCasesByRecency } from '../../data/cases';
+import { skillNotches, skillScale } from '../../data/case-skills';
 import { home } from '../../data/home';
 import { useTranslations } from '../../i18n/ui';
 import { localize, type Lang } from '../../i18n/utils';
@@ -27,88 +56,338 @@ const { lang } = Astro.props;
 const t = useTranslations(lang);
 const intro = home[lang].cases;
 const labels = caseLabels[lang];
-const cases = await getCases();
+const cases = await getCasesByRecency();
 ---
 
 <Section id="casos" eyebrow={intro.eyebrow} title={intro.title} lead={intro.lead}>
-  <ol class="cards" slot="wide">
-    {
-      cases.map((item, index) => {
-        const copy = item.copy[lang];
-        return (
-          <li class="card reveal" style={`--reveal-i:${index % 2}`}>
-            <p class="card__period nums">{copy.period}</p>
-            <h3 class="card__title">
-              <a href={localize(lang, ['casos', item.id])}>{copy.title}</a>
-            </h3>
-            <p class="card__kind">{labels.kindLabels[item.kind]}</p>
-            <p class="card__summary">{copy.summary}</p>
-            <p class="card__more ui" aria-hidden="true">{t('case.read')}</p>
-          </li>
-        );
-      })
-    }
-  </ol>
+  <div class="carril" slot="wide">
+    <ol class="pista" aria-label={t('cases.track')}>
+      {
+        cases.map((item) => {
+          const copy = item.copy[lang];
+          const categoria = labels.categoryLabels[item.category];
+          return (
+            <li class="cas">
+              <span class="osca" aria-hidden="true" />
+              <p class="cas__periode nums">{copy.period}</p>
+
+              <h3 class="cas__titol">{copy.cardTitle}</h3>
+
+              <div class="cas__relleu">
+                <div class="cas__repos">
+                  <p class="cas__subtitol">{copy.cardSubtitle}</p>
+                  <p class="cas__marc">{labels.kindLabels[item.kind]}</p>
+                </div>
+
+                <div class="cas__detall">
+                  <ul class="habilitats" aria-label={t('cases.skills')}>
+                    {item.skills.map((skill) => (
+                      <li>
+                        <span class="habilitats__nom">{skill[lang]}</span>
+                        <span
+                          class="mesura"
+                          role="img"
+                          aria-label={`${skill[lang]}: ${labels.useLabels[skill.use]}`}
+                        >
+                          {skillScale.map((osca) => (
+                            <i class:list={[{ 'mesura--plena': osca <= skillNotches[skill.use] }]} />
+                          ))}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div class="cas__tanca">
+                    <ul class="entitats">
+                      {item.orgs.map((org) => (
+                        <li>
+                          <abbr title={org[lang]}>{org.abbr}</abbr>
+                        </li>
+                      ))}
+                    </ul>
+                    <a
+                      class="entrada"
+                      href={localize(lang, ['casos', item.id])}
+                      aria-label={`${categoria} — ${t('case.read')}: ${copy.cardTitle}`}
+                    >
+                      {categoria}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </li>
+          );
+        })
+      }
+    </ol>
+
+    <div class="rems">
+      <button type="button" class="rem" data-dir="-1" aria-label={t('cases.newer')}>←</button>
+      <button type="button" class="rem" data-dir="1" aria-label={t('cases.older')}>→</button>
+    </div>
+  </div>
 </Section>
 
+<script>
+  /*
+   * El carril és finit: les fletxes desplacen d'una fitxa i s'inhabiliten als
+   * extrems. Sense això, un carril que ja no es mou sembla espatllat en lloc
+   * d'acabat.
+   *
+   * Tot el que fa el guió és desplaçament: obrir una fitxa és cosa del CSS. Amb
+   * el guió mort, el carril continua sent una llista que es desplaça amb el dit
+   * o amb la roda, i les fitxes s'obren igual.
+   */
+  const pista = document.querySelector<HTMLElement>('#casos .pista');
+  const rems = [...document.querySelectorAll<HTMLButtonElement>('#casos .rem')];
+
+  if (pista && rems.length > 0) {
+    const suau = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const estat = () => {
+      // Marge de 2 px: el desplaçament subpixel no ha de bloquejar el botó.
+      const marge = 2;
+      for (const boto of rems) {
+        boto.disabled =
+          Number(boto.dataset.dir) < 0
+            ? pista.scrollLeft <= marge
+            : pista.scrollLeft >= pista.scrollWidth - pista.clientWidth - marge;
+      }
+    };
+
+    estat();
+    pista.addEventListener('scroll', estat, { passive: true });
+    window.addEventListener('resize', estat);
+
+    for (const boto of rems) {
+      boto.addEventListener('click', () => {
+        const fitxa = pista.querySelector('.cas');
+        const buit = parseFloat(getComputedStyle(pista).columnGap) || 24;
+        const pas = fitxa ? fitxa.getBoundingClientRect().width + buit : 320;
+        pista.scrollBy({ left: pas * Number(boto.dataset.dir), behavior: suau ? 'smooth' : 'auto' });
+      });
+    }
+
+    // El focus per teclat ha de portar la fitxa a la vista: sense això, el
+    // tabulador obre una fitxa que és fora de pantalla.
+    for (const enllac of pista.querySelectorAll('.entrada')) {
+      enllac.addEventListener('focus', () => {
+        enllac.closest('.cas')?.scrollIntoView({
+          behavior: suau ? 'smooth' : 'auto',
+          block: 'nearest',
+          inline: 'center',
+        });
+      });
+    }
+  }
+</script>
+
 <style>
-  .cards {
+  /*
+   * El vermell de la senyera aclarit el mínim per aguantar sobre negre: 4,98:1,
+   * per damunt del 4,5:1 que demana el cos petit. El #DA121A pla es queda a
+   * 4,07:1 i el #c1272d de la marca en paper, a 3,39:1.
+   *
+   * És l'única excepció a la paleta d'un sol accent de `theme-dark.css`, i està
+   * acotada al carril: filet de la cronologia encès, període de la fitxa
+   * activa i osques de la gradació. No toca cap enllaç ni cap superfície: el
+   * groc continua sent l'únic color d'interacció del lloc.
+   */
+  .carril {
+    --vermell: #e33b32;
+    --pas: var(--space-6);
     grid-column: 1 / -1;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: var(--space-8);
+    /* Sense això, la contribució de mida del carril és la suma de les sis
+       fitxes i el desbordament el pren la pàgina en lloc de la pista. */
+    min-width: 0;
   }
 
-  /* Com la cronologia: quan la graella de secció obre el raïl d'etiqueta, les
-     fitxes arrenquen a la columna de contingut i el raïl continua adherit. */
   @media (min-width: 62rem) {
-    .cards {
+    /* Com la cronologia: quan la graella de secció obre el raïl d'etiqueta, el
+       carril arrenca a la columna de contingut i el raïl continua adherit. */
+    .carril {
       grid-column: 2 / -1;
     }
   }
 
-  .card {
-    position: relative;
-    border-top: 1px solid var(--rule);
-    padding-top: var(--space-4);
-    /* Les fitxes s'estiren fins a baix perquè el filet de sota quedi a la
-       mateixa alçada en tota la fila, amb resums de longitud desigual. */
+  .pista {
+    list-style: none;
+    /* Marges negatius i encoixinat equivalent: la fitxa que s'aixeca 6 px i el
+       marc de focus no s'han de retallar contra el cantell del desbordament. */
+    margin: 0 calc(-1 * var(--space-4));
+    padding: var(--space-4);
     display: flex;
-    flex-direction: column;
+    align-items: stretch;
+    gap: var(--pas);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
   }
 
-  .card__period {
+  .cas {
+    position: relative;
+    flex: 0 0 auto;
+    width: 19rem;
+    min-height: 24rem;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-6);
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    transition:
+      width var(--dur-slow) var(--ease-out),
+      transform var(--dur-base) var(--ease-out),
+      opacity var(--dur-base) var(--ease-out),
+      border-color var(--dur-base) var(--ease-out),
+      background var(--dur-base) var(--ease-out);
+  }
+
+  /*
+   * L'acordió només a partir de 62rem, que és on la secció obre les dues
+   * columnes. Per sota, sis fitxes de 15rem no serien llegibles i el carril ja
+   * fa la seva feina desplaçant-se.
+   */
+  @media (min-width: 62rem) {
+    .cas {
+      width: 17rem;
+    }
+
+    .pista:hover .cas,
+    .pista:focus-within .cas {
+      width: 15rem;
+      opacity: 0.55;
+    }
+
+    .pista:hover .cas:hover,
+    .pista:focus-within .cas:focus-within {
+      width: 26rem;
+      opacity: 1;
+    }
+  }
+
+  .cas:hover,
+  .cas:focus-within {
+    transform: translateY(-6px);
+    background: var(--paper-sunk);
+    border-color: color-mix(in oklab, var(--vermell) 40%, var(--rule));
+  }
+
+  /* La cronologia travessa totes les fitxes a la mateixa alçada i salta el buit
+     entre l'una i l'altra. Va dins de cada fitxa i no en una capa a part: amb
+     amplades que canvien, una línia absoluta s'hauria de recalcular amb JS. */
+  .cas::before {
+    content: '';
+    position: absolute;
+    top: 3.6rem;
+    left: 0;
+    right: calc(-1 * var(--pas) - 1px);
+    height: 1px;
+    background: var(--rule);
+  }
+
+  /* L'última fitxa és el final de la trajectòria: la línia s'hi atura en lloc
+     de sortir cap al buit. */
+  .cas:last-child::before {
+    right: 0;
+  }
+
+  .osca {
+    position: absolute;
+    top: calc(3.6rem - 3px);
+    left: var(--space-6);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    transition:
+      background var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+
+  .cas:hover .osca,
+  .cas:focus-within .osca {
+    background: var(--vermell);
+    transform: scale(1.6);
+  }
+
+  .cas__periode {
     font-size: var(--step--1);
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--ink-faint);
+    margin-bottom: var(--space-8);
+    transition: color var(--dur-base) var(--ease-out);
   }
 
-  .card__title {
-    margin-top: var(--space-3);
-    max-width: 22ch;
+  .cas:hover .cas__periode,
+  .cas:focus-within .cas__periode {
+    color: var(--vermell);
   }
 
-  .card__title a {
-    text-decoration: none;
+  .cas__titol {
+    max-width: 18ch;
+    color: var(--accent);
+    transition: color var(--dur-base) var(--ease-out);
   }
 
-  /*
-   * Tota la fitxa és clicable, però l'enllaç és un i és el títol: cap `div`
-   * embolicat amb `onclick`, i el lector de pantalla llegeix un sol enllaç amb
-   * el nom del cas. La contrapartida assumida és que la capa tapa el resum i el
-   * text de la fitxa no es pot seleccionar amb el ratolí.
-   */
-  .card__title a::after {
-    content: '';
-    position: absolute;
-    inset: 0;
+  .cas:hover .cas__titol,
+  .cas:focus-within .cas__titol {
+    color: var(--ink);
   }
 
-  .card__kind {
-    margin-top: var(--space-3);
+  .cas__relleu {
+    display: grid;
+    margin-top: auto;
+    padding-top: var(--space-6);
+  }
+
+  /* Els dos blocs s'ancoren al cantell de baix: el detall és el més alt i és
+     qui fixa l'alçada de la cel·la, i sense l'àncora l'etiqueta del marc
+     surava per damunt del cul de la fitxa. */
+  .cas__repos,
+  .cas__detall {
+    grid-area: 1 / 1;
+    align-self: end;
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+
+  /* Vegeu la capçalera: el repòs amagat obre context d'apilament i tapava el
+     botó. No té res per clicar, o sigui que no ha de rebre cap esdeveniment. */
+  .cas__repos {
+    pointer-events: none;
+  }
+
+  .cas__detall {
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+  }
+
+  .cas:hover .cas__repos,
+  .cas:focus-within .cas__repos {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  .cas:hover .cas__detall,
+  .cas:focus-within .cas__detall {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .cas__subtitol {
+    color: var(--ink-soft);
+    max-width: 30ch;
+  }
+
+  .cas__marc {
+    margin-top: var(--space-6);
     font-family: var(--font-ui);
     font-size: 0.72rem;
     letter-spacing: 0.06em;
@@ -116,58 +395,187 @@ const cases = await getCases();
     color: var(--ink-faint);
   }
 
-  .card__summary {
-    margin-top: var(--space-4);
+  .habilitats {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .habilitats__nom {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: var(--step--1);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  /*
+   * La gradació: cinc osques, de les quals se n'encenen dues, quatre o cinc.
+   * Mesura quant es va fer servir la competència en aquell encàrrec, no el
+   * domini de qui la signa —vegeu `src/data/case-skills.ts`—, i per això és
+   * discreta i no contínua: una barra plena al 60 % es llegeix com una nota.
+   * La paraula del nivell no es dibuixa; va per `aria-label` a la mesura.
+   */
+  .mesura {
+    display: flex;
+    gap: 3px;
+    margin-top: var(--space-2);
+  }
+
+  .mesura i {
+    height: 3px;
+    flex: 1;
+    background: var(--rule);
+  }
+
+  .mesura .mesura--plena {
+    background: var(--vermell);
+  }
+
+  .cas__tanca {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+  }
+
+  .entitats {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .entitats li + li {
+    margin-left: -0.5rem;
+  }
+
+  .entitats abbr {
+    display: grid;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    /* Anella del color del fons de la fitxa oberta: és el que separa un cercle
+       de l'altre quan s'encavalquen. */
+    box-shadow: 0 0 0 2px var(--paper-sunk);
+    font-family: var(--font-ui);
+    font-size: 0.64rem;
+    font-weight: var(--w-semibold);
     color: var(--ink-soft);
-    max-width: 46ch;
+    text-decoration: none;
+    cursor: help;
   }
 
-  .card__more {
-    margin-top: auto;
-    padding-top: var(--space-6);
-    color: var(--ink-faint);
-    transition: color var(--dur-base) var(--ease-out);
+  /* El botó diu la categoria: convida més que un verb genèric. Contorn buit
+     perquè es vegi que hi ha botó, i s'omple quan hi tens el cursor a sobre.
+     Cantells rectes: el lloc no té ni una vora arrodonida fora d'aquests
+     cercles de sigles. */
+  .entrada {
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    font-weight: var(--w-medium);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
   }
 
-  .card__more::after {
-    content: '\2009→';
-    display: inline-block;
-    transition: transform var(--dur-base) var(--ease-out);
+  .entrada:hover {
+    background: var(--ink);
+    color: var(--paper);
   }
 
-  .card:hover .card__more,
-  .card:focus-within .card__more {
-    color: var(--accent);
-  }
-
-  .card:hover .card__more::after,
-  .card:focus-within .card__more::after {
-    transform: translateX(0.25rem);
-  }
-
-  .card:hover .card__title a,
-  .card:focus-within .card__title a {
-    color: var(--accent);
-  }
-
-  /* El focus ha de dibuixar-se sobre la fitxa, no sobre les dues línies del
-     títol: és la fitxa sencera el que s'activa amb la tecla. */
-  .card__title a:focus-visible {
-    outline: none;
-  }
-
-  /* `:has(:focus-visible)`, no `:focus-within`: amb el segon, un clic de ratolí
-     també dibuixaria el marc, i el marc és per a la navegació per teclat. */
-  .card:has(a:focus-visible) {
+  .entrada:focus-visible {
     outline: 2px solid var(--accent);
-    outline-offset: 6px;
-    border-radius: 2px;
+    outline-offset: 3px;
   }
 
-  @media (min-width: 46rem) {
-    .cards {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-12) var(--space-8);
+  .rems {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .rem {
+    width: 2.6rem;
+    height: 2.6rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: var(--font-ui);
+    font-size: var(--step-0);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .rem:hover:not(:disabled) {
+    color: var(--vermell);
+    border-color: var(--vermell);
+  }
+
+  .rem:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .rem:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Sense `hover` el gest no existeix: el detall es queda obert i la fitxa
+     creix el que calgui. El carril continua sent un carril: es desplaça amb el
+     dit. */
+  @media (hover: none) {
+    .cas {
+      width: 82vw;
+      max-width: 22rem;
+      min-height: 0;
+    }
+
+    .cas__relleu {
+      display: block;
+    }
+
+    .cas__repos {
+      display: none;
+    }
+
+    .cas__detall {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cas,
+    .osca,
+    .cas__periode,
+    .cas__titol,
+    .cas__repos,
+    .cas__detall,
+    .entrada,
+    .rem {
+      transition: none;
     }
   }
 </style>

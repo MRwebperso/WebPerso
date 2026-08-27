@@ -43,11 +43,22 @@ export default defineConfig({
   integrations: [
     sitemap({
       /*
-       * L'administració del CMS és una pàgina pregenerada com les altres, i sense
-       * aquest filtre entraria al sitemap. Les rutes d'`src/pages/api/` no hi
+       * Dues famílies de rutes en queden fora, per raons diferents.
+       *
+       * L'administració del CMS és una pàgina pregenerada com les altres, i
+       * sense filtre entraria al sitemap. Les rutes d'`src/pages/api/` no hi
        * entren mai —no són pregenerades—, i el `robots.txt` exclou totes dues.
+       *
+       * Els prototips llençables porten `noindex` a la pàgina i per tant no
+       * s'indexarien igualment, però anunciar-los al sitemap és contradir-se:
+       * el sitemap declara quines són les pàgines del lloc, i ells no ho són.
+       * Quan s'esborrin, aquesta llista se'n va amb ells.
        */
-      filter: (page) => !new URL(page).pathname.startsWith('/admin'),
+      filter: (page) => {
+        const { pathname } = new URL(page);
+        const prototips = ['/hero-demo/', '/la-travessa/', '/la-ruta/'];
+        return !pathname.startsWith('/admin') && !prototips.includes(pathname);
+      },
       i18n: {
         defaultLocale: 'ca',
         locales: { ca: 'ca-ES', fr: 'fr-FR' },

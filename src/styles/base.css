@@ -119,6 +119,12 @@ section[id] {
  */
 .section-grid {
   display: grid;
+  /* Columna definida i no `auto`: un fill que es desplaci horitzontalment —el
+     carril de casos— contribueix amb la mida del seu contingut a una pista
+     `auto`, i la secció sencera es desbordava per la dreta al mòbil en lloc de
+     deixar-lo desplaçar. Amb `minmax(0, 1fr)` la pista no pot créixer més que
+     el contenidor, que és el que ja feia la regla de dues columnes de sota. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
 }
 

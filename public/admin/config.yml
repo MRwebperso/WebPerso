@@ -95,11 +95,62 @@ collections:
           - { label: 'Marc associatiu (associative)', value: associative }
           - { label: 'Vinculació de recerca (affiliation)', value: affiliation }
 
+      - name: category
+        label: Línia de feina
+        widget: select
+        hint: >-
+          De quina feina es tracta. No és el marc: el marc diu en quin règim es
+          va fer, i això diu de què va. És el text del botó de la targeta al
+          carril de la portada, i per això la llista és curta.
+        options:
+          - { label: 'Codi i IA (code)', value: code }
+          - { label: 'Comunicació (communication)', value: communication }
+          - { label: 'Recerca (research)', value: research }
+
       - name: year
         label: Any d'inici
         widget: number
         value_type: int
-        hint: Documenta i prou. No ordena res i no surt publicat enlloc.
+        hint: >-
+          No surt publicat mai tal qual —el que es llegeix és el període—, però
+          ordena el carril de la portada, que va del més recent al més antic.
+          Els empats els desfà l'ordre de lectura.
+
+      - name: skills
+        label: Competències
+        widget: list
+        min: 3
+        max: 3
+        hint: >-
+          Sempre tres: la targeta en dibuixa tres i una quarta hi cauria fora.
+          La intensitat és quant es va fer servir la competència EN AQUEST
+          ENCÀRREC, no com se'n domina: la targeta la dibuixa com una gradació
+          de cinc osques i no com un percentatge, precisament per no llegir-se
+          com una nota.
+        fields:
+          - name: use
+            label: Intensitat d'ús
+            widget: select
+            options:
+              - { label: 'Ús ocasional (ocasional)', value: ocasional }
+              - { label: 'Ús regular (regular)', value: regular }
+              - { label: 'Ús central (central)', value: central }
+          - { name: ca, label: Nom en català, widget: string }
+          - { name: fr, label: Nom en francès, widget: string }
+
+      - name: orgs
+        label: Entitats
+        widget: list
+        min: 1
+        max: 3
+        hint: >-
+          Les del cul de la targeta. Fins a tres: la quarta ja no es distingeix
+          a la pila de cercles. La sigla no es tradueix —és el que es dibuixa al
+          cercle—; el nom sencer surt en passar-hi per sobre.
+        fields:
+          - { name: abbr, label: Sigla, widget: string, pattern: ['^.{1,4}$', 'Entre 1 i 4 caràcters'] }
+          - { name: ca, label: Nom en català, widget: string }
+          - { name: fr, label: Nom en francès, widget: string }
 
       - name: langs
         label: Llengües de treball
@@ -122,6 +173,16 @@ collections:
         widget: object
         fields: &copy_fields
           - { name: title, label: Títol, widget: string }
+          - name: cardTitle
+            label: Títol de la targeta
+            widget: string
+            hint: >-
+              Curt: el que cap a la targeta del carril. El títol llarg porta
+              l'aposició que la pàgina del cas necessita i la targeta no.
+          - name: cardSubtitle
+            label: Subtítol de la targeta
+            widget: string
+            hint: Una línia. El que el títol curt no diu.
           - name: summary
             label: Resum
             widget: text

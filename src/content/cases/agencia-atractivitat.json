@@ -1,6 +1,7 @@
 {
   "order": 1,
   "kind": "position",
+  "category": "communication",
   "year": 2023,
   "langs": [
     "fr",
@@ -8,8 +9,39 @@
     "es",
     "en"
   ],
+  "skills": [
+    {
+      "use": "central",
+      "ca": "Estratègia de destinació",
+      "fr": "Stratégie de destination"
+    },
+    {
+      "use": "regular",
+      "ca": "Disseny de visuals",
+      "fr": "Conception de visuels"
+    },
+    {
+      "use": "regular",
+      "ca": "Edició de xarxes",
+      "fr": "Édition des réseaux"
+    }
+  ],
+  "orgs": [
+    {
+      "abbr": "OT",
+      "ca": "Oficina de Turisme de Prats de Molló",
+      "fr": "Office de tourisme de Prats-de-Mollo"
+    },
+    {
+      "abbr": "AA",
+      "ca": "Agència d’Atractivitat de l’Alt Vallespir",
+      "fr": "Agence d’attractivité du Haut-Vallespir"
+    }
+  ],
   "ca": {
     "title": "Alt Vallespir: una destinació de frontera en quatre llengües",
+    "cardTitle": "Oficina de Turisme de Prats",
+    "cardSubtitle": "Una destinació de frontera",
     "summary": "Dos anys de promoció turística a l’Alt Vallespir, amb la frontera tractada com a mercat i no com a límit, i quatre llengües de treball en lloc d’una i tres traduccions.",
     "context": "Oficina de Turisme de Prats de Molló · Agència d’Atractivitat, Comunitat de Municipis de l’Alt Vallespir",
     "role": "Eixos estratègics, promoció transfronterera i comunicació",
@@ -38,6 +70,8 @@
   },
   "fr": {
     "title": "Haut-Vallespir : une destination frontalière en quatre langues",
+    "cardTitle": "Office de tourisme de Prats",
+    "cardSubtitle": "Une destination frontalière",
     "summary": "Deux ans de promotion touristique en Haut-Vallespir, la frontière traitée comme un marché et non comme une limite, et quatre langues de travail au lieu d’une et trois traductions.",
     "context": "Office de Tourisme de Prats-de-Mollo · Agence d’Attractivité, Communauté de Communes du Haut-Vallespir",
     "role": "Axes stratégiques, promotion transfrontalière et communication",

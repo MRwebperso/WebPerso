@@ -1,5 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { type CaseCategory } from './case-categories';
 import { type CaseKind } from './case-kinds';
+import { type SkillUse } from './case-skills';
 import type { Lang } from '../i18n/utils';
 import type { LangKey } from './timeline';
 
@@ -42,8 +44,13 @@ export interface CaseRecord {
   /** Slug de la URL. No es tradueix: és nom propi de projecte o d'entitat. */
   id: string;
   kind: CaseKind;
+  category: CaseCategory;
   year: number;
   langs: readonly LangKey[];
+  /** Les tres competències de la targeta, amb el nom en les dues llengües. */
+  skills: readonly { use: SkillUse; ca: string; fr: string }[];
+  /** Entitats de l'encàrrec, per les sigles del cul de la targeta. */
+  orgs: readonly { abbr: string; ca: string; fr: string }[];
   copy: Record<Lang, CaseCopy>;
 }
 
@@ -86,10 +93,30 @@ export async function getCases(): Promise<CaseRecord[]> {
     .map((entry) => ({
       id: entry.id,
       kind: entry.data.kind,
+      category: entry.data.category,
       year: entry.data.year,
       langs: entry.data.langs,
+      skills: entry.data.skills,
+      orgs: entry.data.orgs,
       copy: { ca: entry.data.ca, fr: entry.data.fr },
     }));
+}
+
+/**
+ * Els casos del més recent al més antic, per al carril de la portada.
+ *
+ * Dues ordenacions i no una perquè responen a preguntes diferents. `order` és
+ * una decisió editorial —què vull que es llegeixi primer— i mana a la
+ * navegació entre casos. El carril, en canvi, dibuixa una cronologia amb un
+ * filet i una osca per any: si no anés per any, la línia mentiria.
+ *
+ * Els empats els desfà `order`, i no per casualitat: `getCases()` ja retorna
+ * ordenat per `order` i `Array.prototype.sort` és estable des d'ES2019, o
+ * sigui que dos casos del mateix any conserven l'ordre editorial. Hi ha dos
+ * casos del 2026 i dos del 2023, així que l'empat no és hipotètic.
+ */
+export async function getCasesByRecency(): Promise<CaseRecord[]> {
+  return (await getCases()).sort((a, b) => b.year - a.year);
 }
 
 /** Un cas pel seu slug. Llança si no existeix: cap ruta no l'hi ha de demanar. */
@@ -101,6 +128,15 @@ export async function getCase(id: string): Promise<CaseRecord> {
 
 interface CaseLabels {
   kindLabels: Record<CaseKind, string>;
+  /** Línia de feina. És el text del botó d'entrada de la targeta. */
+  categoryLabels: Record<CaseCategory, string>;
+  /**
+   * Intensitat d'ús d'una competència. No es dibuixa enlloc: la targeta
+   * n'ensenya la gradació i prou (decisió de l'usuari, 27/08/2026), i aquest
+   * text és el que se serveix per `aria-label` a qui no la veu. Que existeixi
+   * en les dues llengües no és opcional: sense ell, la barra és muda.
+   */
+  useLabels: Record<SkillUse, string>;
   factLabels: {
     context: string;
     role: string;
@@ -120,6 +156,16 @@ export const caseLabels: Record<Lang, CaseLabels> = {
       associative: 'Realitzat en el marc associatiu',
       affiliation: 'Vinculació de recerca',
     },
+    categoryLabels: {
+      code: 'Codi i IA',
+      communication: 'Comunicació',
+      research: 'Recerca',
+    },
+    useLabels: {
+      ocasional: 'ús ocasional',
+      regular: 'ús regular',
+      central: 'ús central',
+    },
     factLabels: {
       context: 'Marc',
       role: 'Paper',
@@ -136,6 +182,16 @@ export const caseLabels: Record<Lang, CaseLabels> = {
       own: 'Projet personnel',
       associative: 'Réalisé dans le cadre associatif',
       affiliation: 'Rattachement de recherche',
+    },
+    categoryLabels: {
+      code: 'Code et IA',
+      communication: 'Communication',
+      research: 'Recherche',
+    },
+    useLabels: {
+      ocasional: 'usage ponctuel',
+      regular: 'usage régulier',
+      central: 'usage central',
     },
     factLabels: {
       context: 'Cadre',

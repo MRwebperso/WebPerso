@@ -1,13 +1,40 @@
 {
   "order": 3,
   "kind": "associative",
+  "category": "code",
   "year": 2026,
   "langs": [
     "fr",
     "ca"
   ],
+  "skills": [
+    {
+      "use": "central",
+      "ca": "Web sense framework",
+      "fr": "Web sans framework"
+    },
+    {
+      "use": "regular",
+      "ca": "Extracció amb IA",
+      "fr": "Extraction par IA"
+    },
+    {
+      "use": "regular",
+      "ca": "Curadoria editorial",
+      "fr": "Curation éditoriale"
+    }
+  ],
+  "orgs": [
+    {
+      "abbr": "CLM",
+      "ca": "Cultures, Llengües i Memòries del Vallespir",
+      "fr": "Cultures, Langues et Mémoires du Vallespir"
+    }
+  ],
   "ca": {
     "title": "«Què fas?», l’agenda cultural de Catalunya Nord",
+    "cardTitle": "«Què fas?»",
+    "cardSubtitle": "L’agenda cultural de Catalunya Nord",
     "summary": "Una agenda d’esdeveniments per a les cinc comarques del nord, feta amb la condició de no costar res cada mes i de continuar essent reparable per una sola persona.",
     "context": "CLM",
     "role": "Concepció, desenvolupament i curadoria",
@@ -36,6 +63,8 @@
   },
   "fr": {
     "title": "« Què fas ? », l’agenda culturel de Catalogne Nord",
+    "cardTitle": "« Què fas ? »",
+    "cardSubtitle": "L’agenda culturel de Catalogne Nord",
     "summary": "Un agenda d’événements pour les cinq comarques du nord, construit à la condition de ne rien coûter chaque mois et de rester réparable par une seule personne.",
     "context": "CLM",
     "role": "Conception, développement et curation",

@@ -1,13 +1,45 @@
 {
   "order": 6,
   "kind": "position",
+  "category": "research",
   "year": 2013,
   "langs": [
     "es",
     "en"
   ],
+  "skills": [
+    {
+      "use": "central",
+      "ca": "Entrevistes de camp",
+      "fr": "Entretiens de terrain"
+    },
+    {
+      "use": "regular",
+      "ca": "Publicació científica",
+      "fr": "Publication scientifique"
+    },
+    {
+      "use": "regular",
+      "ca": "Coordinació de socis",
+      "fr": "Coordination des partenaires"
+    }
+  ],
+  "orgs": [
+    {
+      "abbr": "MEC",
+      "ca": "Ministerio de Educación y Cultura",
+      "fr": "Ministerio de Educación y Cultura"
+    },
+    {
+      "abbr": "AIW",
+      "ca": "Antipode International Workshop Award 2015",
+      "fr": "Antipode International Workshop Award 2015"
+    }
+  ],
   "ca": {
     "title": "MOVOKEUR: quatre anys d’assistència a la recerca en un projecte internacional",
+    "cardTitle": "MOVOKEUR",
+    "cardSubtitle": "Quatre anys d’assistència a la recerca",
     "summary": "Assistència de recerca en un projecte internacional del Ministerio de Educación y Cultura: planificació compartida, entrevistes, publicacions i l’organització d’un taller internacional.",
     "context": "Projecte MOVOKEUR · Ministerio de Educación y Cultura",
     "role": "Assistent de recerca",
@@ -36,6 +68,8 @@
   },
   "fr": {
     "title": "MOVOKEUR : quatre ans d’assistanat de recherche sur un projet international",
+    "cardTitle": "MOVOKEUR",
+    "cardSubtitle": "Quatre ans d’assistanat de recherche",
     "summary": "Assistanat de recherche sur un projet international du Ministerio de Educación y Cultura : planification partagée, entretiens, publications et organisation d’un atelier international.",
     "context": "Projet MOVOKEUR · Ministerio de Educación y Cultura",
     "role": "Assistant de recherche",

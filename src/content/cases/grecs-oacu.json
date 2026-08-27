@@ -1,14 +1,46 @@
 {
   "order": 5,
   "kind": "affiliation",
+  "category": "research",
   "year": 2020,
   "langs": [
     "ca",
     "es",
     "en"
   ],
+  "skills": [
+    {
+      "use": "central",
+      "ca": "Etnografia de camp",
+      "fr": "Ethnographie de terrain"
+    },
+    {
+      "use": "regular",
+      "ca": "Escriptura acadèmica",
+      "fr": "Écriture académique"
+    },
+    {
+      "use": "regular",
+      "ca": "Treball en grup",
+      "fr": "Travail en équipe"
+    }
+  ],
+  "orgs": [
+    {
+      "abbr": "UB",
+      "ca": "Universitat de Barcelona",
+      "fr": "Université de Barcelone"
+    },
+    {
+      "abbr": "GO",
+      "ca": "GRECS / OACU",
+      "fr": "GRECS / OACU"
+    }
+  ],
   "ca": {
     "title": "Recerca associada a la UB: seminaris, projectes i un terreny a Suïssa",
+    "cardTitle": "Recerca a la UB",
+    "cardSubtitle": "Recerca etnogràfica a Suïssa",
     "summary": "Quatre anys de vinculació al Departament d’Antropologia Social i Cultural de la Universitat de Barcelona, amb una etnografia pròpia sobre els temporers vitícoles a Suïssa.",
     "context": "GRECS/OACU, Departament d’Antropologia Social i Cultural, Universitat de Barcelona",
     "role": "Investigador associat",
@@ -35,6 +67,8 @@
   },
   "fr": {
     "title": "Recherche associée à l’UB : séminaires, projets et un terrain en Suisse",
+    "cardTitle": "Recherche à l’UB",
+    "cardSubtitle": "Recherche ethnographique en Suisse",
     "summary": "Quatre ans de rattachement au Département d’Anthropologie Sociale et Culturelle de l’Université de Barcelone, avec une ethnographie propre sur les saisonniers viticoles en Suisse.",
     "context": "GRECS/OACU, Département d’Anthropologie Sociale et Culturelle, Université de Barcelone",
     "role": "Chercheur associé",
