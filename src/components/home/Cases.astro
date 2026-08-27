@@ -59,7 +59,7 @@ const labels = caseLabels[lang];
 const cases = await getCasesByRecency();
 ---
 
-<Section id="casos" eyebrow={intro.eyebrow} title={intro.title} lead={intro.lead}>
+<Section id="casos" eyebrow={intro.eyebrow} title={intro.title} lead={intro.lead} figure>
   <div class="carril" slot="wide">
     <ol class="pista" aria-label={t('cases.track')}>
       {
@@ -81,7 +81,7 @@ const cases = await getCasesByRecency();
 
                 <div class="cas__detall">
                   <ul class="habilitats" aria-label={t('cases.skills')}>
-                    {item.skills.map((skill) => (
+                    {item.skills.map((skill, fila) => (
                       <li>
                         <span class="habilitats__nom">{skill[lang]}</span>
                         <span
@@ -89,8 +89,11 @@ const cases = await getCasesByRecency();
                           role="img"
                           aria-label={`${skill[lang]}: ${labels.useLabels[skill.use]}`}
                         >
-                          {skillScale.map((osca) => (
-                            <i class:list={[{ 'mesura--plena': osca <= skillNotches[skill.use] }]} />
+                          {skillScale.map((osca, columna) => (
+                            <i
+                              class:list={[{ 'mesura--plena': osca <= skillNotches[skill.use] }]}
+                              style={`--k: ${fila + columna}`}
+                            />
                           ))}
                         </span>
                       </li>
@@ -443,10 +446,39 @@ const cases = await getCasesByRecency();
     height: 3px;
     flex: 1;
     background: var(--rule);
+    /*
+     * El front d'onada (decisió de l'usuari, 28/08/2026): les osques plenes no
+     * s'encenen totes de cop, s'encenen en diagonal. `--k` és `fila + columna`,
+     * o sigui que totes les que sumen el mateix s'encenen alhora: primer la
+     * primera de la primera competència, després la segona d'aquella amb la
+     * primera de la següent, i així fins a la cantonada de baix a la dreta.
+     * Amb tres competències i cinc osques, `--k` va de 0 a 6 i la cua dura
+     * 6 × 60 ms = 360 ms, prou per llegir-s'hi un ordre i prou poc per no
+     * haver d'esperar-la.
+     *
+     * El retard va a la regla de base i no a la d'obertura, o sigui que en
+     * tancar la fitxa la diagonal es desfà en el mateix ordre. L'alternativa
+     * —apagar-ho tot de cop— feia que el tancament semblés un tall.
+     */
+    transition: background-color var(--dur-base) var(--ease-out) calc(var(--k, 0) * 60ms);
   }
 
-  .mesura .mesura--plena {
-    background: var(--vermell);
+  /*
+   * Or i no vermell (decisió de l'usuari, 28/08/2026): amb la gradació en
+   * vermell, la fitxa oberta tenia dos senyals forts competint —l'any i les tres
+   * barres— i les barres, que són quinze rectangles, guanyaven sempre. El
+   * vermell es queda per a l'any i per a l'osca del filet, que és el que marca
+   * on som a la cronologia; la gradació passa a `--accent`, el mateix or del
+   * títol en repòs. No hi ha mínim de contrast a comprovar: són 3px de gràfic,
+   * no text, i el nivell va escrit a l'`aria-label` de la mesura.
+   *
+   * L'or s'encén amb l'obertura i no en repòs: si la classe ja portés el color,
+   * la diagonal seria invisible —el detall entra sencer amb una sola opacitat i
+   * les quinze osques hi arribarien ja enceses.
+   */
+  .cas:hover .mesura--plena,
+  .cas:focus-within .mesura--plena {
+    background: var(--accent);
   }
 
   .cas__tanca {
@@ -579,6 +611,12 @@ const cases = await getCasesByRecency();
       transform: none;
       pointer-events: auto;
     }
+
+    /* Sense `hover` la fitxa no s'obre mai: la gradació ha de ser d'or des del
+       primer moment, i la diagonal no té ocasió de córrer. */
+    .mesura--plena {
+      background: var(--accent);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -588,6 +626,7 @@ const cases = await getCasesByRecency();
     .cas__titol,
     .cas__repos,
     .cas__detall,
+    .mesura i,
     .entrada,
     .rem {
       transition: none;

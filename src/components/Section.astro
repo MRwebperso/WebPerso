@@ -12,6 +12,8 @@ interface Props {
   lead?: string;
   /** Fons enfonsat, per a les seccions que han de pesar igual que l'oferta. */
   sunk?: boolean;
+  /** La secció omple el slot `wide` amb una figura. Vegeu la nota de sota. */
+  figure?: boolean;
 }
 
 /*
@@ -29,13 +31,21 @@ interface Props {
  * que és on serveix de rètol; a l'alçada del dibuix no reserva res. El ritme
  * vertical i l'adherència del rètol no es mouen: només canvia qui ocupa la
  * banda esquerra a les files de figura.
+ *
+ * I d'aquí surt `figure`, que és la contrapartida (28/08/2026): amb la figura
+ * ocupant les dues columnes, un rètol adherit li baixa per damunt. A la
+ * trajectòria es veia de seguida —«PARCOURS» acabava al costat de l'any de la
+ * fita, com si en fos part— i a l'oferta i als casos hi passava igual, només
+ * que amb menys text a sota per delatar-ho. A les seccions amb figura, doncs, el
+ * rètol es queda quiet: es llegeix un cop amb el titular i marxa amb ell, com a
+ * la del mètode, que és la que no té figura i per tant mai no va donar problema.
  */
 
-const { id, eyebrow, title, lead, sunk = false } = Astro.props;
+const { id, eyebrow, title, lead, sunk = false, figure = false } = Astro.props;
 ---
 
 <section
-  class:list={['section', { 'section--sunk': sunk }]}
+  class:list={['section', { 'section--sunk': sunk, 'section--figure': figure }]}
   id={id}
   aria-labelledby={`${id}-title`}
 >
@@ -63,5 +73,13 @@ const { id, eyebrow, title, lead, sunk = false } = Astro.props;
 
   .body > :global(* + *:not(.section__lead)) {
     margin-top: var(--space-12);
+  }
+
+  /* Per sota de 62rem el raïl no és columna ni és adherit, o sigui que no hi ha
+     res a desfer: `base.css` només l'enganxa a partir d'aquesta amplada. */
+  @media (min-width: 62rem) {
+    .section--figure .rail {
+      position: static;
+    }
   }
 </style>
