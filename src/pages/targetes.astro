@@ -1,0 +1,554 @@
+---
+/**
+ * «Targetes» — prototip llencable de la fitxa de cas com a targeta.
+ *
+ * Ruta fora de la navegacio i de l'i18n, catala nomes, amb `noindex`: mateixa
+ * condicio que /hero-demo/, /la-travessa/ i /la-ruta/. S'ha d'esborrar quan
+ * hagi decidit la direccio.
+ *
+ * A diferencia dels altres prototips, aquest SI carrega `theme-dark.css`: el
+ * component ha d'anar a la seccio de casos del lloc, que es fosca, i jutjar-lo
+ * sobre paper clar no diria res util.
+ *
+ * Tres lectures de l'encarrec, que son el que s'ha de validar aqui:
+ *
+ * 1. Les barres no son percentatges de domini. Mesuren el PES de cada
+ *    competencia dins d'aquell encarrec: cinc osques i una paraula (puntual,
+ *    sostingut, nucli). Una barra curta vol dir que la competencia hi va
+ *    entrar poc, no que es domini a mitges.
+ * 2. El compte enrere se substitueix per una crida a obrir el cas, amb el que
+ *    hi trobaras (capitols i temps de lectura) com a rao per clicar.
+ * 3. Els avatars passen a ser sigles de les entitats implicades. Marcadors de
+ *    posicio fins que hi hagi logotips reals: aqui res no ha de semblar
+ *    definitiu.
+ *
+ * El color de fons codifica la familia de feina, no el projecte.
+ */
+import '../styles/base.css';
+import '../styles/theme-dark.css';
+
+type Nivell = 'puntual' | 'sostingut' | 'nucli';
+
+const pes: Record<Nivell, { osques: number; text: string }> = {
+  puntual: { osques: 2, text: 'puntual' },
+  sostingut: { osques: 4, text: 'sostingut' },
+  nucli: { osques: 5, text: 'nucli' },
+};
+
+const families = {
+  territori: { nom: 'Territori i turisme', color: '#8fae52' },
+  marca: { nom: 'Marca i disseny', color: '#b083c4' },
+  codi: { nom: 'Desenvolupament i IA', color: '#2fc3a6' },
+  comunicacio: { nom: 'Comunicació', color: '#f0a93a' },
+  recerca: { nom: 'Recerca', color: '#5c9dc4' },
+} as const;
+
+type Targeta = {
+  slug: string;
+  familia: keyof typeof families;
+  periode: string;
+  titol: string;
+  subtitol: string;
+  competencies: { nom: string; nivell: Nivell }[];
+  entitats: { sigla: string; nom: string }[];
+  capitols: number;
+  minuts: number;
+};
+
+const targetes: Targeta[] = [
+  {
+    slug: 'agencia-atractivitat',
+    familia: 'territori',
+    periode: 'oct. 2023 → des. 2025',
+    titol: 'Alt Vallespir, destinació de frontera',
+    subtitol: 'Eixos estratègics, promoció transfronterera i comunicació',
+    competencies: [
+      { nom: 'Estratègia de destinació', nivell: 'nucli' },
+      { nom: 'Disseny de visuals', nivell: 'sostingut' },
+      { nom: 'Gestió editorial de xarxes', nivell: 'sostingut' },
+    ],
+    entitats: [
+      { sigla: 'OT', nom: 'Oficina de Turisme de Prats de Molló' },
+      { sigla: 'AA', nom: 'Agència d’Atractivitat de l’Alt Vallespir' },
+    ],
+    capitols: 3,
+    minuts: 5,
+  },
+  {
+    slug: 'mar-i-muntanya',
+    familia: 'marca',
+    periode: '2026',
+    titol: 'Mar i Muntanya, a Taula!',
+    subtitol: 'Marca, web bilingüe, xarxes i redacció del dossier',
+    competencies: [
+      { nom: 'Identitat de marca', nivell: 'nucli' },
+      { nom: 'Web bilingüe amb CMS', nivell: 'sostingut' },
+      { nom: 'Redacció de dossiers', nivell: 'nucli' },
+    ],
+    entitats: [
+      { sigla: 'CLM', nom: 'Cultures, Llengües i Memòries del Vallespir' },
+      { sigla: 'ST', nom: 'Som Turisme (Alt Empordà)' },
+    ],
+    capitols: 3,
+    minuts: 6,
+  },
+  {
+    slug: 'que-fas',
+    familia: 'codi',
+    periode: '2026 → avui',
+    titol: '«Què fas?», l’agenda cultural de Catalunya Nord',
+    subtitol: 'Concepció, desenvolupament i curadoria',
+    competencies: [
+      { nom: 'Web estàtica sense framework', nivell: 'nucli' },
+      { nom: 'Extracció automàtica amb IA', nivell: 'sostingut' },
+      { nom: 'Curadoria editorial', nivell: 'sostingut' },
+    ],
+    entitats: [{ sigla: 'CLM', nom: 'Cultures, Llengües i Memòries del Vallespir' }],
+    capitols: 3,
+    minuts: 5,
+  },
+  {
+    slug: 'banys-d-arles',
+    familia: 'comunicacio',
+    periode: 'ago. → oct. 2023',
+    titol: 'Els Banys d’Arles: tres mesos i un servei per endreçar',
+    subtitol: 'Comunicació institucional i reestructuració del servei',
+    competencies: [
+      { nom: 'Comunicació institucional', nivell: 'nucli' },
+      { nom: 'Reorganització de servei', nivell: 'sostingut' },
+      { nom: 'Traducció CA–FR', nivell: 'puntual' },
+    ],
+    entitats: [{ sigla: 'BA', nom: 'Ajuntament dels Banys d’Arles i Palaldà' }],
+    capitols: 3,
+    minuts: 4,
+  },
+  {
+    slug: 'grecs-oacu',
+    familia: 'recerca',
+    periode: 'set. 2020 → 2024',
+    titol: 'Recerca associada a la UB',
+    subtitol: 'Seminaris, projectes i un terreny a Suïssa',
+    competencies: [
+      { nom: 'Etnografia de camp', nivell: 'nucli' },
+      { nom: 'Escriptura acadèmica', nivell: 'sostingut' },
+      { nom: 'Treball en grup de recerca', nivell: 'sostingut' },
+    ],
+    entitats: [
+      { sigla: 'UB', nom: 'Universitat de Barcelona' },
+      { sigla: 'GO', nom: 'GRECS / OACU' },
+    ],
+    capitols: 3,
+    minuts: 5,
+  },
+  {
+    slug: 'movokeur',
+    familia: 'recerca',
+    periode: 'set. 2013 → jul. 2017',
+    titol: 'MOVOKEUR: quatre anys d’assistència a la recerca',
+    subtitol: 'Projecte internacional del Ministerio de Educación y Cultura',
+    competencies: [
+      { nom: 'Entrevistes semiestructurades', nivell: 'nucli' },
+      { nom: 'Publicació científica', nivell: 'sostingut' },
+      { nom: 'Coordinació de socis', nivell: 'sostingut' },
+    ],
+    entitats: [
+      { sigla: 'MEC', nom: 'Ministerio de Educación y Cultura' },
+      { sigla: 'AIW', nom: 'Antipode International Workshop Award 2015' },
+    ],
+    capitols: 3,
+    minuts: 6,
+  },
+];
+---
+
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Prototip · targetes de cas</title>
+  </head>
+  <body>
+    <main class="full">
+      <header class="intro">
+        <p class="kicker">Prototip llençable</p>
+        <h1>Targetes de cas</h1>
+        <p class="lead">
+          Tres decisions per validar: les barres mesuren el <strong>pes de la competència dins de
+          l’encàrrec</strong>, no el domini; el compte enrere passa a ser una entrada al cas; els
+          avatars passen a ser les entitats implicades. El color codifica la família de feina.
+        </p>
+        <ul class="llegenda">
+          {
+            Object.values(families).map((f) => (
+              <li><span style={`--c:${f.color}`}></span>{f.nom}</li>
+            ))
+          }
+        </ul>
+      </header>
+
+      <section class="graella">
+        {
+          targetes.map((t) => (
+            <article class="targeta" style={`--c: ${families[t.familia].color}`}>
+              <div class="cap">
+                <span class="periode">{t.periode}</span>
+                <span class="familia">{families[t.familia].nom}</span>
+              </div>
+
+              <div class="cos">
+                <h2>{t.titol}</h2>
+                <p class="subtitol">{t.subtitol}</p>
+
+                <p class="rubrica">Pes dins de l’encàrrec</p>
+                <ul class="competencies">
+                  {t.competencies.map((c) => (
+                    <li>
+                      <span class="nom">{c.nom}</span>
+                      <span class="osques" role="img" aria-label={`${c.nom}: ${pes[c.nivell].text}`}>
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <i class={i <= pes[c.nivell].osques ? 'plena' : ''} style={`--i:${i}`} />
+                        ))}
+                      </span>
+                      <span class="nivell">{pes[c.nivell].text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <footer class="peu">
+                <ul class="entitats">
+                  {t.entitats.map((e) => (
+                    <li><abbr title={e.nom}>{e.sigla}</abbr></li>
+                  ))}
+                </ul>
+                <a class="entrada" href={`/ca/casos/${t.slug}/`}>
+                  <span class="etiqueta">Obre el cas</span>
+                  <span class="detall">{t.capitols} capítols · {t.minuts} min</span>
+                  <span class="fletxa" aria-hidden="true">→</span>
+                </a>
+              </footer>
+            </article>
+          ))
+        }
+      </section>
+    </main>
+
+    <style>
+      body {
+        padding: var(--space-16) var(--gutter) var(--space-24);
+      }
+
+      .full {
+        max-width: var(--content);
+        margin: 0 auto;
+      }
+
+      .intro {
+        max-width: var(--measure-lead);
+        margin-bottom: var(--space-16);
+      }
+
+      .kicker {
+        font-family: var(--font-ui);
+        font-size: var(--step--1);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin-bottom: var(--space-3);
+      }
+
+      .lead {
+        color: var(--ink-soft);
+        margin-top: var(--space-4);
+      }
+
+      .llegenda {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-6);
+        list-style: none;
+        padding: 0;
+        margin: var(--space-8) 0 0;
+        font-family: var(--font-ui);
+        font-size: var(--step--1);
+        color: var(--ink-soft);
+      }
+
+      .llegenda li {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+
+      .llegenda span {
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 2px;
+        background: var(--c);
+      }
+
+      .graella {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+        gap: var(--space-8);
+      }
+
+      /* La targeta: superficie fosca, i el color de la familia nomes com a
+         llum d'angle. Saturar el fons sencer se li menjaria el text. */
+      .targeta {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        background: var(--paper-sunk);
+        overflow: hidden;
+        transition:
+          transform var(--dur-base) var(--ease-out),
+          border-color var(--dur-base) var(--ease-out);
+      }
+
+      .targeta::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120% 90% at 100% 0%, var(--c) 0%, transparent 62%);
+        opacity: 0.22;
+        transition: opacity var(--dur-base) var(--ease-out);
+        pointer-events: none;
+      }
+
+      .targeta:hover,
+      .targeta:focus-within {
+        transform: translateY(-4px);
+        border-color: color-mix(in oklab, var(--c) 55%, transparent);
+      }
+
+      .targeta:hover::before,
+      .targeta:focus-within::before {
+        opacity: 0.36;
+      }
+
+      .cap,
+      .cos,
+      .peu {
+        position: relative;
+      }
+
+      .cap {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-6) var(--space-6) 0;
+        font-family: var(--font-ui);
+        font-size: var(--step--1);
+      }
+
+      .periode {
+        color: var(--ink-soft);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .familia {
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        color: var(--c);
+      }
+
+      .cos {
+        padding: var(--space-6);
+        flex: 1;
+      }
+
+      .cos h2 {
+        font-size: var(--step-2);
+        margin-top: var(--space-6);
+      }
+
+      .subtitol {
+        color: var(--ink-soft);
+        font-size: var(--step-0);
+        margin-top: var(--space-2);
+      }
+
+      .rubrica {
+        font-family: var(--font-ui);
+        font-size: 0.72rem;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin-top: var(--space-8);
+      }
+
+      .competencies {
+        list-style: none;
+        padding: 0;
+        margin: var(--space-4) 0 0;
+        display: grid;
+        gap: var(--space-3);
+      }
+
+      .competencies li {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+          'nom nivell'
+          'osques osques';
+        gap: var(--space-1) var(--space-4);
+        align-items: baseline;
+        font-family: var(--font-ui);
+        font-size: var(--step--1);
+      }
+
+      .nom {
+        grid-area: nom;
+        color: var(--ink);
+      }
+
+      .nivell {
+        grid-area: nivell;
+        color: var(--ink-faint);
+        font-size: 0.72rem;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+      }
+
+      /* Cinc osques i no una barra continua: una barra continua es llegeix com
+         un percentatge, que es exactament el que s'ha d'evitar. */
+      .osques {
+        grid-area: osques;
+        display: flex;
+        gap: 4px;
+      }
+
+      .osques i {
+        height: 5px;
+        flex: 1;
+        border-radius: 3px;
+        background: color-mix(in oklab, var(--ink) 14%, transparent);
+      }
+
+      .osques i.plena {
+        background: var(--c);
+        transform-origin: left center;
+        animation: osca var(--dur-base) var(--ease-out) backwards;
+        animation-delay: calc(var(--i) * 70ms);
+      }
+
+      @keyframes osca {
+        from {
+          transform: scaleX(0);
+        }
+      }
+
+      .peu {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-4) var(--space-6);
+        border-top: 1px solid var(--rule);
+        background: color-mix(in oklab, var(--paper) 70%, transparent);
+      }
+
+      .entitats {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      /* Sigles encavalcades: mateixa figura que els avatars de l'original,
+         pero amb el que hi ha de veritat darrere d'un encarrec. Marcador de
+         posicio: quan hi hagi logotips, aquest cercle els acull igual. */
+      .entitats li + li {
+        margin-left: -0.5rem;
+      }
+
+      .entitats abbr {
+        display: grid;
+        place-items: center;
+        width: 2.1rem;
+        height: 2.1rem;
+        border-radius: 50%;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+        box-shadow: 0 0 0 2px var(--paper-sunk);
+        font-family: var(--font-ui);
+        font-size: 0.66rem;
+        font-weight: var(--w-semibold);
+        letter-spacing: 0.02em;
+        color: var(--ink-soft);
+        text-decoration: none;
+        cursor: help;
+        transition:
+          transform var(--dur-fast) var(--ease-out),
+          color var(--dur-fast) var(--ease-out);
+      }
+
+      .entitats abbr:hover {
+        transform: translateY(-2px);
+        color: var(--c);
+        border-color: var(--c);
+      }
+
+      /* L'entrada al cas: pastilla que s'obre en passar-hi per sobre i deixa
+         veure que hi trobaras. El que fa que destaqui es que es l'unic element
+         ple de color de la targeta. */
+      .entrada {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: 0.55rem 0.9rem;
+        border-radius: 999px;
+        background: var(--c);
+        color: #0a0a0a;
+        font-family: var(--font-ui);
+        font-size: var(--step--1);
+        font-weight: var(--w-medium);
+        text-decoration: none;
+        white-space: nowrap;
+        transition: gap var(--dur-base) var(--ease-out);
+      }
+
+      .detall {
+        max-width: 0;
+        overflow: hidden;
+        opacity: 0;
+        font-weight: var(--w-regular);
+        transition:
+          max-width var(--dur-base) var(--ease-out),
+          opacity var(--dur-base) var(--ease-out);
+      }
+
+      .targeta:hover .detall,
+      .entrada:focus-visible .detall {
+        max-width: 12rem;
+        opacity: 0.72;
+      }
+
+      .fletxa {
+        transition: transform var(--dur-base) var(--ease-out);
+      }
+
+      .targeta:hover .fletxa {
+        transform: translateX(3px);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .targeta,
+        .entrada,
+        .detall,
+        .fletxa,
+        .osques i.plena {
+          transition: none;
+          animation: none;
+        }
+      }
+    </style>
+  </body>
+</html>

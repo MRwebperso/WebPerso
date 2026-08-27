@@ -1,0 +1,703 @@
+---
+/**
+ * «Targetes» v4 — prototip llencable: carril ciclic a tota pantalla.
+ *
+ * Que canvia respecte de /targetes-3/, tot per encarrec de l'usuari
+ * (27/08/2026):
+ *
+ * 1. Cronologia invertida: el mes recent a l'esquerra, el mes antic a la
+ *    dreta. L'ordre es per any de tancament, no d'obertura.
+ *
+ * 2. Groc i blanc canviats de lloc. En repos el titol es groc; la fitxa que
+ *    s'obre el passa a blanc. Tenir el groc i el blanc encesos alhora era
+ *    massa: ara el color marca el que dorm i el blanc el que mires.
+ *
+ * 3. Fora les mesures. Les competencies es llisten pel nom i prou —«entrevistes
+ *    de camp», «publicacio cientifica»—, sense osques ni etiqueta de nivell:
+ *    qualsevol graduacio, digui el que digui, es llegeix com un examen. El
+ *    filet vermell de davant de cada linia es ritme, no mesura: totes fan
+ *    igual.
+ *
+ * 4. El boto diu la categoria, no la mecanica. «RECERCA» convida mes que
+ *    «obre el cas · 6 min». Es contorn buit en repos i s'omple de blanc quan hi
+ *    tens el cursor a sobre: primer es veu que hi ha un boto, despres que
+ *    respon.
+ *
+ *    Aixo obliga a treure la capa que feia clicable tota la fitxa: si hi fos,
+ *    el boto es veuria «premut» nomes per ser dins de la targeta. El repartiment
+ *    passa a ser explicit —s'obre passant-hi per sobre, s'entra pel boto—, i el
+ *    boto porta `aria-label` amb el titol perque l'enllac no es digui nomes
+ *    «recerca» fora de context.
+ *
+ * 5. El carril ocupa tota l'amplada i es ciclic: tres jocs de fitxes i un
+ *    ajust de `scrollLeft` que el fa infinit en tots dos sentits. Perque no
+ *    sembli que la llista no s'acaba mai, entre joc i joc hi ha una fita
+ *    vertical vermella que diu que la volta s'ha completat.
+ *
+ * Ruta fora de la navegacio i de l'i18n, catala nomes, `noindex`, per
+ * esborrar. Carrega `theme-dark.css` perque la seccio de casos es fosca.
+ */
+import '../styles/base.css';
+import '../styles/theme-dark.css';
+
+type Targeta = {
+  slug: string;
+  categoria: string;
+  periode: string;
+  titol: string;
+  subtitol: string;
+  competencies: string[];
+  entitats: { sigla: string; nom: string }[];
+};
+
+/* Del mes recent al mes antic, per any de tancament: el carril es llegeix
+   d'esquerra a dreta com un retroces en el temps. */
+const targetes: Targeta[] = [
+  {
+    slug: 'que-fas',
+    categoria: 'Codi i IA',
+    periode: '2026 — avui',
+    titol: '«Què fas?»',
+    subtitol: 'L’agenda cultural de Catalunya Nord',
+    competencies: ['Web sense framework', 'Extracció amb IA', 'Curadoria editorial'],
+    entitats: [{ sigla: 'CLM', nom: 'Cultures, Llengües i Memòries del Vallespir' }],
+  },
+  {
+    slug: 'mar-i-muntanya',
+    categoria: 'Marca',
+    periode: '2026',
+    titol: 'Mar i Muntanya, a Taula!',
+    subtitol: 'Marca i web bilingüe',
+    competencies: ['Identitat de marca', 'Web amb CMS', 'Redacció de dossiers'],
+    entitats: [
+      { sigla: 'CLM', nom: 'Cultures, Llengües i Memòries del Vallespir' },
+      { sigla: 'ST', nom: 'Som Turisme (Alt Empordà)' },
+    ],
+  },
+  {
+    slug: 'agencia-atractivitat',
+    categoria: 'Territori',
+    periode: '2023 — 2025',
+    titol: 'Una destinació de frontera',
+    subtitol: 'Alt Vallespir, en quatre llengües',
+    competencies: ['Estratègia de destinació', 'Disseny de visuals', 'Edició de xarxes'],
+    entitats: [
+      { sigla: 'OT', nom: 'Oficina de Turisme de Prats de Molló' },
+      { sigla: 'AA', nom: 'Agència d’Atractivitat de l’Alt Vallespir' },
+    ],
+  },
+  {
+    slug: 'grecs-oacu',
+    categoria: 'Recerca',
+    periode: '2020 — 2024',
+    titol: 'Recerca associada a la UB',
+    subtitol: 'Seminaris i un terreny a Suïssa',
+    competencies: ['Etnografia de camp', 'Escriptura acadèmica', 'Treball en grup'],
+    entitats: [
+      { sigla: 'UB', nom: 'Universitat de Barcelona' },
+      { sigla: 'GO', nom: 'GRECS / OACU' },
+    ],
+  },
+  {
+    slug: 'banys-d-arles',
+    categoria: 'Comunicació',
+    periode: '2023',
+    titol: 'Els Banys d’Arles',
+    subtitol: 'Tres mesos i un servei per endreçar',
+    competencies: ['Comunicació institucional', 'Reorganització de servei', 'Traducció CA–FR'],
+    entitats: [{ sigla: 'BA', nom: 'Ajuntament dels Banys d’Arles i Palaldà' }],
+  },
+  {
+    slug: 'movokeur',
+    categoria: 'Recerca',
+    periode: '2013 — 2017',
+    titol: 'MOVOKEUR',
+    subtitol: 'Quatre anys d’assistència a la recerca',
+    competencies: ['Entrevistes de camp', 'Publicació científica', 'Coordinació de socis'],
+    entitats: [
+      { sigla: 'MEC', nom: 'Ministerio de Educación y Cultura' },
+      { sigla: 'AIW', nom: 'Antipode International Workshop Award 2015' },
+    ],
+  },
+];
+
+/* Tres jocs: el del mig es el que es mira, i els dos de fora son el marge que
+   permet ajustar `scrollLeft` sense que mai es vegi el cul del carril. Els
+   duplicats no existeixen per a la tecnologia assistiva. */
+const jocs = [0, 1, 2];
+---
+
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Prototip · targetes de cas, v4</title>
+  </head>
+  <body>
+    <header class="intro">
+      <p class="kicker">Prototip llençable · v4</p>
+      <h1>Carril cíclic</h1>
+      <p class="lead">
+        Del més recent al més antic, i quan la volta s’acaba una fita vermella ho diu i el carril
+        torna a començar. En repòs el títol és groc; la fitxa que mires el passa a blanc.
+      </p>
+    </header>
+
+    <div class="carril">
+      <ol class="pista" id="pista">
+        {
+          jocs.map((joc) => (
+            <>
+              {targetes.map((t) => (
+                <li class="cas" aria-hidden={joc === 1 ? undefined : 'true'}>
+                  <span class="osca" aria-hidden="true" />
+                  <p class="periode nums">{t.periode}</p>
+
+                  <h2 class="titol">{t.titol}</h2>
+
+                  <div class="relleu">
+                    <div class="repos">
+                      <p class="subtitol">{t.subtitol}</p>
+                      <p class="familia">{t.categoria}</p>
+                    </div>
+
+                    <div class="detall">
+                      <ul class="competencies">
+                        {t.competencies.map((c) => (
+                          <li>{c}</li>
+                        ))}
+                      </ul>
+
+                      <div class="tanca">
+                        <ul class="entitats">
+                          {t.entitats.map((e) => (
+                            <li>
+                              <abbr title={e.nom}>{e.sigla}</abbr>
+                            </li>
+                          ))}
+                        </ul>
+                        <a
+                          class="entrada"
+                          href={`/ca/casos/${t.slug}/`}
+                          tabindex={joc === 1 ? undefined : -1}
+                          aria-label={`${t.categoria}: obre el cas ${t.titol}`}
+                        >
+                          {t.categoria}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+
+              <li class="fita" aria-hidden="true">
+                <p>Volta completa · torna al 2026</p>
+              </li>
+            </>
+          ))
+        }
+      </ol>
+
+      <div class="rems">
+        <button type="button" class="rem" data-dir="-1" aria-label="Casos més recents">←</button>
+        <button type="button" class="rem" data-dir="1" aria-label="Casos més antics">→</button>
+      </div>
+    </div>
+
+    <script>
+      /*
+       * Carril infinit sense biblioteca: hi ha tres jocs de fitxes i, quan el
+       * desplacament surt del joc del mig, se li suma o se li resta l'amplada
+       * d'un joc. El salt es d'un multiple exacte de l'amplada del joc, o sigui
+       * que a la pantalla no es veu res.
+       *
+       * L'ajust es fa al `scrollend` i no a cada `scroll`: tocar `scrollLeft`
+       * enmig d'un desplacament suau l'avorta, i els botons en fan servir.
+       * Navegadors sense `scrollend` (Safari, ara com ara) cauen a un
+       * temporitzador d'inactivitat.
+       */
+      const pista = document.getElementById('pista');
+
+      if (pista) {
+        const suau = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const fitxes = pista.querySelectorAll<HTMLElement>('.cas, .fita');
+        const perJoc = fitxes.length / 3;
+
+        const ampladaJoc = () => {
+          const primera = fitxes[0];
+          const segona = fitxes[perJoc];
+          return segona.offsetLeft - primera.offsetLeft;
+        };
+
+        // Arrenca al joc del mig: aixi el primer gest cap enrere ja te carril.
+        const centra = () => {
+          pista.scrollLeft = ampladaJoc();
+        };
+        centra();
+        window.addEventListener('resize', centra);
+
+        const ajusta = () => {
+          const joc = ampladaJoc();
+          if (pista.scrollLeft >= joc * 1.5) pista.scrollLeft -= joc;
+          else if (pista.scrollLeft < joc * 0.5) pista.scrollLeft += joc;
+        };
+
+        if ('onscrollend' in window) {
+          pista.addEventListener('scrollend', ajusta);
+        } else {
+          let repos: number | undefined;
+          pista.addEventListener('scroll', () => {
+            window.clearTimeout(repos);
+            repos = window.setTimeout(ajusta, 140);
+          });
+        }
+
+        for (const boto of document.querySelectorAll<HTMLButtonElement>('.rem')) {
+          boto.addEventListener('click', () => {
+            const pas = fitxes[0].getBoundingClientRect().width + 24;
+            pista.scrollBy({
+              left: pas * Number(boto.dataset.dir),
+              behavior: suau ? 'smooth' : 'auto',
+            });
+          });
+        }
+
+        // El focus per teclat ha de portar la fitxa a la vista: sense aixo, el
+        // tabulador obre una fitxa que es fora de pantalla.
+        for (const enllac of pista.querySelectorAll('.entrada')) {
+          enllac.addEventListener('focus', () => {
+            enllac.closest('.cas')?.scrollIntoView({
+              behavior: suau ? 'smooth' : 'auto',
+              block: 'nearest',
+              inline: 'center',
+            });
+          });
+        }
+      }
+    </script>
+
+    <style>
+      /* Senyera aclarida el minim per aguantar sobre negre: 4,98:1, per damunt
+         del 4,5:1 que demana el cos petit. El #DA121A pla es queda a 4,07:1. */
+      :root {
+        --vermell: #e33b32;
+        --pas: var(--space-6);
+      }
+
+      body {
+        padding: var(--space-16) 0 var(--space-24);
+        overflow-x: hidden;
+      }
+
+      .intro {
+        max-width: var(--measure-lead);
+        margin: 0 auto var(--space-16);
+        padding: 0 var(--gutter);
+      }
+
+      @media (min-width: 62rem) {
+        .intro {
+          max-width: calc(var(--measure-lead) + 2 * var(--gutter));
+          margin-left: max(var(--gutter), (100vw - var(--content)) / 2);
+          margin-right: 0;
+          padding-left: 0;
+        }
+      }
+
+      .kicker {
+        font-family: var(--font-ui);
+        font-size: var(--step--1);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin-bottom: var(--space-3);
+      }
+
+      .lead {
+        color: var(--ink-soft);
+        margin-top: var(--space-4);
+      }
+
+      /* El carril surt del contenidor de text i ocupa tota l'amplada: es el que
+         li dona el caracter de cinta, i el que fa que el tall dels dos costats
+         es llegeixi com «aixo continua». */
+      .pista {
+        list-style: none;
+        margin: 0;
+        padding: var(--space-8) var(--gutter) var(--space-12);
+        display: flex;
+        align-items: stretch;
+        gap: var(--pas);
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+        scrollbar-color: var(--rule) transparent;
+      }
+
+      .cas {
+        position: relative;
+        flex: 0 0 auto;
+        width: 19rem;
+        min-height: 24rem;
+        display: flex;
+        flex-direction: column;
+        padding: var(--space-6);
+        border: 1px solid var(--rule);
+        background: var(--paper);
+        transition:
+          width var(--dur-slow) var(--ease-out),
+          transform var(--dur-base) var(--ease-out),
+          opacity var(--dur-base) var(--ease-out),
+          border-color var(--dur-base) var(--ease-out),
+          background var(--dur-base) var(--ease-out);
+      }
+
+      @media (min-width: 62rem) {
+        .cas {
+          width: 17rem;
+        }
+
+        .pista:hover .cas,
+        .pista:focus-within .cas {
+          width: 15rem;
+          opacity: 0.55;
+        }
+
+        .pista:hover .cas:hover,
+        .pista:focus-within .cas:focus-within {
+          width: 26rem;
+          opacity: 1;
+        }
+      }
+
+      .cas:hover,
+      .cas:focus-within {
+        transform: translateY(-6px);
+        background: var(--paper-sunk);
+        border-color: color-mix(in oklab, var(--vermell) 40%, var(--rule));
+      }
+
+      /* La cronologia travessa totes les fitxes a la mateixa alcada i salta el
+         buit entre l'una i l'altra. Va dins de cada fitxa: amb amplades que
+         canvien, una linia absoluta s'hauria de recalcular amb JS. */
+      .cas::before,
+      .fita::before {
+        content: '';
+        position: absolute;
+        top: 3.6rem;
+        left: 0;
+        right: calc(-1 * var(--pas) - 1px);
+        height: 1px;
+        background: var(--rule);
+      }
+
+      .osca {
+        position: absolute;
+        top: calc(3.6rem - 3px);
+        left: var(--space-6);
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--ink-faint);
+        transition:
+          background var(--dur-base) var(--ease-out),
+          transform var(--dur-base) var(--ease-out);
+      }
+
+      .cas:hover .osca,
+      .cas:focus-within .osca {
+        background: var(--vermell);
+        transform: scale(1.6);
+      }
+
+      /*
+       * La fita de volta: linia vertical vermella entre joc i joc. Sense ella,
+       * un carril infinit no diu mai que ja ho has vist tot; amb ella, el bucle
+       * es una decisio llegible i no un error.
+       */
+      .fita {
+        position: relative;
+        flex: 0 0 auto;
+        width: 2px;
+        margin: 0 var(--space-8);
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          var(--vermell) 12%,
+          var(--vermell) 88%,
+          transparent
+        );
+      }
+
+      .fita p {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        writing-mode: vertical-rl;
+        font-family: var(--font-ui);
+        font-size: 0.72rem;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--vermell);
+        background: var(--paper);
+        padding: var(--space-3) 2px;
+        white-space: nowrap;
+      }
+
+      .periode {
+        font-family: var(--font-ui);
+        font-size: var(--step--1);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin-bottom: var(--space-8);
+        transition: color var(--dur-base) var(--ease-out);
+      }
+
+      .cas:hover .periode,
+      .cas:focus-within .periode {
+        color: var(--vermell);
+      }
+
+      /* Groc el que dorm, blanc el que mires. Amb els dos encesos alhora la
+         fitxa activa no guanyava res: ara el contrast fa la feina que abans
+         intentava fer un segon color. */
+      .titol {
+        font-size: var(--step-2);
+        max-width: 18ch;
+        color: var(--accent);
+        transition: color var(--dur-base) var(--ease-out);
+      }
+
+      .cas:hover .titol,
+      .cas:focus-within .titol {
+        color: var(--ink);
+      }
+
+      .relleu {
+        display: grid;
+        margin-top: auto;
+        padding-top: var(--space-6);
+      }
+
+      /* Els dos blocs s'ancoren al cantell de baix: el detall es mes alt i es
+         qui fixa l'alcada de la cel·la, i sense l'ancora l'etiqueta de
+         categoria surava per damunt del cul de la fitxa. */
+      .repos,
+      .detall {
+        grid-area: 1 / 1;
+        align-self: end;
+        transition:
+          opacity var(--dur-base) var(--ease-out),
+          transform var(--dur-base) var(--ease-out);
+      }
+
+      .detall {
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+      }
+
+      .cas:hover .repos,
+      .cas:focus-within .repos {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      .cas:hover .detall,
+      .cas:focus-within .detall {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+
+      .subtitol {
+        color: var(--ink-soft);
+        max-width: 30ch;
+      }
+
+      .familia {
+        margin-top: var(--space-6);
+        font-family: var(--font-ui);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+
+      /* Nomes el nom de la competencia. Qualsevol graduacio —osques, paraula de
+         nivell, percentatge— es llegeix com un examen; la llista neta es
+         llegeix com el que sap fer qui ho signa. El filet vermell es ritme:
+         totes fan igual de llarg a posta. */
+      .competencies {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: var(--space-3);
+        font-family: var(--font-ui);
+        font-size: var(--step--1);
+        color: var(--ink);
+      }
+
+      .competencies li {
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-3);
+        white-space: nowrap;
+      }
+
+      .competencies li::before {
+        content: '';
+        flex: 0 0 auto;
+        width: 1rem;
+        height: 2px;
+        background: var(--vermell);
+        transform: translateY(-0.25em);
+      }
+
+      .tanca {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        margin-top: var(--space-8);
+      }
+
+      .entitats {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      /* Sigles encavalcades: mateixa figura que els avatars de l'original,
+         pero amb el que hi ha darrere de l'encarrec. Marcador de posicio:
+         quan hi hagi logotips, aquest cercle els acull igual. */
+      .entitats li + li {
+        margin-left: -0.5rem;
+      }
+
+      .entitats abbr {
+        display: grid;
+        place-items: center;
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: 50%;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+        box-shadow: 0 0 0 2px var(--paper-sunk);
+        font-family: var(--font-ui);
+        font-size: 0.64rem;
+        font-weight: var(--w-semibold);
+        color: var(--ink-soft);
+        text-decoration: none;
+        cursor: help;
+      }
+
+      /*
+       * El boto diu la categoria. Contorn buit perque es vegi que hi ha boto, i
+       * s'omple de blanc quan hi tens el cursor a sobre. Cantells rectes: el
+       * lloc no te ni una vora arrodonida fora dels cercles de les sigles.
+       */
+      .entrada {
+        padding: 0.5rem 0.9rem;
+        border: 1px solid var(--ink);
+        color: var(--ink);
+        font-family: var(--font-ui);
+        font-size: 0.72rem;
+        font-weight: var(--w-medium);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+          background var(--dur-fast) var(--ease-out),
+          color var(--dur-fast) var(--ease-out);
+      }
+
+      .entrada:hover {
+        background: var(--ink);
+        color: var(--paper);
+      }
+
+      .entrada:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      .rems {
+        display: flex;
+        gap: var(--space-2);
+        margin: var(--space-4) var(--gutter) 0;
+      }
+
+      .rem {
+        width: 2.6rem;
+        height: 2.6rem;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--rule);
+        background: transparent;
+        color: var(--ink-soft);
+        font-family: var(--font-ui);
+        font-size: var(--step-0);
+        cursor: pointer;
+        transition:
+          color var(--dur-fast) var(--ease-out),
+          border-color var(--dur-fast) var(--ease-out);
+      }
+
+      .rem:hover {
+        color: var(--vermell);
+        border-color: var(--vermell);
+      }
+
+      .rem:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      /* Sense `hover` el gest no existeix: el detall es queda obert i la fitxa
+         creix el que calgui. El carril continua sent un carril: es desplaca amb
+         el dit. */
+      @media (hover: none) {
+        .cas {
+          width: 82vw;
+          max-width: 22rem;
+          min-height: 0;
+        }
+
+        .relleu {
+          display: block;
+        }
+
+        .repos {
+          display: none;
+        }
+
+        .detall {
+          opacity: 1;
+          transform: none;
+          pointer-events: auto;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .cas,
+        .osca,
+        .periode,
+        .titol,
+        .repos,
+        .detall,
+        .entrada,
+        .rem {
+          transition: none;
+        }
+      }
+    </style>
+  </body>
+</html>
