@@ -19,6 +19,16 @@ interface Props {
  * columna de contingut: qui l'ompli decideix quantes columnes ocupa. És el que
  * permet que la cronologia tingui dues columnes pròpies sense perdre el raïl
  * d'etiqueta adherent a l'esquerra.
+ *
+ * Qui ompli el slot ha d'ocupar les dues columnes, `1 / -1` (decisió de
+ * l'usuari, 28/08/2026). Abans les tres figures —oferta, cronologia, casos—
+ * l'arrencaven a la columna de contingut per deixar el raïl lliure, i per tant
+ * renunciaven a 12rem de columna més 3rem de separació: 15 de 74, un 20 % de
+ * l'amplada reservat a una paraula de rètol que ja s'ha acabat de llegir molt
+ * més amunt. El raïl continua sent columna a l'alçada del titular i de la prosa,
+ * que és on serveix de rètol; a l'alçada del dibuix no reserva res. El ritme
+ * vertical i l'adherència del rètol no es mouen: només canvia qui ocupa la
+ * banda esquerra a les files de figura.
  */
 
 const { id, eyebrow, title, lead, sunk = false } = Astro.props;

@@ -92,15 +92,10 @@ const steps = milestones.map((milestone, i) => {
 
 <style>
   .scrolly {
+    /* Les dues columnes de la secció, també amb el raïl obert (28/08/2026):
+       vegeu la nota del slot `wide` a `Section.astro`. El mapa és la figura que
+       més ho nota —el territori es dibuixa en 74rem en lloc de 59. */
     grid-column: 1 / -1;
-  }
-
-  /* Quan la graella de secció obre el raïl d'etiqueta, la peça arrenca a la
-     columna de contingut: el raïl queda lliure per continuar adherit. */
-  @media (min-width: 62rem) {
-    .scrolly {
-      grid-column: 2 / -1;
-    }
   }
 
   .scrolly__figure {

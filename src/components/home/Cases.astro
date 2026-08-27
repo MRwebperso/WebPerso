@@ -138,10 +138,27 @@ const cases = await getCasesByRecency();
    * el guió mort, el carril continua sent una llista que es desplaça amb el dit
    * o amb la roda, i les fitxes s'obren igual.
    */
-  const pista = document.querySelector<HTMLElement>('#casos .pista');
-  const rems = [...document.querySelectorAll<HTMLButtonElement>('#casos .rem')];
+  /*
+   * Es torna a lligar a cada navegació de client (28/08/2026): amb el
+   * `ClientRouter`, el commutador de llengua canvia el cos del document i un
+   * guió de mòdul no es torna a executar. Sense això les fletxes quedaven
+   * mortes a la segona llengua visitada —el carril continuava desplaçant-se amb
+   * el dit, que és justament el que ho feia difícil de veure. L'oient de
+   * `resize` va amb senyal perquè no s'acumuli sobre una pista fora del
+   * document.
+   */
+  let ditch: AbortController | null = null;
 
-  if (pista && rems.length > 0) {
+  function bindCases() {
+    ditch?.abort();
+    ditch = null;
+
+    const pista = document.querySelector<HTMLElement>('#casos .pista');
+    const rems = [...document.querySelectorAll<HTMLButtonElement>('#casos .rem')];
+    if (!pista || rems.length === 0) return;
+
+    ditch = new AbortController();
+    const { signal } = ditch;
     const suau = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const estat = () => {
@@ -157,7 +174,7 @@ const cases = await getCasesByRecency();
 
     estat();
     pista.addEventListener('scroll', estat, { passive: true });
-    window.addEventListener('resize', estat);
+    window.addEventListener('resize', estat, { signal });
 
     for (const boto of rems) {
       boto.addEventListener('click', () => {
@@ -180,6 +197,9 @@ const cases = await getCasesByRecency();
       });
     }
   }
+
+  bindCases();
+  document.addEventListener('astro:page-load', bindCases);
 </script>
 
 <style>
@@ -196,18 +216,13 @@ const cases = await getCasesByRecency();
   .carril {
     --vermell: #e33b32;
     --pas: var(--space-6);
+    /* Les dues columnes de la secció, també amb el raïl obert (28/08/2026):
+       vegeu la nota del slot `wide` a `Section.astro`. El carril arrenca a la
+       vora esquerra del contingut i guanya 15rem de recorregut. */
     grid-column: 1 / -1;
     /* Sense això, la contribució de mida del carril és la suma de les sis
        fitxes i el desbordament el pren la pàgina en lloc de la pista. */
     min-width: 0;
-  }
-
-  @media (min-width: 62rem) {
-    /* Com la cronologia: quan la graella de secció obre el raïl d'etiqueta, el
-       carril arrenca a la columna de contingut i el raïl continua adherit. */
-    .carril {
-      grid-column: 2 / -1;
-    }
   }
 
   .pista {

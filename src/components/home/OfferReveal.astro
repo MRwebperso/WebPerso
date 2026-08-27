@@ -271,16 +271,13 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     --veil-wire: clamp(0, calc((0.5 - var(--x)) * 14), 1);
     --open-wire: clamp(0, calc((0.46 - var(--x)) * 8.3), 1);
     --more-wire: clamp(0, calc((0.36 - var(--x)) * 8.3), 1);
+    /* Les dues columnes de la secció, també amb el raïl obert (28/08/2026):
+       vegeu la nota del slot `wide` a `Section.astro`. Aquí és el que arregla
+       la lectura als extrems: el repòs de la costura cau al centre real de la
+       pàgina i no al centre del terç dret, i els dos blocs de text —topall de
+       `min(38ch, 44%)`— passen de ~26rem a ~32rem d'amplada disponible. */
     grid-column: 1 / -1;
     margin-top: var(--space-12);
-  }
-
-  /* Mateix repartiment que la cronologia: quan la graella de secció obre el
-     raïl d'etiqueta, la peça arrenca a la columna de contingut. */
-  @media (min-width: 62rem) {
-    .stage {
-      grid-column: 2 / -1;
-    }
   }
 
   .stage__pin {
@@ -574,11 +571,29 @@ const SUN = { cx: 470, cy: 86, r: 36 };
    * travessa) i el bucle de fotogrames només corre mentre les dues no
    * coincideixen: en repòs no hi ha cap `requestAnimationFrame` viu.
    */
-  const stage = document.querySelector<HTMLElement>('[data-offer-split]');
-  const pin = stage?.querySelector<HTMLElement>('[data-pin]');
-  const handle = stage?.querySelector<HTMLElement>('[data-handle]');
+  /*
+   * Per què cal tornar a lligar-ho a `astro:page-load` (28/08/2026): amb el
+   * `ClientRouter` engegat, el commutador de llengua no recarrega la pàgina
+   * —canvia el cos del document— i un guió de mòdul no es torna a executar mai.
+   * La costura funcionava a la primera pàgina carregada i quedava morta a
+   * l'altra: no era cap diferència entre el català i el francès, sinó la
+   * primera visita contra la segona. Els oients de finestra i de consulta de
+   * mitjans es tanquen amb un `AbortController` a cada nova lligada, perquè si
+   * no s'acumularien apuntant a un panell que ja no és al document.
+   */
+  let ditch: AbortController | null = null;
 
-  if (stage && pin && handle) {
+  function bindOffer() {
+    ditch?.abort();
+    ditch = null;
+
+    const stage = document.querySelector<HTMLElement>('[data-offer-split]');
+    const pin = stage?.querySelector<HTMLElement>('[data-pin]');
+    const handle = stage?.querySelector<HTMLElement>('[data-handle]');
+    if (!stage || !pin || !handle) return;
+
+    ditch = new AbortController();
+    const { signal } = ditch;
     const narrow = matchMedia('(max-width: 48rem)');
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
     const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
@@ -704,16 +719,19 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     }
 
     sync();
-    narrow.addEventListener('change', sync);
+    narrow.addEventListener('change', sync, { signal });
     /* El canvi de mida passa per `sync` i no només per la consulta de mitjans:
        hi ha situacions —redimensionat emulat, canvi d'orientació— en què el
        `change` no arriba. */
-    addEventListener('resize', sync);
+    addEventListener('resize', sync, { signal });
     /* I una segona lectura quan la pàgina ha acabat de carregar: el guió corre
        en acabar d'analitzar el document, i si l'amplada encara no és la
        definitiva —barra de desplaçament que apareix, marc que es redimensiona
        mentre carrega— la primera lectura pot deixar la peça apilada en una
        pantalla on hi cabria de sobres. */
-    addEventListener('load', sync);
+    addEventListener('load', sync, { signal });
   }
+
+  bindOffer();
+  document.addEventListener('astro:page-load', bindOffer);
 </script>
