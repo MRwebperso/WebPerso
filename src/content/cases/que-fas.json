@@ -34,7 +34,7 @@
   "ca": {
     "title": "«Què fas?», l’agenda cultural de Catalunya Nord",
     "cardTitle": "«Què fas?»",
-    "cardSubtitle": "L’agenda cultural de Catalunya Nord",
+    "cardSubtitle": "L’agenda cultural de Catalunya Nord, sense framework ni comptes d’usuari",
     "summary": "Una agenda d’esdeveniments per a les cinc comarques del nord, feta amb la condició de no costar res cada mes i de continuar essent reparable per una sola persona.",
     "context": "CLM",
     "role": "Concepció, desenvolupament i curadoria",
@@ -49,7 +49,7 @@
     "chapters": [
       {
         "title": "El problema",
-        "body": "Les associacions culturals del nord anuncien cadascuna pel seu compte, i el resultat és que ningú no sap què passa a trenta quilòmetres de casa. Concebre un agregador no té cap dificultat; el que costa és que sobrevisqui a l’entusiasme inicial. Per això les restriccions me les vaig posar jo abans de començar: cap cost recurrent, cap compte d’usuari, cap base de dades, i codi que jo mateix pugui reparar d’aquí a sis mesos sense demanar ajuda a ningú."
+        "body": "Les associacions culturals del nord anuncien cadascuna pel seu compte, i el resultat és que ningú no sap què passa a trenta quilòmetres de casa. Concebre un agregador no té cap dificultat. La dificultat arriba després, quan l’entusiasme inicial s’apaga. Per això les restriccions me les vaig posar jo abans de començar: cap cost recurrent, cap compte d’usuari, cap base de dades, i codi que jo mateix pugui reparar d’aquí a sis mesos sense demanar ajuda a ningú."
       },
       {
         "title": "Què vaig fer",
@@ -57,14 +57,14 @@
       },
       {
         "title": "On és ara",
-        "body": "El web està construït i en la seva forma definitiva. La cadena d’automatització està escrita i revisada, i queda pendent de connectar-se al compte definitiu, que ha de ser propietari alhora de la bústia, del full i de l’script. De tot el que he fet, és el cas que explica millor com faig servir les eines d’IA: una peça acotada dins d’un procés que valida una persona, no un motor que decideix què es publica."
+        "body": "El web està construït i en la seva forma definitiva. De tot el que he fet, és el cas que explica millor com faig servir les eines d’IA: una peça acotada dins d’un procés que valida una persona. La cadena d’automatització està escrita i revisada, i queda pendent de connectar-se al compte definitiu, que ha de ser propietari alhora de la bústia, del full i de l’script."
       }
     ]
   },
   "fr": {
     "title": "« Què fas ? », l’agenda culturel de Catalogne Nord",
     "cardTitle": "« Què fas ? »",
-    "cardSubtitle": "L’agenda culturel de Catalogne Nord",
+    "cardSubtitle": "L’agenda culturel de Catalogne Nord, sans framework ni comptes",
     "summary": "Un agenda d’événements pour les cinq comarques du nord, construit à la condition de ne rien coûter chaque mois et de rester réparable par une seule personne.",
     "context": "CLM",
     "role": "Conception, développement et curation",
@@ -79,7 +79,7 @@
     "chapters": [
       {
         "title": "Le problème",
-        "body": "Les associations culturelles du nord annoncent chacune de son côté, et personne ne sait ce qui se passe à trente kilomètres de chez soi. Concevoir un agrégateur ne présente aucune difficulté ; ce qui est difficile, c’est qu’il survive à l’enthousiasme du début. Les contraintes, je me les suis donc imposées avant de commencer : aucun coût récurrent, aucun compte utilisateur, aucune base de données, et un code que je puisse moi-même réparer dans six mois sans demander d’aide à personne."
+        "body": "Les associations culturelles du nord annoncent chacune de son côté, et personne ne sait ce qui se passe à trente kilomètres de chez soi. Concevoir un agrégateur ne présente aucune difficulté. La difficulté vient après, quand l’enthousiasme du début retombe. Les contraintes, je me les suis donc imposées avant de commencer : aucun coût récurrent, aucun compte utilisateur, aucune base de données, et un code que je puisse moi-même réparer dans six mois sans demander d’aide à personne."
       },
       {
         "title": "Ce que j’ai fait",
@@ -87,7 +87,7 @@
       },
       {
         "title": "Où cela en est",
-        "body": "Le site est construit et dans sa forme définitive. La chaîne d’automatisation est écrite et relue ; il reste à la brancher sur le compte définitif, qui doit être propriétaire à la fois de la boîte, de la feuille et du script. De tout ce que j’ai produit, c’est le cas qui explique le mieux comment j’emploie les outils d’IA : une pièce délimitée dans un processus qu’une personne valide, non un moteur qui décide de ce qui se publie."
+        "body": "Le site est construit et dans sa forme définitive. De tout ce que j’ai produit, c’est le cas qui explique le mieux comment j’emploie les outils d’IA : une pièce délimitée dans un processus qu’une personne valide. La chaîne d’automatisation est écrite et relue ; il reste à la brancher sur le compte définitif, qui doit être propriétaire à la fois de la boîte, de la feuille et du script."
       }
     ]
   }

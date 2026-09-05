@@ -10,7 +10,7 @@ import type { Lang } from './utils';
 const ca = {
   'meta.title': 'Miquel Rodrigues — comunicació, recerca i IA',
   'meta.description':
-    'Doctor en comunicació establert a Prats de Molló. Assessorament i productes de comunicació, redacció de dossiers i recerca aplicada, integració crítica d’eines d’IA. Sis llengües, dos costats de la frontera.',
+    'Doctor en comunicació establert a Prats de Molló. Comunicació, dossiers europeus i recerca aplicada, als dos costats de la frontera i en sis llengües.',
 
   'skip.content': 'Vés al contingut',
   'nav.label': 'Navegació principal',
@@ -59,7 +59,7 @@ export type UIKey = keyof typeof ca;
 const fr: Record<UIKey, string> = {
   'meta.title': 'Miquel Rodrigues — communication, recherche et IA',
   'meta.description':
-    'Docteur en communication établi à Prats-de-Mollo. Conseil et produits de communication, rédaction de dossiers et recherche appliquée, intégration critique d’outils d’IA. Six langues, deux côtés de la frontière.',
+    'Docteur en communication établi à Prats-de-Mollo. Communication, dossiers européens et recherche appliquée, des deux côtés de la frontière et en six langues.',
 
   'skip.content': 'Aller au contenu',
   'nav.label': 'Navigation principale',

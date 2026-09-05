@@ -18,6 +18,7 @@ const c = home[lang].hero;
     <div>
       <h1 id="presentacio-title">{c.title}</h1>
       <p class="lead hero__intro">{c.intro}</p>
+      <p class="lead hero__intro2">{c.intro2}</p>
     </div>
   </div>
 </section>
@@ -34,5 +35,10 @@ const c = home[lang].hero;
   .hero__intro {
     margin-top: var(--space-8);
     color: var(--ink);
+  }
+
+  /* Un grau per sota del nucli invariant: mateixa mida, el color de lead. */
+  .hero__intro2 {
+    margin-top: var(--space-6);
   }
 </style>
