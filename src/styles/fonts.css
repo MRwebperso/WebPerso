@@ -13,8 +13,7 @@
  * Compilacions d'eix: es fan servir les `wght`, no les `opsz`. L'eix òptic del
  * Newsreader duplica el pes del fitxer (132 kB contra 58 kB en llatí) per un
  * guany perceptiu petit amb els pocs cossos grans d'aquest lloc. Per
- * recuperar-lo n'hi ha prou de canviar `wght` per `opsz` aquí sota i tornar a
- * activar `font-optical-sizing: auto` a base.css.
+ * recuperar-lo n'hi ha prou de canviar `wght` per `opsz` aquí sota.
  *
  * La cursiva del Plex no s'importa: cap dels seus usos (etiquetes, navegació,
  * xifres) la demana.

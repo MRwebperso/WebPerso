@@ -8,9 +8,10 @@
  * cadascun, projectats a mà des de longitud/latitud reals— amb un punt que
  * viatja d'una fita a la següent. Cada tram del viatge és el seu propi traç (`figure__route-segment`,
  * `data-node` = índex d'arribada): només es dibuixa el tram que s'acaba de
- * recórrer; els anteriors es desfan. «Projectes europeus» i la Pandèmia porten, a més, un
- * ram de rutes secundàries (moltes destinacions / anada i tornada Suïssa–
- * Vallespir–Alemanya) que pengen del mateix `[data-node]` que la fita
+ * recórrer; els anteriors es desfan. «Projectes europeus», la Pandèmia i la fita
+ * final porten, a més, un ram de rutes secundàries (moltes destinacions / anada
+ * i tornada Suïssa–Vallespir–Alemanya / ciutats d'ambdós costats de la
+ * frontera) que pengen del mateix `[data-node]` que la fita
  * corresponent, així que `activate(index)` a `Timeline.astro` els sincronitza
  * sense saber que hi són. La «càmera» (`--cam-scale/x/y`, calculada aquí i
  * aplicada per `activate()`) comença de prop a les Cevenes —un únic punt, no
@@ -84,7 +85,7 @@ function project(lon: number, lat: number): Point {
  * que es veu és una frontera o una costa de veres, i quan la càmera s'allunya
  * hi apareixen els veïns en lloc de blanc.
  *
- * Continuen sent contorns simplificats —vint punts per país, no cartografia—,
+ * Continuen sent contorns simplificats —de 5 a 45 punts per país, no cartografia—,
  * però les fronteres compartides van amb les mateixes coordenades als dos
  * anells perquè no s'obrin escletxes entre països.
  */
@@ -449,12 +450,12 @@ const countryPaths = COUNTRIES.map(ringD);
 /**
  * Catalunya sencera, Nord i Sud com una sola massa: de Salses als Ports, de
  * la Ribagorça al cap de Creus. La frontera d'estat hi passa pel mig —és
- * `FRONTIER` qui la dibuixa, i és tot el sentit de la fita final: el contorn
+ * `frontierD` qui la dibuixa, i és tot el sentit de la fita final: el contorn
  * no s'atura on s'atura l'estat.
  *
  * A la darrera fita la càmera hi entra a fons i aquest contorn passa a ser el
- * mapa; per això té més punts que els anells de país, i per això el traç és
- * més marcat que el d'ells.
+ * mapa; per això té més punts que gairebé tots els anells de país, i per això
+ * el traç és més marcat que el d'ells.
  */
 const CATALONIA_LONLAT: [number, number][] = [
   [3.03, 42.92], // Salses, límit nord de la Catalunya del Nord
@@ -918,8 +919,9 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   }
 
   /*
-   * La frontera i els trams del viatge són els dos únics traços discontinus, i
-   * per això els dos únics que NO poden dur `vector-effect: non-scaling-stroke`:
+   * Hi ha tres traços discontinus; la frontera i els trams del viatge són els
+   * dos que NO poden dur `vector-effect: non-scaling-stroke` (el tercer, l'arc
+   * secundari de l'oscil·lació, el du igualment):
    * amb l'efecte activat el navegador mesura el patró de guions en píxels de
    * pantalla mentre la longitud de la corba es compta en unitats del mapa, i a
    * càmera 2× només se'n dibuixa la meitat. És d'aquí que venia el tram que no
@@ -1124,7 +1126,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   /*
    * El punt d'Alemanya s'encén a part del seu propi ram: apareix (opacitat)
    * amb la resta de l'oscil·lació, però només s'enfosqueix («fill»/«stroke»)
-   * mig segon més tard — quan el tram Suïssa→Vallespir→Alemanya ja hi hauria
+   * 0,7 s més tard — quan el tram Suïssa→Vallespir→Alemanya ja hi hauria
    * arribat, no a l'instant que el ram sencer es fa visible.
    */
   .figure__oscillation-dot {
@@ -1182,9 +1184,9 @@ const lastCopy = c.milestones[c.milestones.length - 1];
   /*
    * Mentre `is-priming` hi és (només a l'arrencada, un instant), cap
    * d'aquests elements no anima el pas d'amagat a visible: la primera
-   * activació aplica l'estat real de cop. Els punts que ja neixen «future» hi
-   * són inclosos —si no, es veurien un instant abans d'esvair-se— però només
-   * aquest estat: el punt «current» hi queda fora expressament, perquè el
+   * activació aplica l'estat real de cop. Els punts que ja neixen «future» o
+   * «past» hi són inclosos —si no, es veurien un instant abans d'esvair-se—
+   * però només aquests: el punt «current» hi queda fora expressament, perquè el
    * primer sí que s'ha de veure blanc i enfosquir-se amb calma, no aparèixer
    * ja fosc. Els «pips» de llengua hi són pel mateix motiu que els trams: el
    * marcatge estàtic els dibuixa amb les dades de l'última fita (Vallespir,
