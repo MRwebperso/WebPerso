@@ -44,16 +44,16 @@
   --paper-sunk: #f2eee6;
   --ink: #16171a;
   --ink-soft: #4a4d54;
-  /* Mínim per a AA en cos petit sobre els DOS fons: 5,06:1 sobre --paper i
-     4,63:1 sobre --paper-sunk. El gris anterior (#6b6f77) passava sobre
-     --paper amb 4,70:1 però queia a 4,31:1 sobre el fons enfonsat, on hi ha
+  /* Mínim per a AA en cos petit sobre els DOS fons: 5,12:1 sobre --paper i
+     4,69:1 sobre --paper-sunk. El gris anterior (#6b6f77) passava sobre
+     --paper amb 4,75:1 però queia a 4,36:1 sobre el fons enfonsat, on hi ha
      etiquetes de la secció de mètode i la fitxa dels casos. */
   --ink-faint: #666a72;
   --rule: #ddd7cb;
   --accent: #2f4f5e; /* blau pissarra: aigua i esquist, no bandera */
   --accent-soft: #e6ecef;
   /* Vermell acotat a la marca. No entra a la interfície: si s'escampés,
-     competiria amb l'accent i el conjunt deixaria de ser sobri. 5,59:1
+     competiria amb l'accent i el conjunt deixaria de ser sobri. 5,51:1
      sobre --paper, prou per al contrast d'element gràfic (3:1). */
   --mark-rule: #c1272d;
 

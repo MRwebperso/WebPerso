@@ -3,8 +3,9 @@ import type { Lang } from '../i18n/utils';
 /**
  * Cronologia — dades i contingut.
  *
- * La geometria (any, zones ocupades, estat de cada llengua) és única i no es
- * tradueix: el diagrama es dibuixa dels mateixos números en les dues llengües.
+ * Els fets de cada fita (any, zones ocupades, estat de cada llengua) són únics
+ * i no es tradueixen (el dibuix viu a `TimelineFigure.astro`): el diagrama es
+ * dibuixa dels mateixos números en les dues llengües.
  * Només els textos van per llengua, i la paritat la imposen els tipus: sis
  * fites en tupla i les sis llengües en `Record`. Afegir una fita o una llengua
  * en una llengua i no en l'altra no compila.

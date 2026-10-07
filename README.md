@@ -13,7 +13,7 @@ Les dues ordres que validen no cobreixen el mateix, i val la pena saber-ho:
 | Ordre | Què atrapa |
 |---|---|
 | `npm run check` | Tipus, i els esquemes de les col·leccions de contingut: paritat de lliurables, camps buits, valors de `kind` fora de la llista |
-| `npm run build` | Tot l'anterior, i a més les comprovacions que travessen fitxers: `order` duplicat entre casos, carpeta de casos buida |
+| `npm run build` | Els mateixos esquemes de col·lecció que `check`, però no els tipus, i a més les comprovacions que travessen fitxers: `order` duplicat entre casos, carpeta de casos buida |
 
 ## Canvi de domini
 
@@ -48,7 +48,7 @@ La regla que fa funcionar la parella és l'acotació del Plex: si s'escampa al t
 
 **Nota de contingut:** escriu la ela geminada com `l·l` (ela + punt volat U+00B7), no amb els caràcters precomposats `Ŀ`/`ŀ`. Els precomposats viuen al subconjunt llatí estès i n'activen la descàrrega (36 kB de més) sense cap guany.
 
-`--ink-faint` és el gris més clar que manté AA en cos petit **sobre els dos fons**: 5,06:1 sobre `--paper` i 4,63:1 sobre `--paper-sunk`. La comprovació sobre el fons enfonsat no és opcional, perquè hi viuen etiquetes de la secció de mètode i tota la fitxa dels casos.
+`--ink-faint` és el gris més clar que manté AA en cos petit **sobre els dos fons**: 5,12:1 sobre `--paper` i 4,69:1 sobre `--paper-sunk`. La comprovació sobre el fons enfonsat no és opcional, perquè hi viuen etiquetes de la secció de mètode i tota la fitxa dels casos.
 
 Les revelacions en scroll (`.reveal`) porten l'estat inicial condicionat a `.js`, una classe que un script del `<head>` posa a l'element arrel abans del primer pintat. Sense aquesta condició, qualsevol contingut amb `.reveal` es quedaria a opacitat zero per sempre amb el JS desactivat.
 
@@ -74,7 +74,7 @@ L'única peça amb scrollytelling del lloc ([Timeline.astro](src/components/home
 
 - **Els passos porten el contingut.** Cada fita té any, títol, territori i estat de cada llengua en text. Funcionen sols: sense JS, amb lector de pantalla i en pantalla estreta, on el diagrama no es mostra.
 - **L'instrument és decoratiu** (`aria-hidden`), perquè no hi diu res que no sigui ja al text. Sense JS es queda en l'estat d'avui —trajectòria sencera, sis llengües de treball—, que és una lectura vàlida; la classe `is-live` és el que cedeix el control als passos.
-- La geometria viu a [src/data/timeline.ts](src/data/timeline.ts) i no es tradueix: el diagrama surt dels mateixos números en les dues llengües. Les longituds del traç es calculen en compilació perquè el dibuix progressiu s'aturi al node exacte de cada pas.
+- Els fets de cada fita (any, zones, estat de les llengües) viuen a [src/data/timeline.ts](src/data/timeline.ts) i la geometria del dibuix (projecció, contorns, coordenades, càmera) a [TimelineFigure.astro](src/components/home/TimelineFigure.astro); cap dels dos no es tradueix: el diagrama surt dels mateixos números en les dues llengües. Les longituds del traç es calculen en compilació perquè el dibuix progressiu s'aturi al node exacte de cada pas.
 - El pas actiu es marca **només** amb el filet d'accent. Enfosquir els altres amb `opacity` baixa les etiquetes de `--ink-faint` a 3,4:1 i se'n va per sota de l'AA en cos petit.
 
 ## Casos

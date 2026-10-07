@@ -9,7 +9,7 @@ El [README.md](README.md) és la documentació de referència i és exhaustiu: c
 ```bash
 npm run dev      # astro dev, port 4321 (o $PORT si està ocupat)
 npm run check    # tipus + esquemes de col·lecció
-npm run build    # tot l'anterior + comprovacions que travessen fitxers
+npm run build    # esquemes + comprovacions que travessen fitxers, sense tipus
 ```
 
 **No hi ha cap framework de proves ni cap linter.** No inventis `npm test`; la xarxa de seguretat són `check` i `build`, i no cobreixen el mateix. `check` no atrapa l'`order` duplicat entre casos ni la carpeta de casos buida, perquè aquestes dues comprovacions viuen en temps d'execució a [getCases()](src/data/cases.ts) i només salten compilant. Si has tocat `src/content/cases/`, l'ordre que val és `build`.
