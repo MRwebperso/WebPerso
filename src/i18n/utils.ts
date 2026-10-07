@@ -51,12 +51,6 @@ function split(pathname: string): string[] {
   return pathname.split('/').filter(Boolean);
 }
 
-/** Llengua deduïda de la URL; `defaultLang` si la URL no en porta. */
-export function getLangFromUrl(url: URL): Lang {
-  const [first] = split(url.pathname);
-  return isLang(first) ? first : defaultLang;
-}
-
 /**
  * Camí canònic d'una URL: sense prefix de llengua i amb els segments
  * retraduïts a les seves claus internes.

@@ -10,13 +10,11 @@
   /* ── Famílies ── */
   --family-serif: 'Newsreader Variable', ui-serif, Georgia, 'Times New Roman', serif;
   --family-sans: 'IBM Plex Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --family-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   /* ── Rols (el que fan servir els components) ── */
   --font-display: var(--family-serif);
   --font-text: var(--family-serif);
   --font-ui: var(--family-sans);
-  --font-mono: var(--family-mono);
 
   /* ── Pesos ── */
   --w-light: 300;
@@ -39,7 +37,6 @@
 
   /* ── Interlletratge ── */
   --tracking-display: -0.018em;
-  --tracking-text: 0;
   --tracking-label: 0.11em;
 
   /* ── Color: neutres càlids + un accent territorial mesurat ── */
@@ -70,7 +67,6 @@
   --space-12: 3rem;
   --space-16: 4rem;
   --space-24: 6rem;
-  --space-32: 8rem;
 
   /* ── Mesura i graella ── */
   --measure: 66ch;

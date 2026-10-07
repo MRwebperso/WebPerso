@@ -93,14 +93,6 @@ section[id] {
   padding-inline: var(--gutter);
 }
 
-.prose {
-  max-width: var(--measure);
-}
-
-.prose > * + * {
-  margin-top: var(--space-6);
-}
-
 .section {
   padding-block: var(--space-24);
   border-top: 1px solid var(--rule);
