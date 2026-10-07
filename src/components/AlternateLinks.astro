@@ -1,0 +1,32 @@
+---
+/*
+ * Els `<link rel="alternate">` d'una pàgina: una per llengua i el `x-default`.
+ * Existeix perquè l'arrel (`src/pages/index.astro`) no passa per `BaseLayout`
+ * i havia de recopiar aquest bucle; ara que viu aquí, la regla del `x-default`
+ * i l'ordre de les llengües són en un sol lloc. Les URL absolutes surten
+ * d'`Astro.site`, mai escrites a mà.
+ */
+import { langCodes, languages, defaultLang, type Lang } from '../i18n/utils';
+
+interface Props {
+  /** Camins relatius a l'arrel, tal com els produeix `getAlternates()`. */
+  alternates: Record<Lang, string>;
+}
+
+const { alternates } = Astro.props;
+---
+
+{
+  langCodes.map((code) => (
+    <link
+      rel="alternate"
+      hreflang={languages[code].hreflang}
+      href={new URL(alternates[code], Astro.site)}
+    />
+  ))
+}
+<link
+  rel="alternate"
+  hreflang="x-default"
+  href={new URL(alternates[defaultLang], Astro.site)}
+/>

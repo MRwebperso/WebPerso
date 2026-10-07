@@ -2,9 +2,9 @@
 import { ClientRouter } from 'astro:transitions';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import AlternateLinks from '../components/AlternateLinks.astro';
 import { useTranslations } from '../i18n/ui';
 import {
-  defaultLang,
   getAlternates,
   langCodes,
   languages,
@@ -55,20 +55,7 @@ const canonical = new URL(alternates[lang], Astro.site);
 
     <link rel="canonical" href={canonical} />
 
-    {
-      langCodes.map((code) => (
-        <link
-          rel="alternate"
-          hreflang={languages[code].hreflang}
-          href={new URL(alternates[code], Astro.site)}
-        />
-      ))
-    }
-    <link
-      rel="alternate"
-      hreflang="x-default"
-      href={new URL(alternates[defaultLang], Astro.site)}
-    />
+    <AlternateLinks alternates={alternates} />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />

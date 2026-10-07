@@ -4,11 +4,17 @@
  * Encamina cap a `/ca/` o `/fr/` (tria desada > llengua del navegador >
  * `x-default`) i, sense JS, presenta les dues portes en igualtat.
  */
+import AlternateLinks from '../components/AlternateLinks.astro';
 import { site } from '../config/site.mjs';
-import { defaultLang, langCodes, languages } from '../i18n/utils';
+import { defaultLang, langCodes, languages, localize, type Lang } from '../i18n/utils';
 import '../styles/base.css';
 
-const routes = Object.fromEntries(langCodes.map((l) => [l, `/${l}/`]));
+// Les rutes de les dues portes surten del registre, com a `404.astro`. El
+// cast repeteix el de `getAlternates()` (utils.ts:84): `Object.fromEntries`
+// perd les claus de `Lang` pel camí i el component les demana.
+const routes = Object.fromEntries(
+  langCodes.map((l) => [l, localize(l)])
+) as Record<Lang, string>;
 ---
 
 <!doctype html>
@@ -18,20 +24,7 @@ const routes = Object.fromEntries(langCodes.map((l) => [l, `/${l}/`]));
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{site.name}</title>
     <meta name="robots" content="noindex, follow" />
-    {
-      langCodes.map((code) => (
-        <link
-          rel="alternate"
-          hreflang={languages[code].hreflang}
-          href={new URL(routes[code], Astro.site)}
-        />
-      ))
-    }
-    <link
-      rel="alternate"
-      hreflang="x-default"
-      href={new URL(routes[defaultLang], Astro.site)}
-    />
+    <AlternateLinks alternates={routes} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script is:inline define:vars={{ routes, defaultLang }}>
       (() => {
