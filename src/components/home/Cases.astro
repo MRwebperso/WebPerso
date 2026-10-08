@@ -207,22 +207,16 @@ const cases = await getCasesByRecency();
 
 <style>
   /*
-   * El vermell de la senyera aclarit el mínim (decisió de Miquel, 8/10/2026):
-   * només puja la L en OKLCH i la tonalitat es conserva. El #ec443a fa 4,61:1
-   * sobre `--paper-sunk` (la fitxa oberta, el cas més estret) i 5,14:1 sobre
-   * `--paper`; el #e33b32 d'abans queia a 4,18:1 a la fitxa oberta, per sota
-   * del 4,5:1 que demana el cos petit. El #DA121A pla dona 3,85:1 sobre
-   * `--paper` i el #c1272d de la marca en paper, 3,39:1. La vora barrejada
-   * al 40 % (`color-mix` de `.cas:hover`) és un reforç decoratiu, fora del
-   * criteri, perquè l'estat ja el porten el fons, el període i l'osca.
+   * `--vermell` viu a `theme-dark.css`: allà hi ha el valor, les ràtios i la
+   * decisió de Miquel (8/10/2026). La vora barrejada al 40 % (`color-mix` de
+   * `.cas:hover`) és un reforç decoratiu, fora del criteri, perquè l'estat ja
+   * el porten el fons, el període i l'osca.
    *
-   * És l'única excepció a la paleta d'un sol accent de `theme-dark.css`, i està
-   * acotada al carril: filet de la cronologia encès, període de la fitxa
-   * activa i osques de la gradació. No toca cap enllaç ni cap superfície: el
-   * groc continua sent l'únic color d'interacció del lloc.
+   * Aquí el vermell pinta el filet encès de la cronologia, el període de la
+   * fitxa activa i les osques; no toca cap enllaç ni cap superfície, i el
+   * groc continua sent l'únic color d'interacció.
    */
   .carril {
-    --vermell: #ec443a;
     --pas: var(--space-6);
     /* Les dues columnes de la secció, també amb el raïl obert (28/08/2026):
        vegeu la nota del slot `wide` a `Section.astro`. El carril arrenca a la

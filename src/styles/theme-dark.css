@@ -51,12 +51,24 @@
   --rule: #2c2e33;
 
   /* El groc de l'hero passa a ser l'accent de tot el lloc, en lloc del blau
-     pissarra. És l'únic color de la paleta: la resta són neutres. */
+     pissarra. És l'únic color d'interacció; l'altre color, `--vermell`,
+     només senyala estats (vegeu més avall). */
   --accent: #eab308;
   --accent-soft: #2a2410;
 
+  /* El vermell de la senyera aclarit el mínim (decisió de Miquel,
+     8/10/2026): només puja la L en OKLCH i la tonalitat es conserva. Fa
+     5,14:1 sobre `--paper` i 4,61:1 sobre `--paper-sunk`; el #e33b32 d'abans
+     queia a 4,18:1 sobre `--paper-sunk`, i el #DA121A pla (3,85:1) i el
+     #c1272d de la marca (3,39:1) no passen ni sobre `--paper`. Té dos usos:
+     el carril de casos (filet de la cronologia, període de la fitxa activa,
+     osques) i els errors del formulari de contacte. No és un color
+     d'interacció: senyala un estat, i la interacció continua sent groga. */
+  --vermell: #ec443a;
+
   /* L'horitzó de la marca era vermell sobre paper. Sobre negre el vermell de
-     marca (#c1272d) cau a 3,39:1 i, sobretot, obriria una segona família
-     cromàtica al costat del groc. La marca passa al groc. */
+     marca (#c1272d) cau a 3,39:1 i no hi té lloc: el vermell que entra a la
+     interfície és l'aclarit de `--vermell`, i només per senyalar. La marca
+     passa al groc. */
   --mark-rule: #eab308;
 }

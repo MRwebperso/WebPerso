@@ -275,8 +275,14 @@ const f = c.form;
     min-height: 8rem;
   }
 
+  /* Els errors fan servir `--vermell` (decisió de Miquel, 8/10/2026): en fosc
+     `--mark-rule` és el mateix groc que l'èxit i el focus, i només el text
+     els distingia. Ràtios: text d'error 5,14:1 sobre `--paper`; vora del camp
+     invàlid 4,61:1 per dins (`--paper-sunk`) i 5,14:1 per fora; filet `ko`
+     5,14:1. El focus d'un camp invàlid continua visible pel contorn groc
+     global de `base.css`. */
   .field__input[aria-invalid='true'] {
-    border-color: var(--mark-rule);
+    border-color: var(--vermell);
   }
 
   .field__error:empty {
@@ -284,7 +290,7 @@ const f = c.form;
   }
 
   .field__error {
-    color: var(--mark-rule);
+    color: var(--vermell);
   }
 
   .form__foot {
@@ -342,7 +348,7 @@ const f = c.form;
   }
 
   .form__status[data-state='ko'] {
-    border-inline-start-color: var(--mark-rule);
+    border-inline-start-color: var(--vermell);
     color: var(--ink);
   }
 </style>
