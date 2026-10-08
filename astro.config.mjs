@@ -28,7 +28,13 @@ export default defineConfig({
   // Només afecta `astro dev`: permet obrir el servidor de desenvolupament en un
   // port lliure quan el 4321 ja està ocupat. No té cap efecte a la compilació.
   server: { port: Number(process.env.PORT) || 4321 },
-  build: { format: 'directory' },
+  /*
+   * Decisió de Miquel (8/10/2026): amb `'auto'` Astro triava per mida quin CSS
+   * anava en línia, i un component nou va canviar el repartiment de les pàgines
+   * de cas. Amb `'never'` no es mou i els fulls es queden en memòria cau entre
+   * navegacions; a canvi, unes quantes peticions més a la primera càrrega.
+   */
+  build: { format: 'directory', inlineStylesheets: 'never' },
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   i18n: {
     locales: ['ca', 'fr'],
