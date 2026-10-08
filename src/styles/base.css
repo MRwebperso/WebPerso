@@ -82,7 +82,7 @@ svg {
 
 /* Les àncores no han de quedar sota la capçalera adherent. */
 section[id] {
-  scroll-margin-top: 4.5rem;
+  scroll-margin-top: calc(var(--header-height) + var(--space-2));
 }
 
 /* ── Primitives de composició ── */
@@ -133,7 +133,7 @@ section[id] {
 
   .section-grid > .rail {
     position: sticky;
-    top: 5.5rem;
+    top: calc(var(--header-height) + var(--space-6));
   }
 }
 

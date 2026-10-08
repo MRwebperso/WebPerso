@@ -69,6 +69,10 @@
   --space-24: 6rem;
 
   /* ── Mesura i graella ── */
+  /* Alçada de la barra de capçalera adherent: la llegeixen la capçalera,
+     l'heroi de la portada i els elements enganxosos que han de quedar per
+     sota (scroll-margin, rail, figura de la cronologia). */
+  --header-height: 4rem;
   --measure: 66ch;
   --measure-lead: 52ch; /* el cos gran necessita línia més curta */
   --measure-narrow: 44ch;
