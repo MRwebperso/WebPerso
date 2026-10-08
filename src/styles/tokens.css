@@ -31,6 +31,11 @@
   --step-4: clamp(2.2rem, 1.87rem + 1.55vw, 2.91rem);
   --step-5: clamp(2.64rem, 2.15rem + 2.33vw, 3.64rem);
 
+  /* Cos de les etiquetes petites en majúscules (fitxes de cas, cronologia): més petit que el
+     terra de --step--1. És el valor que fan servir, sense que cap document en doni el motiu.
+     L'espaiat que li va és --tracking-label-sm (fitxes, cronologia, commutador de llengua). */
+  --size-label-sm: 0.72rem;
+
   --leading-tight: 1.08;
   --leading-snug: 1.28;
   --leading-body: 1.58;
@@ -38,6 +43,7 @@
   /* ── Interlletratge ── */
   --tracking-display: -0.018em;
   --tracking-label: 0.11em;
+  --tracking-label-sm: 0.06em;
 
   /* ── Color: neutres càlids + un accent territorial mesurat ── */
   --paper: #faf8f4;
