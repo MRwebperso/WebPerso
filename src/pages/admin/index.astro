@@ -61,9 +61,24 @@ const baseUrl = Astro.site?.origin;
     <script is:inline>
       window.CMS_MANUAL_INIT = true;
     </script>
-    <!-- Fixat a la major 3: unpkg en resol l'última publicada. -->
-    <script is:inline src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"
-    ></script>
+    {/*
+      Versió exacta i empremta, per decisió de l'usuari del 8/10/2026. Amb
+      l'interval `^3.0.0`, qualsevol 3.x nova entrava a l'administració sense
+      que ningú l'hagués vista, i un fitxer alterat al CDN s'hauria executat amb
+      el testimoni de GitHub de qui edita. La 3.16.3 és la que unpkg servia
+      aquell dia, de manera que el canvi no altera res.
+      Si l'empremta no coincideix, el navegador bloca l'script i el text de
+      `.fallback` es queda a la pantalla.
+      Per actualitzar-lo, tres passos:
+      1. Canviar la versió a l'URL.
+      2. Recalcular l'empremta amb aquesta ordre, canviant X.Y.Z per la versió
+         nova, i posar el resultat després de `sha384-`:
+         curl -sL https://unpkg.com/decap-cms@X.Y.Z/dist/decap-cms.js | openssl dgst -sha384 -binary | openssl base64 -A
+      3. `npm run build` i obrir `/admin/` per comprovar que l'editor surt.
+    */}
+    <script is:inline src="https://unpkg.com/decap-cms@3.16.3/dist/decap-cms.js"
+      integrity="sha384-A/Gdn928CNLufmnGWGs9RM4Q9o8bSNLeJERqBFrBjwzL7FRpoLT3MPF8Tl0+Wd2p"
+      crossorigin="anonymous"></script>
     <script is:inline define:vars={{ baseUrl }}>
       if (window.CMS) {
         // El text d'espera diu «no s'ha pogut baixar el paquet», i aquest camí
