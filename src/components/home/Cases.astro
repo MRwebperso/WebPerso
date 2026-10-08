@@ -207,9 +207,14 @@ const cases = await getCasesByRecency();
 
 <style>
   /*
-   * El vermell de la senyera aclarit el mínim per aguantar sobre negre: 4,98:1,
-   * per damunt del 4,5:1 que demana el cos petit. El #DA121A pla es queda a
-   * 4,07:1 i el #c1272d de la marca en paper, a 3,39:1.
+   * El vermell de la senyera aclarit el mínim (decisió de Miquel, 8/10/2026):
+   * només puja la L en OKLCH i la tonalitat es conserva. El #ec443a fa 4,61:1
+   * sobre `--paper-sunk` (la fitxa oberta, el cas més estret) i 5,14:1 sobre
+   * `--paper`; el #e33b32 d'abans queia a 4,18:1 a la fitxa oberta, per sota
+   * del 4,5:1 que demana el cos petit. El #DA121A pla dona 3,85:1 sobre
+   * `--paper` i el #c1272d de la marca en paper, 3,39:1. La vora barrejada
+   * al 40 % (`color-mix` de `.cas:hover`) és un reforç decoratiu, fora del
+   * criteri, perquè l'estat ja el porten el fons, el període i l'osca.
    *
    * És l'única excepció a la paleta d'un sol accent de `theme-dark.css`, i està
    * acotada al carril: filet de la cronologia encès, període de la fitxa
@@ -217,7 +222,7 @@ const cases = await getCasesByRecency();
    * groc continua sent l'únic color d'interacció del lloc.
    */
   .carril {
-    --vermell: #e33b32;
+    --vermell: #ec443a;
     --pas: var(--space-6);
     /* Les dues columnes de la secció, també amb el raïl obert (28/08/2026):
        vegeu la nota del slot `wide` a `Section.astro`. El carril arrenca a la
