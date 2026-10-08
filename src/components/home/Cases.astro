@@ -327,6 +327,7 @@ const cases = await getCasesByRecency();
     right: calc(-1 * var(--pas) - 1px);
     height: 1px;
     background: var(--rule);
+    transition: background var(--dur-base) var(--ease-out);
   }
 
   /* L'última fitxa és el final de la trajectòria: la línia s'hi atura en lloc
@@ -651,8 +652,11 @@ const cases = await getCasesByRecency();
   @media (prefers-reduced-motion: reduce) {
     .cas,
     .osca,
+    .cas::before,
     .cas__periode,
     .cas__titol,
+    .cas__subtitol,
+    .cas__marc,
     .cas__repos,
     .cas__detall,
     .mesura i,
