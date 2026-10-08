@@ -212,9 +212,10 @@ const cases = await getCasesByRecency();
    * `.cas:hover`) és un reforç decoratiu, fora del criteri, perquè l'estat ja
    * el porten el fons, el període i l'osca.
    *
-   * Aquí el vermell pinta el filet encès de la cronologia, el període de la
-   * fitxa activa i les osques; no toca cap enllaç ni cap superfície, i el
-   * groc continua sent l'únic color d'interacció.
+   * Aquí el vermell pinta l'osca de la fitxa activa, el seu període i, en
+   * passar-hi per sobre, la fletxa i la vora dels botons de desplaçament
+   * (`.rem`); la línia de la cronologia no es fa vermella (llegeix `--rule`).
+   * No toca cap enllaç ni cap fons gran: l'únic fons vermell és l'osca, un punt.
    */
   .carril {
     --pas: var(--space-6);
@@ -255,7 +256,6 @@ const cases = await getCasesByRecency();
     transition:
       width var(--dur-slow) var(--ease-out),
       transform var(--dur-base) var(--ease-out),
-      opacity var(--dur-base) var(--ease-out),
       border-color var(--dur-base) var(--ease-out),
       background var(--dur-base) var(--ease-out);
   }
