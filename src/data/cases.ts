@@ -120,11 +120,42 @@ export async function getCasesByRecency(): Promise<CaseRecord[]> {
   return (await getCases()).sort((a, b) => b.year - a.year);
 }
 
-/** Un cas pel seu slug. Llança si no existeix: cap ruta no l'hi ha de demanar. */
-export async function getCase(id: string): Promise<CaseRecord> {
-  const found = (await getCases()).find((item) => item.id === id);
-  if (!found) throw new Error(`Cas desconegut: «${id}».`);
-  return found;
+/** El que rep cada pàgina de cas: el cas i els dos veïns de la navegació de baix. */
+export interface CaseRouteProps {
+  record: CaseRecord;
+  /** El cas anterior en l'ordre editorial (`order`), o `null` si aquest és el primer. */
+  prev: CaseRecord | null;
+  /** El cas següent en l'ordre editorial (`order`), o `null` si aquest és el darrer. */
+  next: CaseRecord | null;
+}
+
+/**
+ * Les rutes de cas, amb tot el que cada pàgina necessita ja resolt.
+ *
+ * Existeix perquè la col·lecció es llegeixi una sola vegada per compilació de
+ * les rutes, i no tres cops per pàgina (una a `getStaticPaths`, una per
+ * recuperar el cas i una altra a la plantilla per trobar-ne els veïns). Els
+ * veïns es calculen aquí i enlloc més: les dues pàgines bessones (`ca` i `fr`)
+ * i `CaseContent` només reben el resultat, de manera que cap d'elles no ha de
+ * recopiar la lògica de posició ni arriscar-se a divergir.
+ *
+ * Contracte de `prev` i `next`: són els veïns en l'ordre editorial que dicta
+ * `order` (el mateix ordre de lectura de `getCases()`), i valen `null` als
+ * extrems, de manera que el primer cas no té anterior i el darrer no té
+ * següent.
+ */
+export async function getCaseRoutes(): Promise<
+  { params: { case: string }; props: CaseRouteProps }[]
+> {
+  const cases = await getCases();
+  return cases.map((record, index) => ({
+    params: { case: record.id },
+    props: {
+      record,
+      prev: index > 0 ? cases[index - 1] : null,
+      next: index < cases.length - 1 ? cases[index + 1] : null,
+    },
+  }));
 }
 
 interface CaseLabels {

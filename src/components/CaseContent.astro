@@ -13,34 +13,33 @@
  * encàrrecs, i els individuals no queden per sota: la plantilla és la mateixa i
  * no hi ha cap tractament que distingeixi els uns dels altres.
  */
-import { caseLabels, getCases } from '../data/cases';
+import { caseLabels, type CaseRecord } from '../data/cases';
 import { langKeys, timeline } from '../data/timeline';
 import { useTranslations } from '../i18n/ui';
 import { localize, type Lang } from '../i18n/utils';
 
 interface Props {
   lang: Lang;
-  /** Slug del cas. La plantilla en deriva la posició, i d'aquí els veïns. */
-  id: string;
+  /** El cas que dibuixa la plantilla. */
+  record: CaseRecord;
+  /** El cas anterior en l'ordre editorial, `null` als extrems; el calcula `getCaseRoutes()`. */
+  prev: CaseRecord | null;
+  /** El cas següent en l'ordre editorial, `null` als extrems; el calcula `getCaseRoutes()`. */
+  next: CaseRecord | null;
 }
 
-const { lang, id } = Astro.props;
+const { lang, record, prev, next } = Astro.props;
 const t = useTranslations(lang);
 
-// La llista ja ve ordenada per `order`, de manera que la posició d'aquest cas és
-// la que decideix quins són els veïns de la navegació de baix.
-const cases = await getCases();
-const index = cases.findIndex((item) => item.id === id);
-if (index < 0) throw new Error(`Cas desconegut: «${id}».`);
-
-const facts = cases[index];
+// Els veïns de la navegació de baix arriben fets de `getCaseRoutes()`, en l'ordre
+// editorial: la plantilla no llegeix la col·lecció ni en calcula cap posició.
 const labels = caseLabels[lang];
-const copy = facts.copy[lang];
+const copy = record.copy[lang];
 
 // L'ordre de les llengües surt del registre de la cronologia, no de l'ordre en
 // què s'han escrit al cas: així la llista es llegeix igual a tot el lloc.
 const workLangs = langKeys
-  .filter((key) => facts.langs.includes(key))
+  .filter((key) => record.langs.includes(key))
   .map((key) => timeline[lang].langNames[key]);
 
 const rows: { label: string; value: string }[] = [
@@ -53,18 +52,16 @@ const rows: { label: string; value: string }[] = [
 ];
 
 const selection = `${localize(lang)}#casos`;
-const prev = index > 0 ? index - 1 : null;
-const next = index < cases.length - 1 ? index + 1 : null;
 
-const href = (at: number) => localize(lang, ['casos', cases[at].id]);
-const titleOf = (at: number) => cases[at].copy[lang].title;
+const href = (item: CaseRecord) => localize(lang, ['casos', item.id]);
+const titleOf = (item: CaseRecord) => item.copy[lang].title;
 ---
 
 <article class="case" aria-labelledby="case-title">
   <header class="case__head">
     <div class="wrap section-grid">
       <div class="rail">
-        <p class="eyebrow">{labels.kindLabels[facts.kind]}</p>
+        <p class="eyebrow">{labels.kindLabels[record.kind]}</p>
       </div>
       <div>
         <p class="case__period nums">{copy.period}</p>
