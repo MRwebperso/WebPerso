@@ -1,4 +1,5 @@
 import type { Lang } from '../i18n/utils';
+import { ui } from '../i18n/ui';
 
 /**
  * Contingut editorial de la one-page.
@@ -89,7 +90,7 @@ const ca: HomeContent = {
       {
         title: 'Assessorament i productes de comunicació',
         body: 'Del pla de comunicació a la peça acabada: estratègia, identitat, redacció, fotografia i vídeo. Ho produeixo tot jo, i el mateix criteri travessa el cartell, el web i el compte d’Instagram. Vaig portar la comunicació institucional de l’Ajuntament dels Banys d’Arles i, després, la de la destinació de l’Alt Vallespir en quatre llengües.',
-        deliverablesLabel: 'Lliurables',
+        deliverablesLabel: ui.ca['case.deliverables'],
         deliverables: [
           'Pla de comunicació',
           'Identitat visual i normes d’ús',
@@ -101,7 +102,7 @@ const ca: HomeContent = {
       {
         title: 'Redacció de dossiers i recerca aplicada',
         body: 'Candidatures a subvenció, memòries i informes, amb la recerca que els sosté: dades de territori, cartografia d’actors, estat de la qüestió. He redactat i justificat dossiers europeus fins al tancament, he coordinat socis de diversos països al projecte MOVOKEUR del Ministerio de Educación y Cultura, he auditat organitzacions per encàrrec extern i he signat tretze publicacions acadèmiques.',
-        deliverablesLabel: 'Lliurables',
+        deliverablesLabel: ui.ca['case.deliverables'],
         deliverables: [
           'Dossiers de subvenció (Fonds 66, EsCaT/POCTEFA, Generalitat)',
           'Memòries i informes de justificació',
@@ -195,7 +196,7 @@ const fr: HomeContent = {
       {
         title: 'Conseil et produits de communication',
         body: 'Du plan de communication à la pièce finie : stratégie, identité, rédaction, photo et vidéo. Je produis tout moi-même, et le même parti pris traverse l’affiche, le site et le compte Instagram. J’ai porté la communication institutionnelle de la mairie d’Amélie-les-Bains, puis celle de la destination Haut-Vallespir en quatre langues.',
-        deliverablesLabel: 'Livrables',
+        deliverablesLabel: ui.fr['case.deliverables'],
         deliverables: [
           'Plan de communication',
           'Identité visuelle et règles d’usage',
@@ -207,7 +208,7 @@ const fr: HomeContent = {
       {
         title: 'Rédaction de dossiers et recherche appliquée',
         body: 'Candidatures à subvention, mémoires et rapports, avec la recherche qui les tient : données de territoire, cartographie d’acteurs, état de la question. J’ai rédigé et justifié des dossiers européens jusqu’à la clôture, coordonné des partenaires de plusieurs pays sur le projet MOVOKEUR du Ministerio de Educación y Cultura, audité des organisations pour un commanditaire extérieur et signé treize publications académiques.',
-        deliverablesLabel: 'Livrables',
+        deliverablesLabel: ui.fr['case.deliverables'],
         deliverables: [
           'Dossiers de subvention (Fonds 66, EsCaT/POCTEFA, Generalitat)',
           'Mémoires et rapports de justification',

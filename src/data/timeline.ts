@@ -1,4 +1,5 @@
 import type { Lang } from '../i18n/utils';
+import { ui } from '../i18n/ui';
 
 /**
  * Cronologia — dades i contingut.
@@ -146,7 +147,7 @@ const ca: TimelineContent = {
       zoneLabel: 'Prats de Molló, França',
       body: 'M’estableixo a Prats de Molló, aquesta vegada per quedar-m’hi. Dirigeixo l’oficina de turisme durant dos anys, en quatre llengües i amb la frontera al capdamunt de la vall, i ara treballo per encàrrec als dos costats. Els contactes escampats per Europa acaben servint el poble on visc.',
       aside: {
-        label: 'Realitzat en el marc associatiu',
+        label: ui.ca['case.associative'],
         body: 'Presideixo CLM, l’associació que duu TVallespir. Hi provo formats, eines i maneres de treballar abans de fer-los servir per encàrrec. Les feines fetes des d’allà surten al portfolio etiquetades: no són facturades, i la distinció compta.',
       },
     },
@@ -200,7 +201,7 @@ const fr: TimelineContent = {
       zoneLabel: 'Prats-de-Mollo, France',
       body: 'Je m’installe à Prats-de-Mollo, cette fois pour y rester. Je dirige l’office de tourisme pendant deux ans, en quatre langues et avec la frontière en haut de la vallée, puis je travaille sur commande des deux côtés. Les contacts dispersés en Europe finissent par servir le village où j’habite.',
       aside: {
-        label: 'Réalisé dans le cadre associatif',
+        label: ui.fr['case.associative'],
         body: 'Je préside CLM, l’association qui porte TVallespir. J’y essaie des formats, des outils et des façons de travailler avant de les employer sur commande. Les travaux réalisés depuis l’association figurent au portfolio avec leur étiquette : ils ne sont pas facturés, et la distinction compte.',
       },
     },

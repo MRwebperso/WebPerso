@@ -3,6 +3,7 @@ import { type CaseCategory } from './case-categories';
 import { type CaseKind } from './case-kinds';
 import { type SkillUse } from './case-skills';
 import type { Lang } from '../i18n/utils';
+import { ui } from '../i18n/ui';
 import type { LangKey } from './timeline';
 
 /**
@@ -153,7 +154,7 @@ export const caseLabels: Record<Lang, CaseLabels> = {
       position: 'Lloc de treball',
       commission: 'Encàrrec',
       own: 'Projecte propi',
-      associative: 'Realitzat en el marc associatiu',
+      associative: ui.ca['case.associative'],
       affiliation: 'Vinculació de recerca',
     },
     categoryLabels: {
@@ -172,7 +173,7 @@ export const caseLabels: Record<Lang, CaseLabels> = {
       period: 'Període',
       territory: 'Territori',
       langs: 'Llengües',
-      deliverables: 'Lliurables',
+      deliverables: ui.ca['case.deliverables'],
     },
   },
   fr: {
@@ -180,7 +181,7 @@ export const caseLabels: Record<Lang, CaseLabels> = {
       position: 'Poste occupé',
       commission: 'Commande',
       own: 'Projet personnel',
-      associative: 'Réalisé dans le cadre associatif',
+      associative: ui.fr['case.associative'],
       affiliation: 'Rattachement de recherche',
     },
     categoryLabels: {
@@ -199,7 +200,7 @@ export const caseLabels: Record<Lang, CaseLabels> = {
       period: 'Période',
       territory: 'Territoire',
       langs: 'Langues',
-      deliverables: 'Livrables',
+      deliverables: ui.fr['case.deliverables'],
     },
   },
 };

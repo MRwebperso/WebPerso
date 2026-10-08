@@ -48,6 +48,9 @@ const ca = {
   'case.prev': 'Cas anterior',
   'case.next': 'Cas següent',
   'case.back': 'Tornar a la selecció',
+  /* Aquests dos rètols els comparteixen els casos, la cronologia i la portada, i viuen aquí perquè el tipus en vigila la paritat. */
+  'case.associative': 'Realitzat en el marc associatiu',
+  'case.deliverables': 'Lliurables',
 
   '404.title': 'Pàgina no trobada',
   '404.body': 'L’adreça no correspon a cap pàgina d’aquest lloc.',
@@ -94,6 +97,8 @@ const fr: Record<UIKey, string> = {
   'case.prev': 'Cas précédent',
   'case.next': 'Cas suivant',
   'case.back': 'Retour à la sélection',
+  'case.associative': 'Réalisé dans le cadre associatif',
+  'case.deliverables': 'Livrables',
 
   '404.title': 'Page introuvable',
   '404.body': 'Cette adresse ne correspond à aucune page du site.',
