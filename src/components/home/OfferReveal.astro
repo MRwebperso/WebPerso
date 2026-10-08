@@ -78,12 +78,14 @@ const area = (pts: number[][]) => `${poly(pts)} L640 420 L0 420 Z`;
  * El sol va amunt i a la dreta del marc, no a l'esquerra. Dues raons, i totes
  * dues mesurades: al seu lloc natural —sobre la primera carena, a l'esquerra—
  * la massa clara queda exactament darrere del titular de la capa 01, i el
- * blanc hi cau a 2,8:1. A la dreta del marc, en canvi, la columna de text no hi
- * arriba mai (acaba a x≈306 del marc i el disc comença a 434), i de passada el
- * sol queda amagat rere la costura mentre no s'obre la banda: qui empeny cap a
- * la dreta descobreix el sol i, a la mateixa posició, la capa del plànol ja
- * n'ensenyava el cercle de construcció. És la peça que demostra que les dues
- * bandes són el mateix dibuix.
+ * blanc hi cau a 2,8:1 (mesurat sobre aquella disposició descartada, que el
+ * codi ja no conté: no es pot recalcular). A la dreta del marc, en canvi, la
+ * columna de text no hi arriba mai (acaba a x≈306 del marc —mesurat al
+ * navegador— i el disc comença a 434), i de passada el sol queda amagat rere la
+ * costura mentre no s'obre la banda: qui empeny cap a la dreta descobreix el
+ * sol i, a la mateixa posició, la capa del plànol ja n'ensenyava el cercle de
+ * construcció. És la peça que demostra que les dues bandes són el mateix
+ * dibuix.
  */
 const SUN = { cx: 470, cy: 86, r: 36 };
 ---
@@ -104,9 +106,12 @@ const SUN = { cx: 470, cy: 86, r: 36 };
               */}
               {/* El cel pot arribar molt avall en or sense tocar el text: on hi
                   ha número i titular —el terç alt de l'esquerra— el degradat
-                  encara va per sota del 10 %, i allà el blanc es manté a 18:1.
-                  El que sí que l'encendria és una massa clara a mitja alçada, i
-                  per això el sol és a l'altra punta del marc. */}
+                  encara va per sota del 10 %, i allà el blanc es manté a
+                  16,45:1 com a mínim (calculat al 10 %; 18,1:1 només al
+                  capdamunt, on el degradat és al 4 %). Que el titular quedi
+                  sota el 10 % s'ha mesurat al navegador: depèn del retall del
+                  SVG. El que sí que l'encendria és una massa clara a mitja
+                  alçada, i per això el sol és a l'altra punta del marc. */}
               <linearGradient id="or-sky" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stop-color="currentColor" stop-opacity="0.04"></stop>
                 <stop offset="0.45" stop-color="currentColor" stop-opacity="0.16"></stop>
@@ -434,6 +439,10 @@ const SUN = { cx: 470, cy: 86, r: 36 };
    * terç d'or: 7,7:1 en `--ink-soft`. A la dreta el vel serveix sobretot per
    * apagar la línia blanca de la carena, que si no travessaria el text: al 88 %
    * de vel, hi queda al 12 %.
+   *
+   * Les tres ràtios (19:1, 7,1:1 i 7,7:1) s'han mesurat al navegador (degradat
+   * retallat, traç puntejat): no es poden calcular des del codi i no cal
+   * tornar-les a buscar a la font.
    */
   .stage[data-mode='split'] .layer::after {
     content: '';

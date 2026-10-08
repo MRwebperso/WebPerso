@@ -228,10 +228,16 @@ const steps = milestones.map((milestone, i) => {
     }
 
     /*
-     * El pas actiu es marca amb el filet d'accent i prou. Enfosquir els altres
-     * amb `opacity` seria l'efecte esperat, però baixa les etiquetes de
-     * `--ink-faint` a 3,4:1 i se'n va per sota de l'AA en cos petit; davant de
-     * client públic això no es negocia.
+     * El pas actiu es marca amb el filet d'accent i prou: als altres passos no
+     * s'hi posa `opacity`. Enfosquir-los seria l'efecte esperat, i en el tema
+     * fosc, que és el que serveix el lloc, `--ink-faint` a 0,8 encara dona
+     * 5,19:1 sobre `--paper` (4,83:1 sobre `--paper-sunk`); però el 4,5:1 es
+     * perd per sota de 0,732 sobre `--paper` i de 0,762 sobre `--paper-sunk`.
+     * El marge és massa estret per sobreviure a un ajust de paleta, i per això
+     * la regla és no posar-n'hi gens en lloc de fixar un llindar; davant de
+     * client públic això no es negocia. El 3,4:1 que hi havia escrit aquí era
+     * del tema clar (`#666a72` a 0,8 sobre `#faf8f4`: 3,42:1), que el lloc ja
+     * no serveix.
      */
     .step.is-current::before {
       transform: scaleY(1);
