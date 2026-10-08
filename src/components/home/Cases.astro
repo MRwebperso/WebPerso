@@ -270,16 +270,42 @@ const cases = await getCasesByRecency();
       width: 17rem;
     }
 
+    /*
+     * Les veïnes reculen pel color i no per l'opacitat (decisió de l'usuari,
+     * 8/10/2026): amb `opacity: 0.55` el text petit queia a 4,21:1
+     * (`--ink-soft`), 3,00:1 (`--ink-faint`) i 3,72:1 (el títol en `--accent`,
+     * un `h3` en `--step-1` de gruix 500, que no és text gran). El mètode és
+     * redefinir cada color de text sobre el segment cap a `--paper`: `--ink` a
+     * 0,55 (#8e8e8e, 6,04:1); `--accent` al mateix nivell que `--ink` (#b28809,
+     * 6,05:1), perquè el títol continuï sent el text més fort de la fitxa;
+     * `--ink-faint` al terra de 4,55:1 (#767a80, 4,59:1); i `--ink-soft` a la
+     * mitjana geomètrica entre `--ink` i el terra (#828487, 5,28:1), perquè la
+     * jerarquia entre els grisos sobrevisqui. Ràtios sobre el `--paper` fosc
+     * (#0a0a0a). Les gràfiques, `--rule` (#1d1e21) i `--paper-sunk` (#111213),
+     * segueixen a 0,55 perquè no porten text.
+     */
     .pista:hover .cas,
     .pista:focus-within .cas {
       width: 15rem;
-      opacity: 0.55;
+      --ink: #8e8e8e;
+      --accent: #b28809;
+      --ink-soft: #828487;
+      --ink-faint: #767a80;
+      --rule: #1d1e21;
+      --paper-sunk: #111213;
     }
 
+    /* La fitxa activa torna als colors del tema amb `inherit`, sense copiar-ne
+       cap hex. */
     .pista:hover .cas:hover,
     .pista:focus-within .cas:focus-within {
       width: 26rem;
-      opacity: 1;
+      --ink: inherit;
+      --accent: inherit;
+      --ink-soft: inherit;
+      --ink-faint: inherit;
+      --rule: inherit;
+      --paper-sunk: inherit;
     }
   }
 
@@ -401,6 +427,7 @@ const cases = await getCasesByRecency();
   .cas__subtitol {
     color: var(--ink-soft);
     max-width: 30ch;
+    transition: color var(--dur-base) var(--ease-out);
   }
 
   .cas__marc {
@@ -410,6 +437,7 @@ const cases = await getCasesByRecency();
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink-faint);
+    transition: color var(--dur-base) var(--ease-out);
   }
 
   .habilitats {
@@ -426,6 +454,7 @@ const cases = await getCasesByRecency();
     font-size: var(--step--1);
     color: var(--ink);
     white-space: nowrap;
+    transition: color var(--dur-base) var(--ease-out);
   }
 
   /*
@@ -516,6 +545,7 @@ const cases = await getCasesByRecency();
     color: var(--ink-soft);
     text-decoration: none;
     cursor: help;
+    transition: color var(--dur-base) var(--ease-out);
   }
 
   /* El botó diu la categoria: convida més que un verb genèric. Contorn buit
