@@ -233,14 +233,17 @@ const vars = [
     font-family: var(--family-sans, 'IBM Plex Sans Variable', system-ui, sans-serif);
   }
 
-  @media (min-width: 768px) {
+  /* Les consultes van en rem, amb el mateix valor que abans en px: dins `@media`,
+     `rem` val 16 px.
+     48rem és el llindar de component del lloc; vegeu l'escala a `tokens.css`. */
+  @media (min-width: 48rem) {
     .hero {
       padding: var(--space-12, 3rem);
       --circle-size: 400px;
     }
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 64rem) {
     .hero {
       --circle-size: 500px;
     }
@@ -268,7 +271,7 @@ const vars = [
     gap: var(--space-8, 2rem);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48rem) {
     .hero__nav {
       display: flex;
       align-items: center;
@@ -325,7 +328,7 @@ const vars = [
     gap: var(--space-8, 2rem);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48rem) {
     .hero__main {
       grid-template-columns: repeat(3, 1fr);
       gap: 0;
@@ -357,7 +360,7 @@ const vars = [
     text-underline-offset: 0.2em;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48rem) {
     .hero__intro {
       order: 1;
       text-align: left;
@@ -381,7 +384,7 @@ const vars = [
     min-height: var(--circle-size);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48rem) {
     .hero__figure {
       order: 2;
     }
@@ -438,7 +441,7 @@ const vars = [
     text-wrap: nowrap;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48rem) {
     .hero__display {
       justify-content: flex-start;
     }

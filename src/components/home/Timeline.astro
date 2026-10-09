@@ -191,7 +191,10 @@ const steps = milestones.map((milestone, i) => {
     font-weight: var(--w-medium);
   }
 
-  @media (min-width: 64rem) {
+  /* Passa de 64 a 62rem perquè entre 62 i 64rem les capçaleres ja anaven en dues
+     columnes però la cronologia no tenia mapa i els passos sortien des de la vora
+     esquerra (decisió de Miquel, 9/10/2026). Vegeu l'escala a `tokens.css`. */
+  @media (min-width: 62rem) {
     .scrolly {
       display: grid;
       grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);

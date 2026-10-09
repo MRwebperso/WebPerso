@@ -124,6 +124,7 @@ section[id] {
   align-self: start;
 }
 
+/* Llindar de pàgina (62rem): vegeu l'escala a `tokens.css`. */
 @media (min-width: 62rem) {
   .section-grid {
     grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);

@@ -76,7 +76,8 @@ const { id, eyebrow, title, lead, sunk = false, figure = false } = Astro.props;
   }
 
   /* Per sota de 62rem el raïl no és columna ni és adherit, o sigui que no hi ha
-     res a desfer: `base.css` només l'enganxa a partir d'aquesta amplada. */
+     res a desfer: `base.css` només l'enganxa a partir d'aquesta amplada.
+     Llindar de pàgina (62rem): vegeu l'escala a `tokens.css`. */
   @media (min-width: 62rem) {
     .section--figure .rail {
       position: static;

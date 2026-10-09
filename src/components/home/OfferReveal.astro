@@ -608,6 +608,7 @@ const SUN = { cx: 470, cy: 86, r: 36 };
 
     ditch = new AbortController();
     const { signal } = ditch;
+    // Llindar de component (48rem): vegeu l'escala a `tokens.css`.
     const narrow = matchMedia('(max-width: 48rem)');
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
     const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);

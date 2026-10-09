@@ -91,3 +91,24 @@
   --dur-base: 260ms;
   --dur-slow: 520ms;
 }
+
+/*
+ * Escala de llindars d'amplada (decisió de Miquel, 9/10/2026, després de captures).
+ * Dues famílies, cadascuna amb un paper:
+ *  - 62rem, llindar de pàgina: capçaleres de secció en dues columnes i raïl
+ *    adherent (base.css, Section.astro), carril de casos en acordió (Cases.astro)
+ *    i cronologia amb mapa (Timeline.astro).
+ *  - 48rem, llindar de component: el panell partit de l'oferta (OfferReveal.astro,
+ *    `matchMedia`) i l'heroi (MinimalistHero.astro). Depenen de la seva pròpia
+ *    amplada: l'oferta ocupa tota l'amplada en les dues maquetacions.
+ * No són tokens: les propietats personalitzades no funcionen dins `@media`, i
+ * `@custom-media` demanaria un preprocessador (el projecte no en té i no se
+ * n'afegeixen dependències). Per això el valor s'escriu a cada lloc i cada lloc
+ * remet aquí.
+ * Dins `@media` el `rem` és el de la mida de lletra inicial del navegador
+ * (16 px), no el de `:root`, així que el `clamp` de l'escala no hi influeix.
+ * Les altres amplades (30rem als eixos de Timeline; 34 i 40rem a CaseContent;
+ * 46rem a Header i CaseContent; 52rem a Method; 60rem a Footer; 64rem de
+ * l'heroi, la mida del cercle) són ajustos locals d'un component, no llindars
+ * del lloc.
+ */
