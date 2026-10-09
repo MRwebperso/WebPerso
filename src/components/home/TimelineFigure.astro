@@ -575,11 +575,7 @@ function buildSegments(points: Point[], bow: number): RouteSegment[] {
     const a = points[i - 1];
     const b = points[i];
     if (a.x === b.x && a.y === b.y) continue;
-    const ctrl = controlFor(a, b, bow);
-    segments.push({
-      d: `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`,
-      nodeIndex: i,
-    });
+    segments.push({ d: arcD(a, b, bow), nodeIndex: i });
   }
   return segments;
 }
