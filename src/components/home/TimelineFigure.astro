@@ -75,6 +75,34 @@ function project(lon: number, lat: number): Point {
 }
 
 /**
+ * La frontera d'estat pels Pirineus. Ja no és una ratlla recta de banda a
+ * banda: a la fita final la càmera hi és a sobre i una recta no hi passaria
+ * per on hi passa de veres. Els anells d'Espanya i de França llegeixen aquest
+ * mateix array com a aresta comuna —per això es declara abans de `COUNTRIES`—,
+ * així la ratlla de punts cau exactament sobre la vora dels dos països i no
+ * uns quants quilòmetres al costat, i corregir la frontera és tocar un sol lloc.
+ *
+ * El tram que compta és `[2.42, 42.36]`, el coll d'Ares: passa just al sud de
+ * Prats de Molló, que és on para el punt de la darrera fita.
+ */
+const FRONTIER_LONLAT: [number, number][] = [
+  [-1.79, 43.35],
+  [-0.7, 42.85],
+  [0.65, 42.7],
+  [1.15, 42.72],
+  [1.42, 42.65],
+  [1.72, 42.5],
+  [2.05, 42.35],
+  [2.42, 42.36],
+  [2.65, 42.42],
+  [3.05, 42.43],
+];
+// Tot menys el primer punt, d'est a oest: l'anell francès ja comença a
+// `FRONTIER_LONLAT[0]`. `reverse()` capgira l'array sobre si mateix: el
+// `slice()` d'abans fa que capgiri una còpia i l'original quedi intacte.
+const FRONTIER_EAST_TO_WEST = FRONTIER_LONLAT.slice(1).reverse();
+
+/**
  * Els països, un contorn tancat cadascun.
  *
  * Abans hi havia una sola silueta que ajuntava França i la península en un
@@ -122,18 +150,10 @@ const COUNTRIES: [number, number][][] = [
     [-7.0, 43.55],
     [-5.0, 43.55],
     [-3.0, 43.42],
-    // Pirineu: les mateixes coordenades que `FRONTIER_LONLAT` i que l'anell
-    // francès, perquè la ratlla de la frontera hi caigui exactament al damunt.
-    [-1.79, 43.35],
-    [-0.7, 42.85],
-    [0.65, 42.7],
-    [1.15, 42.72],
-    [1.42, 42.65],
-    [1.72, 42.5],
-    [2.05, 42.35],
-    [2.42, 42.36],
-    [2.65, 42.42],
-    [3.05, 42.43],
+    // Pirineu: el mateix array `FRONTIER_LONLAT` que llegeix l'anell francès
+    // (allà, el primer punt i la resta a l'inrevés), perquè la ratlla de la
+    // frontera hi caigui exactament al damunt.
+    ...FRONTIER_LONLAT,
     [3.32, 42.32],
     [3.18, 42.26],
     [3.13, 41.85],
@@ -165,7 +185,7 @@ const COUNTRIES: [number, number][][] = [
   ],
   // França
   [
-    [-1.79, 43.35],
+    FRONTIER_LONLAT[0],
     [-1.25, 44.6],
     [-1.15, 45.6],
     [-1.05, 46.0],
@@ -195,16 +215,10 @@ const COUNTRIES: [number, number][][] = [
     [3.03, 42.92],
     [3.05, 42.72],
     [3.16, 42.44],
-    // Pirineu, d'est a oest: mateixes coordenades que l'anell espanyol.
-    [3.05, 42.43],
-    [2.65, 42.42],
-    [2.42, 42.36],
-    [2.05, 42.35],
-    [1.72, 42.5],
-    [1.42, 42.65],
-    [1.15, 42.72],
-    [0.65, 42.7],
-    [-0.7, 42.85],
+    // Pirineu, d'est a oest: el mateix array `FRONTIER_LONLAT` que llegeix
+    // l'anell espanyol (el primer punt és ja a l'inici de l'anell, la resta va
+    // a l'inrevés), perquè la ratlla de la frontera hi caigui exactament al damunt.
+    ...FRONTIER_EAST_TO_WEST,
   ],
   // Gran Bretanya
   [
@@ -490,28 +504,6 @@ const CATALONIA_LONLAT: [number, number][] = [
 const catalanCoastPoints = CATALONIA_LONLAT.map(([lon, lat]) => project(lon, lat));
 const catalanCoastD = `${catalanCoastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
 
-/**
- * La frontera d'estat pels Pirineus. Ja no és una ratlla recta de banda a
- * banda: a la fita final la càmera hi és a sobre i una recta no hi passaria
- * per on hi passa de veres. Els mateixos punts serveixen d'aresta comuna als
- * anells d'Espanya i de França, així la ratlla de punts cau exactament sobre
- * la vora dels dos països i no uns quants quilòmetres al costat.
- *
- * El tram que compta és `[2.42, 42.36]`, el coll d'Ares: passa just al sud de
- * Prats de Molló, que és on para el punt de la darrera fita.
- */
-const FRONTIER_LONLAT: [number, number][] = [
-  [-1.79, 43.35],
-  [-0.7, 42.85],
-  [0.65, 42.7],
-  [1.15, 42.72],
-  [1.42, 42.65],
-  [1.72, 42.5],
-  [2.05, 42.35],
-  [2.42, 42.36],
-  [2.65, 42.42],
-  [3.05, 42.43],
-];
 const frontierD = FRONTIER_LONLAT.map(([lon, lat]) => project(lon, lat))
   .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
   .join(' ');
