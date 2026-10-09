@@ -228,8 +228,8 @@ const SUN = { cx: 470, cy: 86, r: 36 };
       role="slider"
       tabindex="0"
       aria-label={t('offer.split')}
-      aria-valuemin="0"
-      aria-valuemax="100"
+      aria-valuemin="5"
+      aria-valuemax="95"
       aria-valuenow="50"
       aria-orientation="horizontal"
     >
@@ -615,7 +615,9 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     /* Repòs al mig: els dos titulars i els dos cossos llegibles alhora. */
     const REST = 0.5;
     /* Als extrems queda una franja de l'altra capa. Amb 0 o 1 la maneta se
-       n'aniria mig fora del panell, que té el desbordament amagat. */
+       n'aniria mig fora del panell, que té el desbordament amagat.
+       `aria-valuemin` i `aria-valuemax` de la maneta (5 i 95) en són el mirall
+       en percentatge; si canvien aquí, s'han de canviar allà. */
     const MIN = 0.05;
     const MAX = 0.95;
 
