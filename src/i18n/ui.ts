@@ -34,6 +34,7 @@ const ca = {
 
   'footer.rights': 'Tots els drets reservats',
   'footer.email': 'Correu',
+  'footer.legal': 'Avís legal',
 
   /* Carril de casos de la portada: navegació i lectura de la gradació. */
   'cases.track': 'Casos, del més recent al més antic',
@@ -84,6 +85,7 @@ const fr: Record<UIKey, string> = {
 
   'footer.rights': 'Tous droits réservés',
   'footer.email': 'Courriel',
+  'footer.legal': 'Mentions légales',
 
   'cases.track': 'Cas, du plus récent au plus ancien',
   'cases.newer': 'Cas plus récents',

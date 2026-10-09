@@ -1,7 +1,7 @@
 ---
 import { site } from '../config/site.mjs';
 import { useTranslations } from '../i18n/ui';
-import type { Lang } from '../i18n/utils';
+import { localize, type Lang } from '../i18n/utils';
 
 interface Props {
   lang: Lang;
@@ -21,7 +21,9 @@ const year = new Date().getFullYear();
       <span class="eyebrow">{t('footer.email')}</span>
       <a href={`mailto:${site.email}`}>{site.email}</a>
     </p>
-    <p class="footer__legal">© {year} · {t('footer.rights')}</p>
+    <p class="footer__legal">
+      © {year} · {t('footer.rights')} · <a href={localize(lang, ['legal'])}>{t('footer.legal')}</a>
+    </p>
   </div>
 </footer>
 

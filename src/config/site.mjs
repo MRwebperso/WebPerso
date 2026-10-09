@@ -27,6 +27,8 @@ export const site = {
   name: 'Miquel Rodrigues',
   /** Nom administratiu, només per a mencions legals. */
   legalName: 'Galvão Michel Rodrigues',
+  /** Identificador de la microempresa, per a la pàgina d'avís legal. */
+  siren: '106 974 439',
   place: {
     ca: 'Prats de Molló, Alt Vallespir',
     fr: 'Prats-de-Mollo, Haut-Vallespir',

@@ -1,0 +1,18 @@
+---
+/**
+ * Mentions légales, costat francès: `/fr/mentions-legales/`. El bessó català
+ * és `src/pages/ca/avis-legal.astro`, i el registre `segments` de
+ * `src/i18n/utils.ts` (clau `legal`) els fa germans per al commutador de
+ * llengua i les `hreflang`.
+ *
+ * Embolcall fi: la plantilla viu a LegalContent.astro i el text a data/legal.ts.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import LegalContent from '../../components/LegalContent.astro';
+import { site } from '../../config/site.mjs';
+import { legal } from '../../data/legal';
+---
+
+<BaseLayout lang="fr" title={`${legal.fr.title} — ${site.name}`} description={legal.fr.description}>
+  <LegalContent lang="fr" />
+</BaseLayout>

@@ -102,6 +102,7 @@ Correu professional visible i formulari senzill ([Contact.astro](src/components/
 - **La validació és pròpia**, i no la del navegador, per la mateixa raó que tot el contingut és bilingüe: les cadenes natives surten en la llengua de la interfície de qui llegeix, no en la de la pàgina. Els errors viuen a `home.ts`, amb la paritat imposada pels tipus.
 - La revisió en directe d'un camp només s'engega **quan ja ha fallat una vegada**: corregir algú mentre escriu per primer cop és molestar-lo. L'error va lligat al camp amb `aria-describedby` i el resultat de l'enviament, a una regió `role="status"`.
 - Contra el correu brossa, un **camp trampa** fora del recorregut del tabulador i sense veu al lector de pantalla. No hi ha cap servei extern de verificació ni cap galeta.
+- **La pàgina d'avís legal només parla del correu** ([legal.ts](src/data/legal.ts)), perquè avui el formulari no es dibuixa. El dia que `FORM_ENDPOINT` s'activi, la secció de dades ha de guanyar el paràgraf sobre el servei que rep els missatges.
 
 ## Moviment i marca
 

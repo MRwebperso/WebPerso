@@ -1,0 +1,88 @@
+---
+/**
+ * Plantilla de la pàgina d'avís legal, per a les dues llengües.
+ *
+ * Segueix l'estructura de CaseContent: capçalera i blocs sobre `.wrap` i
+ * `.section-grid`, sense graella pròpia. No hi ha raïl: no s'hi inventa cap
+ * etiqueta, i les columnes de contingut s'envien a la darrera pista de la
+ * graella (vegeu `.legal__col`), de manera que cauen a la columna de lectura
+ * de les pàgines de cas.
+ */
+import { legal } from '../data/legal';
+import type { Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = legal[lang];
+
+// L'ordre és el de lectura i el fixa la plantilla, no l'ordre de les claus de l'objecte.
+const order = ['editor', 'host', 'data', 'contents'] as const;
+---
+
+<article class="legal" aria-labelledby="legal-title">
+  <header class="legal__head">
+    <div class="wrap section-grid">
+      <div class="legal__col">
+        <h1 id="legal-title">{copy.title}</h1>
+      </div>
+    </div>
+  </header>
+
+  {
+    order.map((key) => (
+      <section class="legal__section">
+        <div class="wrap section-grid">
+          <div class="legal__col legal__text">
+            <h2>{copy.sections[key].heading}</h2>
+            {copy.sections[key].paragraphs.map((paragraph) => (
+              <p>{paragraph}</p>
+            ))}
+          </div>
+        </div>
+      </section>
+    ))
+  }
+</article>
+
+<style>
+  /* Sense raïl, la columna va a la darrera pista: al mòbil la graella en té
+     una i és la 1, sense fila buida ni buit de separació; a partir de 62rem és
+     la 2, la mateixa columna de lectura que a les pàgines de cas. */
+  .legal__col {
+    grid-column: -2 / -1;
+  }
+
+  /* Mateix ritme vertical que la capçalera de cas i els seus capítols. */
+  .legal__head {
+    padding-block: clamp(var(--space-12), 9vh, var(--space-24)) var(--space-8);
+  }
+
+  /* Mateix cos que el títol d'un cas. */
+  .legal h1 {
+    font-size: var(--step-4);
+  }
+
+  .legal__section {
+    padding-block: var(--space-8);
+  }
+
+  .legal__section:last-child {
+    padding-bottom: var(--space-24);
+  }
+
+  .legal__text {
+    max-width: var(--measure);
+  }
+
+  .legal h2 {
+    font-size: var(--step-1);
+    letter-spacing: 0;
+  }
+
+  .legal__text p {
+    margin-top: var(--space-3);
+  }
+</style>

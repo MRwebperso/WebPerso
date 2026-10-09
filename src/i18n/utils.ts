@@ -30,6 +30,7 @@ export function isLang(value: string | undefined): value is Lang {
  */
 export const segments = {
   casos: { ca: 'casos', fr: 'cas' },
+  legal: { ca: 'avis-legal', fr: 'mentions-legales' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 type SegmentKey = keyof typeof segments;
