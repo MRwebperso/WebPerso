@@ -27,6 +27,12 @@ export function isLang(value: string | undefined): value is Lang {
  *
  * Els identificadors de cas (slugs de portfolio) NO es tradueixen: són noms
  * propis de projecte i han de ser estables entre llengües.
+ *
+ * Els segments del registre són de primer nivell: només es tradueix el primer
+ * segment de la ruta. El que ve després (l'identificador d'un cas) no es
+ * tradueix mai, encara que dugui el nom d'un segment (`/ca/casos/casos/` ↔
+ * `/fr/cas/casos/`). Contrapartida assumida: una ruta que volgués un segment
+ * traduït en segona posició obligaria a tocar `getCanonicalPath` i `localize`.
  */
 export const segments = {
   casos: { ca: 'casos', fr: 'cas' },
@@ -53,25 +59,27 @@ function split(pathname: string): string[] {
 }
 
 /**
- * Camí canònic d'una URL: sense prefix de llengua i amb els segments
- * retraduïts a les seves claus internes.
+ * Camí canònic d'una URL: sense prefix de llengua i amb el primer segment
+ * retraduït a la seva clau interna; els següents passen tal qual.
  */
 export function getCanonicalPath(url: URL): string[] {
   const parts = split(url.pathname);
   const lang = isLang(parts[0]) ? parts.shift() as Lang : defaultLang;
-  return parts.map((part) => canonicalBySegment[lang].get(part) ?? part);
+  const [first, ...rest] = parts;
+  if (first === undefined) return [];
+  return [canonicalBySegment[lang].get(first) ?? first, ...rest];
 }
 
 /**
  * Construeix una ruta absoluta-a-l'arrel per a una llengua.
  * Sempre relativa al domini: `localize('fr', ['casos', 'tvallespir'])`
- * → `/fr/cas/tvallespir/`.
+ * → `/fr/cas/tvallespir/`. Només es tradueix el primer segment.
  */
 export function localize(lang: Lang, path: string[] = []): string {
-  const parts = path.map((part) =>
-    part in segments ? segments[part as SegmentKey][lang] : part,
-  );
-  return `/${[lang, ...parts].join('/')}/`;
+  const [first, ...rest] = path;
+  if (first === undefined) return `/${lang}/`;
+  const head = first in segments ? segments[first as SegmentKey][lang] : first;
+  return `/${[lang, head, ...rest].join('/')}/`;
 }
 
 /**
