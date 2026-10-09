@@ -38,6 +38,7 @@
  * l'accessibilitat depengui de saber llegir un diagrama.
  */
 import { langKeys, milestones, timeline } from '../../data/timeline';
+import type { MilestoneId, Six } from '../../data/timeline';
 import type { Lang } from '../../i18n/utils';
 
 interface Props {
@@ -510,8 +511,9 @@ const frontierD = FRONTIER_LONLAT.map(([lon, lat]) => project(lon, lat))
 
 /** Els llocs reals de cada fita. «Projectes europeus» comparteix coordenades
  * amb Barcelona a propòsit: no hi va haver trasllat, és la mateixa base amb
- * els viatges europeus a sobre. */
-const COORDS: Record<string, [number, number]> = {
+ * els viatges europeus a sobre. La clau és l'`id` de la fita (no la posició),
+ * i el tipus `Record<MilestoneId, …>` fa que un `id` que falti no compili. */
+const COORDS: Record<MilestoneId, [number, number]> = {
   cevenes: [3.9, 44.2],
   portugal: [-9.15, 38.72],
   barcelona: [2.17, 41.39],
@@ -521,14 +523,24 @@ const COORDS: Record<string, [number, number]> = {
 };
 const GERMANY: [number, number] = [9.73, 52.37]; // Hannover, no Hamburg
 
-const cevenesPoint = project(...COORDS.cevenes);
-const portugalPoint = project(...COORDS.portugal);
-const barcelonaPoint = project(...COORDS.barcelona);
-const chPoint = project(...COORDS.pandemia);
-const dePoint = project(...GERMANY);
-const vaPoint = project(...COORDS.vallespir);
-
 const anchors: Point[] = milestones.map((m) => project(...COORDS[m.id]));
+
+/** Índex d'una fita per `id` (és el `data-node` i l'índex d'`anchors`). Si
+ * l'`id` no hi és, el build s'atura: millor això que emetre un `-1`. */
+function nodeOf(id: MilestoneId): number {
+  const i = milestones.findIndex((m) => m.id === id);
+  if (i < 0) throw new Error(`TimelineFigure: fita desconeguda «${id}»`);
+  return i;
+}
+
+// Els punts nomenats es llegeixen d'`anchors` per `id`, no es tornen a
+// projectar ni se cerquen per posició. Alemanya no és una fita: es projecta.
+const cevenesPoint = anchors[nodeOf('cevenes')];
+const portugalPoint = anchors[nodeOf('portugal')];
+const barcelonaPoint = anchors[nodeOf('barcelona')];
+const chPoint = anchors[nodeOf('pandemia')];
+const dePoint = project(...GERMANY);
+const vaPoint = anchors[nodeOf('vallespir')];
 
 function controlFor(a: Point, b: Point, bow: number): Point {
   const mx = (a.x + b.x) / 2;
@@ -657,8 +669,10 @@ const catalanScale = Math.min(
 
 // La primera fita és un únic punt fosc, no un territori: la càmera hi entra
 // de prop, com a la fita final, i s'allunya a «Évora i Lisboa» per fer lloc a
-// la segona.
-const CAMERA = [
+// la segona. Una entrada per fita, en l'ordre de `milestones` (la posició és
+// l'índex de la fita, el mateix que dona `nodeOf(id)`); `Six` impedeix que
+// en falti o en sobri cap.
+const CAMERA: Six<ReturnType<typeof cameraFor>> = [
   cameraFor(cevenesPoint, 2.4),
   cameraFor(westFocus, 1.3),
   cameraFor(westFocus, 1.3),
@@ -715,7 +729,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
 
         <path class="figure__frontier" d={frontierD} />
 
-        <g class="figure__oscillation" data-node="4">
+        <g class="figure__oscillation" data-node={nodeOf('pandemia')}>
           {
             oscillationArcs.map((arc, i) => (
               <path
@@ -736,7 +750,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           />
         </g>
 
-        <g class="figure__fan" data-node="3">
+        <g class="figure__fan" data-node={nodeOf('europa')}>
           {
             fanArcs.map((arc, i) => (
               <>
@@ -759,7 +773,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           }
         </g>
 
-        <g class="figure__catalonia" data-node="5">
+        <g class="figure__catalonia" data-node={nodeOf('vallespir')}>
           <path
             class="figure__catalonia-land"
             d={catalanCoastD}

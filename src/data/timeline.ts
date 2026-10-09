@@ -22,11 +22,17 @@ export type LangKey = (typeof langKeys)[number];
 /** 0 absent · 1 adquirida · 2 llengua de treball. */
 export type LangState = 0 | 1 | 2;
 
-type Six<T> = readonly [T, T, T, T, T, T];
+export type Six<T> = readonly [T, T, T, T, T, T];
+
+/** Escrit a mà: `milestones` és `Six<Milestone>` i no se'n pot derivar sense
+ * tocar la declaració. Les dades es comproven contra aquesta unió. */
+export type MilestoneId = 'cevenes' | 'portugal' | 'barcelona' | 'europa' | 'pandemia' | 'vallespir';
 
 export interface Milestone {
-  /** Identificador estable: no es tradueix ni surt a la interfície. */
-  id: string;
+  /** Identificador estable: no es tradueix ni surt a la interfície. Serveix
+   * també de clau a la geometria de `TimelineFigure` (`COORDS`, els punts
+   * nomenats i `data-node`), de manera que un `id` que falti no compila. */
+  id: MilestoneId;
   year: number;
   /**
    * Zones ocupades. La primera és la de residència i marca el carril pel qual
