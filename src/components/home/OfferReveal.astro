@@ -589,6 +589,11 @@ const SUN = { cx: 470, cy: 86, r: 36 };
    * primera visita contra la segona. Els oients de finestra i de consulta de
    * mitjans es tanquen amb un `AbortController` a cada nova lligada, perquè si
    * no s'acumularien apuntant a un panell que ja no és al document.
+   *
+   * No hi ha cap crida directa a `bindOffer()`: `astro:page-load` també arriba
+   * a la primera càrrega, i la crida directa duplicava la lligada: els oients
+   * de punter i de teclat del panell s'hi posaven dues vegades (constatat el
+   * 9/10/2026).
    */
   let ditch: AbortController | null = null;
 
@@ -741,6 +746,5 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     addEventListener('load', sync, { signal });
   }
 
-  bindOffer();
   document.addEventListener('astro:page-load', bindOffer);
 </script>

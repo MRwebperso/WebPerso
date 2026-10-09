@@ -91,6 +91,8 @@ const canonical = new URL(alternates[lang], Astro.site);
 
     <script>
       // Revelació en scroll. Es reactiva a cada transició de pàgina.
+      // No n'hi ha cap crida directa: `astro:page-load` arriba també a la
+      // primera càrrega, i la crida directa duplicava l'observador (9/10/2026).
       const bind = () => {
         document.documentElement.classList.add('js');
         const targets = document.querySelectorAll<HTMLElement>('.reveal');
@@ -118,7 +120,6 @@ const canonical = new URL(alternates[lang], Astro.site);
         );
         targets.forEach((el) => io.observe(el));
       };
-      bind();
       document.addEventListener('astro:page-load', bind);
 
       // En commutar de llengua a mig document, el router substitueix la pàgina

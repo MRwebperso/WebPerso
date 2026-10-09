@@ -188,7 +188,8 @@ const f = c.form;
     });
   };
 
-  bind();
+  // `astro:page-load` arriba també a la primera càrrega; amb una crida
+  // directa, els oients es duplicaven.
   document.addEventListener('astro:page-load', bind);
 </script>
 

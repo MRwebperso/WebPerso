@@ -149,6 +149,10 @@ const cases = await getCasesByRecency();
    * el dit, que és justament el que ho feia difícil de veure. L'oient de
    * `resize` va amb senyal perquè no s'acumuli sobre una pista fora del
    * document.
+   *
+   * No hi ha cap crida directa a `bindCases()`: `astro:page-load` també arriba
+   * a la primera càrrega, i la crida directa duplicava la lligada (en moviment
+   * reduït, una fletxa saltava dues fitxes; constatat el 9/10/2026).
    */
   let ditch: AbortController | null = null;
 
@@ -201,7 +205,6 @@ const cases = await getCasesByRecency();
     }
   }
 
-  bindCases();
   document.addEventListener('astro:page-load', bindCases);
 </script>
 

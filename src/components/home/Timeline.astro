@@ -369,6 +369,8 @@ const steps = milestones.map((milestone, i) => {
     figure.classList.remove('is-priming');
   };
 
-  bindTimeline();
+  // Es lliga només a `astro:page-load`, que arriba també a la primera càrrega:
+  // una crida directa creava dos observadors sobre els mateixos passos
+  // (9/10/2026).
   document.addEventListener('astro:page-load', bindTimeline);
 </script>
