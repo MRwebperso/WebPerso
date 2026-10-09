@@ -5,15 +5,25 @@ import { ui } from '../i18n/ui';
  * Contingut editorial de la one-page.
  *
  * La paritat no és una bona intenció: `ca` i `fr` compleixen la mateixa
- * interfície, i les llistes d'oferta i de mètode són tuples de longitud fixa.
+ * interfície, i les llistes d'oferta, els seus lliurables i les de mètode són
+ * tuples de longitud fixa.
  * Afegir un principi en una llengua i no en l'altra no compila.
  */
+
+/**
+ * Els lliurables d'una oferta. És una tupla perquè la paritat CA–FR la imposi
+ * el tipus, com als principis de mètode i com fa el `superRefine` dels casos.
+ * Contrapartida assumida: les dues ofertes comparteixen la mateixa llargada, i
+ * si una n'ha de tenir un sisè caldran dos tipus. Per afegir-ne un, s'allarga
+ * la tupla i després s'escriu a les dues llengües (si no, no compila).
+ */
+type Deliverables = [string, string, string, string, string];
 
 interface Offer {
   title: string;
   body: string;
   deliverablesLabel: string;
-  deliverables: string[];
+  deliverables: Deliverables;
 }
 
 interface Principle {
