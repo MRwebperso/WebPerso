@@ -212,10 +212,12 @@ const cases = await getCasesByRecency();
    * `.cas:hover`) és un reforç decoratiu, fora del criteri, perquè l'estat ja
    * el porten el fons, el període i l'osca.
    *
-   * Aquí el vermell pinta l'osca de la fitxa activa, el seu període i, en
-   * passar-hi per sobre, la fletxa i la vora dels botons de desplaçament
-   * (`.rem`); la línia de la cronologia no es fa vermella (llegeix `--rule`).
-   * No toca cap enllaç ni cap fons gran: l'únic fons vermell és l'osca, un punt.
+   * Aquí el vermell pinta l'osca de la fitxa activa i el seu període; la
+   * línia de la cronologia no es fa vermella (llegeix `--rule`). Els botons de
+   * desplaçament (`.rem`) es fan grocs en passar-hi per sobre, com tota la
+   * interacció (decisió de Miquel, 9/10/2026): 10,32:1 de `--accent` sobre
+   * `--paper`. No toca cap enllaç ni cap fons gran: l'únic fons vermell és
+   * l'osca, un punt.
    */
   .carril {
     --pas: var(--space-6);
@@ -604,8 +606,8 @@ const cases = await getCasesByRecency();
   }
 
   .rem:hover:not(:disabled) {
-    color: var(--vermell);
-    border-color: var(--vermell);
+    color: var(--accent);
+    border-color: var(--accent);
   }
 
   .rem:disabled {
