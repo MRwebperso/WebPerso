@@ -589,14 +589,14 @@ const fanArcs = FAN_DESTS.map(([lon, lat]) => {
   return { d: arcD(barcelonaPoint, dest, 0.18), dest };
 });
 
-// ── Pandèmia (fita 4): Suïssa → Vallespir → Alemanya → Suïssa, i algun tram
-// cap a Barcelona («el procés d'establir-se»). L'ordre és el de l'espec, no
-// alfabètic ni geogràfic. ──
+// ── Pandèmia (fita 4): Suïssa → Vallespir → Alemanya → Suïssa. L'ordre és el
+// de l'espec, no alfabètic ni geogràfic. El tram cap a Barcelona ja no hi és
+// perquè quedava tapat pel traç del recorregut i no es veia (decisió de
+// Miquel, 9/10/2026). ──
 const oscillationArcs = [
-  { d: arcD(chPoint, vaPoint, 0.16), secondary: false },
-  { d: arcD(vaPoint, dePoint, 0.16), secondary: false },
-  { d: arcD(dePoint, chPoint, 0.16), secondary: false },
-  { d: arcD(chPoint, barcelonaPoint, 0.14), secondary: true },
+  { d: arcD(chPoint, vaPoint, 0.16) },
+  { d: arcD(vaPoint, dePoint, 0.16) },
+  { d: arcD(dePoint, chPoint, 0.16) },
 ];
 
 /**
@@ -719,7 +719,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           {
             oscillationArcs.map((arc, i) => (
               <path
-                class:list={['figure__oscillation-arc', { 'figure__oscillation-arc--secondary': arc.secondary }]}
+                class="figure__oscillation-arc"
                 d={arc.d}
                 style={`--reveal-delay:${(i * 0.35).toFixed(2)}s`}
                 vector-effect="non-scaling-stroke"
@@ -1107,12 +1107,6 @@ const lastCopy = c.milestones[c.milestones.length - 1];
     fill: none;
     stroke: var(--ink-soft);
     stroke-width: 0.9;
-  }
-
-  .figure__oscillation-arc--secondary {
-    stroke: var(--ink-faint);
-    stroke-width: 0.7;
-    stroke-dasharray: 1.5 2;
   }
 
   /*
