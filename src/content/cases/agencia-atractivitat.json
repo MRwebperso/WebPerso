@@ -12,18 +12,18 @@
   "skills": [
     {
       "use": "central",
-      "ca": "Estratègia de destinació",
-      "fr": "Stratégie de destination"
+      "ca": "Planificació estratègica",
+      "fr": "Planification stratégique"
+    },
+    {
+      "use": "central",
+      "ca": "Mediació cultural",
+      "fr": "Médiation culturelle"
     },
     {
       "use": "regular",
-      "ca": "Disseny de visuals",
-      "fr": "Conception de visuels"
-    },
-    {
-      "use": "regular",
-      "ca": "Edició de xarxes",
-      "fr": "Édition des réseaux"
+      "ca": "Estratègia de comunicació",
+      "fr": "Stratégie de communication"
     }
   ],
   "orgs": [

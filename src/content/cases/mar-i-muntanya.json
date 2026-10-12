@@ -14,14 +14,14 @@
       "fr": "Identité de marque"
     },
     {
-      "use": "regular",
-      "ca": "Web amb CMS",
-      "fr": "Web avec CMS"
+      "use": "central",
+      "ca": "Finançament de projectes",
+      "fr": "Financement de projets"
     },
     {
-      "use": "central",
-      "ca": "Redacció de dossiers",
-      "fr": "Rédaction de dossiers"
+      "use": "regular",
+      "ca": "Direcció editorial",
+      "fr": "Direction éditoriale"
     }
   ],
   "orgs": [
@@ -39,7 +39,7 @@
   "ca": {
     "title": "Mar i Muntanya, a Taula!",
     "cardTitle": "Mar i Muntanya, a Taula!",
-    "cardSubtitle": "Quatre fires d’octubre, una sola marca als dos costats",
+    "cardSubtitle": "Quatre fires de tardor, una sola marca als dos costats",
     "summary": "Una marca de comunicació bilingüe per a quatre fires gastronòmiques fora de temporada, dues al nord i dues al sud, que per separat no arriben enlloc.",
     "context": "CLM, amb Som Turisme (Alt Empordà)",
     "role": "Marca, web bilingüe, xarxes i redacció del dossier",
@@ -69,7 +69,7 @@
   "fr": {
     "title": "Mar i Muntanya, a Taula !",
     "cardTitle": "Mar i Muntanya, a Taula !",
-    "cardSubtitle": "Quatre foires d’octobre, une seule marque des deux côtés",
+    "cardSubtitle": "Quatre foires d’automne, une seule marque des deux côtés",
     "summary": "Une marque de communication bilingue pour quatre foires gastronomiques hors saison, deux au nord et deux au sud, qui séparément ne portent nulle part.",
     "context": "CLM, avec Som Turisme (Alt Empordà)",
     "role": "Marque, site bilingue, réseaux et rédaction du dossier",

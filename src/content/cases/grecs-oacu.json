@@ -11,18 +11,18 @@
   "skills": [
     {
       "use": "central",
-      "ca": "Etnografia de camp",
-      "fr": "Ethnographie de terrain"
+      "ca": "Recerca qualitativa",
+      "fr": "Recherche qualitative"
     },
     {
       "use": "regular",
-      "ca": "Escriptura acadèmica",
-      "fr": "Écriture académique"
+      "ca": "Escriptura científica",
+      "fr": "Écriture scientifique"
     },
     {
       "use": "regular",
-      "ca": "Treball en grup",
-      "fr": "Travail en équipe"
+      "ca": "Treball de camp etnogràfic",
+      "fr": "Enquête ethnographique"
     }
   ],
   "orgs": [

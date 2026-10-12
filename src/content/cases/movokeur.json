@@ -10,18 +10,18 @@
   "skills": [
     {
       "use": "central",
-      "ca": "Entrevistes de camp",
-      "fr": "Entretiens de terrain"
+      "ca": "Recerca qualitativa",
+      "fr": "Recherche qualitative"
     },
     {
       "use": "regular",
-      "ca": "Publicació científica",
-      "fr": "Publication scientifique"
+      "ca": "Escriptura científica",
+      "fr": "Écriture scientifique"
     },
     {
       "use": "regular",
-      "ca": "Coordinació de socis",
-      "fr": "Coordination des partenaires"
+      "ca": "Gestió de partenariats",
+      "fr": "Gestion de partenariats"
     }
   ],
   "orgs": [

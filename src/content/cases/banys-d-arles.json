@@ -11,17 +11,17 @@
     {
       "use": "central",
       "ca": "Comunicació institucional",
-      "fr": "Communication institutionnelle"
+      "fr": "Communication publique"
+    },
+    {
+      "use": "central",
+      "ca": "Mediació cultural",
+      "fr": "Médiation culturelle"
     },
     {
       "use": "regular",
-      "ca": "Reorganització de servei",
-      "fr": "Réorganisation du service"
-    },
-    {
-      "use": "ocasional",
-      "ca": "Traducció CA–FR",
-      "fr": "Traduction CA–FR"
+      "ca": "Direcció d’equip",
+      "fr": "Direction d’équipe"
     }
   ],
   "orgs": [
@@ -32,9 +32,9 @@
     }
   ],
   "ca": {
-    "title": "Els Banys d’Arles: tres mesos i un servei per endreçar",
-    "cardTitle": "Els Banys d’Arles",
-    "cardSubtitle": "Reorganitzar un servei de comunicació en tres mesos",
+    "title": "Els Banys: tres mesos i un servei per endreçar",
+    "cardTitle": "Els Banys",
+    "cardSubtitle": "Tres mesos dirigint l’equip de comunicació d’un ajuntament",
     "summary": "Un pas curt pel servei de comunicació d’un ajuntament termal, amb la comunicació institucional de l’alcaldia a fer cada setmana i el servei mateix a reestructurar.",
     "context": "Servei de Comunicació, Ajuntament dels Banys d’Arles i Palaldà",
     "role": "Comunicació institucional i reestructuració del servei",
@@ -64,7 +64,7 @@
   "fr": {
     "title": "Amélie-les-Bains : trois mois et un service à remettre en ordre",
     "cardTitle": "Amélie-les-Bains",
-    "cardSubtitle": "Réorganiser un service de communication en trois mois",
+    "cardSubtitle": "Trois mois à diriger l’équipe communication d’une mairie",
     "summary": "Un passage court au service communication d’une mairie thermale, avec la communication institutionnelle de la municipalité à assurer chaque semaine et le service lui-même à restructurer.",
     "context": "Service Communication, Mairie d’Amélie-les-Bains-Palalda",
     "role": "Communication institutionnelle et restructuration du service",

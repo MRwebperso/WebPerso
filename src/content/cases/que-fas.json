@@ -10,18 +10,18 @@
   "skills": [
     {
       "use": "central",
-      "ca": "Web sense framework",
-      "fr": "Web sans framework"
+      "ca": "Disseny d’eines d’IA",
+      "fr": "Conception d’outils d’IA"
     },
     {
       "use": "regular",
-      "ca": "Extracció amb IA",
-      "fr": "Extraction par IA"
+      "ca": "Direcció editorial",
+      "fr": "Direction éditoriale"
     },
     {
-      "use": "regular",
-      "ca": "Curadoria editorial",
-      "fr": "Curation éditoriale"
+      "use": "ocasional",
+      "ca": "Estratègia de comunicació",
+      "fr": "Stratégie de communication"
     }
   ],
   "orgs": [
@@ -34,7 +34,7 @@
   "ca": {
     "title": "«Què fas?», l’agenda cultural de Catalunya Nord",
     "cardTitle": "«Què fas?»",
-    "cardSubtitle": "L’agenda cultural de Catalunya Nord, sense framework ni comptes d’usuari",
+    "cardSubtitle": "L’agenda cultural de Catalunya Nord, sense cap cost mensual",
     "summary": "Una agenda d’esdeveniments per a les cinc comarques del nord, feta amb la condició de no costar res cada mes i de continuar essent reparable per una sola persona.",
     "context": "CLM",
     "role": "Concepció, desenvolupament i curadoria",
@@ -64,7 +64,7 @@
   "fr": {
     "title": "« Què fas ? », l’agenda culturel de Catalogne Nord",
     "cardTitle": "« Què fas ? »",
-    "cardSubtitle": "L’agenda culturel de Catalogne Nord, sans framework ni comptes",
+    "cardSubtitle": "L’agenda culturel de Catalogne Nord, sans aucun coût mensuel",
     "summary": "Un agenda d’événements pour les cinq comarques du nord, construit à la condition de ne rien coûter chaque mois et de rester réparable par une seule personne.",
     "context": "CLM",
     "role": "Conception, développement et curation",
