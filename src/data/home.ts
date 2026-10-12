@@ -1,34 +1,39 @@
 import type { Lang } from '../i18n/utils';
-import { ui } from '../i18n/ui';
 
 /**
  * Contingut editorial de la one-page.
  *
  * La paritat no és una bona intenció: `ca` i `fr` compleixen la mateixa
- * interfície, i les llistes d'oferta, els seus lliurables i les de mètode són
- * tuples de longitud fixa.
- * Afegir un principi en una llengua i no en l'altra no compila.
+ * interfície, i la parella d'ofertes, les tres línies de servei del hero i els
+ * dos paràgrafs de relat del mètode són tuples de longitud fixa.
+ * Afegir una línia o un paràgraf en una llengua i no en l'altra no compila.
+ * Contrapartida assumida: allargar una d'aquestes llistes vol dir tocar el tipus
+ * abans de tocar cap text.
  */
 
 /**
- * Els lliurables d'una oferta. És una tupla perquè la paritat CA–FR la imposi
- * el tipus, com als principis de mètode i com fa el `superRefine` dels casos.
- * Contrapartida assumida: les dues ofertes comparteixen la mateixa llargada, i
- * si una n'ha de tenir un sisè caldran dos tipus. Per afegir-ne un, s'allarga
- * la tupla i després s'escriu a les dues llengües (si no, no compila).
+ * Una oferta és un títol i un cos de prosa, i res més. Fins al 12/10/2026
+ * duia sota el cos un bloc de lliuraments amb noms de projectes, d'entitats i de
+ * finançadors; Miquel el va treure (D3) i va demanar que cap projecte, entitat
+ * ni finançador no surti nomenat als textos de l'oferta: els noms propis viuen
+ * als casos. Per això el tipus no té cap tupla de detall ni l'etiqueta que la
+ * presentava.
  */
-type Deliverables = [string, string, string, string, string];
-
 interface Offer {
   title: string;
   body: string;
-  deliverablesLabel: string;
-  deliverables: Deliverables;
 }
 
-interface Principle {
-  title: string;
-  body: string;
+/**
+ * Una línia de la llista de serveis del hero: el text i la secció a la qual
+ * enllaça. Les àncores són els `id` de `Offer.astro` i de `Method.astro`, que
+ * no es tradueixen, i per això són iguals en les dues llengües; el tipus les
+ * tanca sobre les dues seccions que existeixen, de manera que una àncora
+ * escrita malament no compila en lloc de trencar-se en silenci al navegador.
+ */
+interface ServiceLine {
+  text: string;
+  anchor: 'comunicacio' | 'metode';
 }
 
 interface SectionIntro {
@@ -63,18 +68,49 @@ export interface HomeContent {
   hero: {
     eyebrow: string;
     title: string;
-    /** NUCLI INVARIANT (secció 2.1 del brief). Text de referència: no alterar. */
+    /**
+     * Primer paràgraf de la presentació: tres fets (el doctorat, el lloc de
+     * treball, les llengües). Fins al 12/10/2026 era un text de referència de la
+     * secció 2.1 del brief que no s'havia d'alterar; Miquel va aixecar la
+     * restricció (D1) en demanar de refer la presentació en coherència amb les
+     * tres seccions reescrites, i per això aquest camp ja es pot tocar com els
+     * altres.
+     */
     intro: string;
     /**
-     * Segon paràgraf de la presentació (refosa del 4-9-2026). Va un grau per
-     * sota del nucli invariant: mateixa mida, el color de lead en comptes del
-     * ple. Substancia amb fets datats el que el primer paràgraf declara.
+     * Els tres serveis en tres línies, entre els dos paràgrafs, cadascuna
+     * enllaçada a la seva secció (D7, 12/10/2026): anuncien el visible, el
+     * treball que el sosté i les eines, i el lector hi arriba pel servei que
+     * busca sense haver de llegir la portada de dalt a baix. Tupla: la llargada
+     * i l'ordre han de ser els mateixos en les dues llengües.
+     */
+    services: [ServiceLine, ServiceLine, ServiceLine];
+    /**
+     * Segon paràgraf de la presentació (refosa del 4-9-2026, refeta el
+     * 12/10/2026). Va un grau per sota del primer: mateixa mida, el color de
+     * lead en comptes del ple. Hi van els fets de trajectòria (la tesi,
+     * l'oficina de turisme, Camprodon) que ni el primer paràgraf ni la llista
+     * de serveis diuen, i és l'únic lloc de la portada que els pot dir: les
+     * seccions d'oferta i de mètode ja no nomenen cap projecte ni cap entitat.
      */
     intro2: string;
   };
   communication: SectionIntro & { offers: [Offer, Offer] };
   method: SectionIntro & {
-    principles: [Principle, Principle, Principle];
+    /**
+     * El relat de la secció en dos paràgrafs (D4, 12/10/2026): què s'hi guanya
+     * quan algú que ja fa servir un assistent d'IA treballa amb mi, i qui
+     * controla el resultat. Ocupa el lloc de les tres columnes numerades
+     * d'abans (D5): les tres formes d'eina (aplicació, cadena de tractament,
+     * producte de comunicació) hi surten en prosa i no en llista. Tupla per la
+     * mateixa raó que la resta: la paritat CA–FR la imposa el tipus.
+     */
+    story: [string, string];
+    /**
+     * Compromís de verificació xifrat, no una negació de venda (D5): l'antiga
+     * frase («no venc implantacions d'IA») contradeia l'oferta d'eines pensades
+     * per al projecte del client.
+     */
     boundary: string;
   };
   timeline: SectionIntro;
@@ -85,41 +121,30 @@ export interface HomeContent {
 const ca: HomeContent = {
   hero: {
     eyebrow: 'Miquel Rodrigues · Prats de Molló, Alt Vallespir',
-    title: 'Comunicació, recerca aplicada i integració crítica d’IA',
+    title: 'Comunicació i recerca als dos costats de la frontera',
     intro:
-      'Doctor en comunicació establert a Prats de Molló, amb vint anys d’experiència en comunicació, recerca i formació. Ofereixo tres serveis: assessorament i productes de comunicació, redacció de dossiers i recerca aplicada, i integració crítica d’eines d’IA. Treballo en sis llengües als dos costats de la frontera. Aquesta combinació no existeix al territori.',
+      'Soc doctor en comunicació i treballo des de Prats de Molló, en sis llengües.',
+    services: [
+      { text: 'Comunicació: estratègia i peces acabades', anchor: 'comunicacio' },
+      { text: 'Dossiers de finançament i recerca aplicada', anchor: 'comunicacio' },
+      { text: 'Eines d’IA fetes per a cada projecte', anchor: 'metode' },
+    ],
     intro2:
-      'La meva tesi analitzava com s’havia explicat la crisi de l’euro en diverses llengües alhora. Des d’aleshores faig el mateix a escala petita: saber qui llegeix, en quina llengua i amb quins criteris jutja. He dirigit una oficina de turisme de frontera durant dos anys, he escrit i justificat dossiers europeus, i he auditat organitzacions des de fora. Treballo des de Prats de Molló, a mitja hora de Camprodon per la Collada d’Ares.',
+      'De la tesi, me n’ha quedat un mètode: abans d’escriure, saber qui llegeix i en quina llengua. Durant dos anys vaig dirigir l’oficina de turisme de Prats. La promoció es feia en quatre llengües i mirava també al sud, a l’altre costat de la frontera, on Camprodon és a mitja hora de casa per la Collada d’Ares.',
   },
 
   communication: {
     eyebrow: 'Serveis',
     title: 'Dues línies de treball',
-    lead: 'Treballo per encàrrec, amb l’abast acordat per escrit. Els interlocutors habituals són ajuntaments petits, associacions culturals, oficines de turisme i estructures d’una o dues persones que necessiten una campanya sencera i no tenen ningú per coordinar-la. En projectes transfronterers les dues línies solen anar juntes: el dossier i la comunicació que en surt s’escriuen alhora.',
+    lead: 'Del que faig per a un projecte, el públic en veu la comunicació. Els dossiers i la recerca queden al darrere i donen sentit a la campanya: si em demanes totes dues coses, per exemple, la campanya parteix del dossier i fa servir dades que ja he comprovat. Treballo per encàrrec per a empreses, amb l’abast acordat per escrit.',
     offers: [
       {
         title: 'Assessorament i productes de comunicació',
-        body: 'Del pla de comunicació a la peça acabada: estratègia, identitat, redacció, fotografia i vídeo. Ho produeixo tot jo, i el mateix criteri travessa el cartell, el web i el compte d’Instagram. Vaig portar la comunicació institucional de l’Ajuntament dels Banys d’Arles i, després, la de la destinació de l’Alt Vallespir en quatre llengües.',
-        deliverablesLabel: ui.ca['case.deliverables'],
-        deliverables: [
-          'Pla de comunicació',
-          'Identitat visual i normes d’ús',
-          'Webs bilingües amb gestor d’edició',
-          'Vídeo i fotografia',
-          'Calendari editorial de xarxes',
-        ],
+        body: 'Comencem per l’estratègia: de què parlarà el projecte i a qui. Després en surten les peces, acabades: textos, imatge, vídeo, web. Ho produeixo tot jo. Si el projecte ho demana, hi afegeixo eines basades en IA i informes que agafen les teves dades i les fan llegibles per a qui ha de decidir.',
       },
       {
         title: 'Redacció de dossiers i recerca aplicada',
-        body: 'Candidatures a subvenció, memòries i informes, amb la recerca que els sosté: dades de territori, cartografia d’actors, estat de la qüestió. He redactat i justificat dossiers europeus fins al tancament, he coordinat socis de diversos països al projecte MOVOKEUR del Ministerio de Educación y Cultura, he auditat organitzacions per encàrrec extern i he signat tretze publicacions acadèmiques.',
-        deliverablesLabel: ui.ca['case.deliverables'],
-        deliverables: [
-          'Dossiers de subvenció (Fonds 66, EsCaT/POCTEFA, Generalitat)',
-          'Memòries i informes de justificació',
-          'Estudis de context i cartografia d’actors',
-          'Cartes de suport i convenis de partenariat',
-          'Acompanyament fins a la justificació final',
-        ],
+        body: 'La recerca va primer: les dades del territori, el mapa de qui hi decideix. Després escric el dossier que va a buscar el finançament, amb el projecte ben justificat, i el segueixo fins al tancament, quan toca demostrar què s’ha fet amb els diners. La recerca també es pot encarregar sola, en forma de diagnòstic territorial.',
       },
     ],
   },
@@ -127,35 +152,25 @@ const ca: HomeContent = {
   method: {
     eyebrow: 'Mètode',
     title: 'Com faig servir les eines d’IA',
-    lead: 'Faig servir eines d’IA en gairebé tot el que produeixo. Aquest lloc n’és un exemple: escrit amb assistència d’IA, muntat amb Claude Code, i amb la cronologia de més avall com a peça a jutjar. La feina real és el que es descarta abans de lliurar.',
-    principles: [
-      {
-        title: 'El pilotatge',
-        body: 'L’eina produeix matèria: esborranys, variants, traduccions de treball. Jo la reescric, la retallo o la llenço. En un dossier institucional, un paràgraf que ha sortit sencer d’un model es nota de seguida, i el comitè el llegeix com a manca d’interès pel projecte.',
-      },
-      {
-        title: 'La comprovació',
-        body: 'Cada dada, cita i referència que arriba al lliurament l’he vista a la font. Els models fabriquen referències versemblants amb una facilitat notable: any equivocat, revista que no existeix, pàgina inventada. Comprovar-ho és una hora de feina per dossier i no me la salto mai.',
-      },
-      {
-        title: 'Les dues llengües',
-        body: 'El català i el francès es redacten en paral·lel, cadascun des de zero. En aquest territori el lector institucional sovint té les dues versions obertes, i una traducció feta de pressa es reconeix pel registre. Aquest lloc no té versió principal: les dues rutes es generen alhora i el commutador de dalt no recarrega res.',
-      },
+    lead: 'Si portes un ajuntament petit o una associació, probablement ja fas servir un assistent d’IA per a les feines de cada dia: resumir un informe, escriure un correu difícil.',
+    story: [
+      'Amb aquesta base ens entenem de seguida i puc portar el teu projecte més lluny amb eines pensades per a ell: una aplicació petita, una cadena de tractament interna, un producte de comunicació. Si reps per correu propostes d’activitats, cadascuna escrita a la seva manera, un model en pot fer una fitxa per proposta, sempre amb els mateixos camps: qui l’organitza, què s’hi fa, on i quan. Jo munto aquesta cadena i decideixo en quin punt una persona revisa les fitxes abans que es publiquin.',
+      'Tens els resultats abans i més ben fets. Un model et pot donar, amb el mateix aplom que la resta, la cita d’una revista que no existeix. Un paràgraf de dossier que en surt tal qual, un comitè d’avaluació el reconeix de seguida i el llegeix com a falta d’interès pel projecte. Conec prou les eines per guiar-les cap a una versió millor i prou l’ofici per veure quan encara no hi és.',
     ],
     boundary:
-      'No venc implantacions d’IA ni formació en programari. El que es contracta és el producte acabat.',
+      'Les dades i les cites que proposa un model, com totes les del lliurament, les comprovo a la font; en un dossier hi dedico una hora.',
   },
 
   timeline: {
     eyebrow: 'Trajectòria',
     title: 'Una trajectòria en tres eixos',
-    lead: 'Temps, territori i llengua alhora: quan, a quin costat de la frontera i en quines llengües. Les sis llengües surten d’aquest recorregut, cadascuna del lloc on em va tocar viure.',
+    lead: 'A Barcelona treballava en anglès i vivia en català i en castellà. L’alemany el vaig aprendre durant la pandèmia, entre Suïssa i Alemanya.',
   },
 
   cases: {
     eyebrow: 'Casos',
     title: 'Selecció de feines',
-    lead: 'Sis feines, explicades de dalt a baix: què es demanava, què vaig fer i com va acabar, inclosos els punts que continuen oberts. Algunes són encàrrecs; d’altres, llocs de treball o feina associativa, i van etiquetades.',
+    lead: 'Sis feines, explicades de cap a cap, inclosos els punts que continuen oberts. La meitat eren llocs de treball; l’altra meitat, feina associativa i recerca a la universitat.',
   },
 
   contact: {
@@ -191,41 +206,30 @@ const ca: HomeContent = {
 const fr: HomeContent = {
   hero: {
     eyebrow: 'Miquel Rodrigues · Prats-de-Mollo, Haut-Vallespir',
-    title: 'Communication, recherche appliquée et intégration critique de l’IA',
+    title: 'Communication et recherche des deux côtés de la frontière',
     intro:
-      'Docteur en communication établi à Prats-de-Mollo, avec vingt ans d’expérience en communication, recherche et formation. Je propose trois services : conseil et produits de communication, rédaction de dossiers et recherche appliquée, et intégration critique d’outils d’IA. Je travaille en six langues des deux côtés de la frontière. Cette combinaison n’existe pas sur le territoire.',
+      'Docteur en communication, je travaille depuis Prats-de-Mollo, en six langues.',
+    services: [
+      { text: 'Communication : stratégie et pièces terminées', anchor: 'comunicacio' },
+      { text: 'Dossiers de financement et recherche appliquée', anchor: 'comunicacio' },
+      { text: 'Outils d’IA faits pour chaque projet', anchor: 'metode' },
+    ],
     intro2:
-      'Ma thèse portait sur la manière dont la crise de l’euro s’est racontée dans plusieurs langues à la fois. Depuis, je fais la même chose à petite échelle : savoir qui lit, dans quelle langue, et selon quels critères. J’ai dirigé pendant deux ans un office de tourisme frontalier, j’ai écrit et justifié des dossiers européens, et j’ai audité des organisations de l’extérieur. Je travaille depuis Prats-de-Mollo, à trente minutes de Camprodon par le col d’Ares.',
+      'Ma thèse m’a laissé une méthode : avant d’écrire, savoir qui lit et dans quelle langue. Pendant deux ans, j’ai dirigé l’office de tourisme de Prats. La promotion se faisait en quatre langues et regardait aussi vers le sud, de l’autre côté de la frontière, où Camprodon est à une demi-heure de chez moi par le col d’Ares.',
   },
 
   communication: {
     eyebrow: 'Services',
     title: 'Deux volets de travail',
-    lead: 'Je travaille sur commande, avec un périmètre arrêté par écrit. Mes interlocuteurs habituels sont de petites mairies, des associations culturelles, des offices de tourisme et des structures d’une ou deux personnes qui ont besoin d’une campagne entière sans avoir personne pour la coordonner. Sur les projets transfrontaliers, les deux volets vont généralement de pair : le dossier et la communication qui en découle s’écrivent en même temps.',
+    lead: 'De mon travail sur un projet, le public en voit la communication. Les dossiers et la recherche restent en coulisse et donnent du sens à la campagne : si vous me demandez les deux, par exemple, la campagne part du dossier et utilise des données que j’ai déjà vérifiées. Je travaille sur commande pour des entreprises, dans un périmètre convenu par écrit.',
     offers: [
       {
         title: 'Conseil et produits de communication',
-        body: 'Du plan de communication à la pièce finie : stratégie, identité, rédaction, photo et vidéo. Je produis tout moi-même, et le même parti pris traverse l’affiche, le site et le compte Instagram. J’ai porté la communication institutionnelle de la mairie d’Amélie-les-Bains, puis celle de la destination Haut-Vallespir en quatre langues.',
-        deliverablesLabel: ui.fr['case.deliverables'],
-        deliverables: [
-          'Plan de communication',
-          'Identité visuelle et règles d’usage',
-          'Sites bilingues avec interface d’édition',
-          'Vidéo et photographie',
-          'Calendrier éditorial des réseaux',
-        ],
+        body: 'Nous commençons par la stratégie : de quoi le projet va parler et à qui. Viennent ensuite les pièces, terminées : textes, image, vidéo, site. Je produis tout moi-même. Si le projet le demande, j’y ajoute des outils appuyés sur l’IA et des rapports qui prennent vos données et les rendent lisibles par ceux qui décident.',
       },
       {
         title: 'Rédaction de dossiers et recherche appliquée',
-        body: 'Candidatures à subvention, mémoires et rapports, avec la recherche qui les tient : données de territoire, cartographie d’acteurs, état de la question. J’ai rédigé et justifié des dossiers européens jusqu’à la clôture, coordonné des partenaires de plusieurs pays sur le projet MOVOKEUR du Ministerio de Educación y Cultura, audité des organisations pour un commanditaire extérieur et signé treize publications académiques.',
-        deliverablesLabel: ui.fr['case.deliverables'],
-        deliverables: [
-          'Dossiers de subvention (Fonds 66, EsCaT/POCTEFA, Generalitat)',
-          'Mémoires et rapports de justification',
-          'Études de contexte et cartographie d’acteurs',
-          'Lettres de soutien et conventions de partenariat',
-          'Accompagnement jusqu’à la clôture',
-        ],
+        body: 'La recherche vient d’abord : les données du territoire, la carte de ceux qui y décident. J’écris ensuite le dossier qui va chercher le financement, avec un projet bien justifié, et je le suis jusqu’à la clôture, quand il faut montrer ce qu’on a fait de l’argent. La recherche peut aussi se commander seule, sous la forme d’un diagnostic territorial.',
       },
     ],
   },
@@ -233,35 +237,25 @@ const fr: HomeContent = {
   method: {
     eyebrow: 'Méthode',
     title: 'Comment je me sers des outils d’IA',
-    lead: 'J’utilise des outils d’IA dans presque tout ce que je produis. Ce site en est un exemple : écrit avec l’assistance d’une IA, monté avec Claude Code, et avec la chronologie plus bas comme pièce à juger. Le vrai travail, c’est ce qu’on écarte avant de livrer.',
-    principles: [
-      {
-        title: 'Le pilotage',
-        body: 'L’outil produit de la matière : brouillons, variantes, traductions de travail. Je la réécris, je la coupe ou je la jette. Dans un dossier institutionnel, un paragraphe sorti tel quel d’un modèle se repère aussitôt, et le comité le lit comme un manque d’intérêt pour le projet.',
-      },
-      {
-        title: 'La vérification',
-        body: 'Chaque donnée, citation et référence qui arrive à la livraison, je l’ai vue à la source. Les modèles fabriquent des références vraisemblables avec une facilité remarquable : mauvaise année, revue inexistante, page inventée. La vérification, c’est une heure de travail par dossier, et je ne la saute jamais.',
-      },
-      {
-        title: 'Les deux langues',
-        body: 'Le catalan et le français s’écrivent en parallèle, chacun depuis zéro. Sur ce territoire, le lecteur institutionnel a souvent les deux versions ouvertes, et une traduction faite trop vite s’entend au registre. Ce site n’a pas de version principale : les deux routes sont générées ensemble, et le sélecteur du haut ne recharge rien.',
-      },
+    lead: 'Si vous faites tourner une petite mairie ou une association, vous vous servez probablement déjà d’un assistant d’IA pour les tâches courantes : résumer un rapport, rédiger un courriel délicat.',
+    story: [
+      'Sur cette base, nous nous comprenons vite et je peux emmener votre projet plus loin avec des outils pensés pour lui : une petite application, une chaîne de traitement interne, un produit de communication. Si vous recevez par courriel des propositions d’activités, chacune rédigée à sa façon, un modèle peut en tirer une fiche par proposition, toujours avec les mêmes champs : qui l’organise, ce qu’on y fait, où et quand. Je monte cette chaîne et je décide à quel moment une personne relit les fiches avant leur publication.',
+      'Vous avez les résultats plus tôt et mieux faits. Un modèle peut vous donner, avec le même aplomb que le reste, la citation d’une revue qui n’existe pas. Un paragraphe de dossier qui en sort tel quel, un comité d’évaluation le repère aussitôt et le lit comme un manque d’intérêt pour le projet. Je connais assez les outils pour les mener vers une meilleure version et assez le métier pour voir quand elle n’y est pas encore.',
     ],
     boundary:
-      'Je ne vends ni implantation d’IA ni formation à des logiciels. Ce qui se contracte, c’est le produit fini.',
+      'Les données et les citations qu’avance un modèle, comme toutes celles de la livraison, je les vérifie à la source ; sur un dossier, j’y passe une heure.',
   },
 
   timeline: {
     eyebrow: 'Parcours',
     title: 'Un parcours en trois axes',
-    lead: 'Le temps, le territoire et la langue en même temps : quand, de quel côté de la frontière et dans quelles langues. Les six langues sortent de ce parcours, chacune du lieu où j’ai vécu.',
+    lead: 'À Barcelone, je travaillais en anglais et je vivais en catalan et en castillan. L’allemand, je l’ai appris pendant la pandémie, entre la Suisse et l’Allemagne.',
   },
 
   cases: {
     eyebrow: 'Cas',
     title: 'Sélection de travaux',
-    lead: 'Six travaux, expliqués de bout en bout : ce qui était demandé, ce que j’ai fait, comment cela s’est terminé, points encore ouverts compris. Certains sont des commandes ; d’autres des postes occupés ou du travail associatif, et ils sont étiquetés.',
+    lead: 'Six travaux, expliqués de bout en bout, points encore ouverts compris. La moitié étaient des emplois ; l’autre moitié, du travail associatif et de la recherche à l’université.',
   },
 
   contact: {

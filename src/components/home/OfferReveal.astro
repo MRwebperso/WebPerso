@@ -16,8 +16,8 @@
  * 21/08/2026): amb el control lligat a l'scroll, per rellegir una frase cal
  * moure la pàgina i es perd el lloc. Amb la maneta, el lector es queda quiet,
  * obre la banda que li interessa i la torna a tancar. La costura descansa al
- * mig: d'entrada es llegeixen els dos titulars i els dos cossos, i els
- * lliurables de cada banda només apareixen quan s'hi empeny —és la part que es
+ * mig: d'entrada es llegeixen els dos titulars i els dos cossos, i les
+ * acotacions del plànol només apareixen quan s'hi empeny —és la part que es
  * guarda per a qui té prou curiositat per obrir-la.
  *
  * Per què el ratolí per sobre i no només l'arrossegament: el gest ha de costar
@@ -146,10 +146,6 @@ const SUN = { cx: 470, cy: 86, r: 36 };
           <p class="copy__num nums">01</p>
           <h3>{comm.title}</h3>
           <p class="copy__body detail">{comm.body}</p>
-          <p class="copy__deliverables ui detail detail--late">
-            <span class="eyebrow">{comm.deliverablesLabel}</span>
-            <span>{comm.deliverables.join(' · ')}</span>
-          </p>
         </div>
       </li>
 
@@ -214,10 +210,6 @@ const SUN = { cx: 470, cy: 86, r: 36 };
           <p class="copy__num nums">02</p>
           <h3>{research.title}</h3>
           <p class="copy__body detail">{research.body}</p>
-          <p class="copy__deliverables ui detail detail--late">
-            <span class="eyebrow">{research.deliverablesLabel}</span>
-            <span>{research.deliverables.join(' · ')}</span>
-          </p>
         </div>
       </li>
     </ol>
@@ -254,25 +246,26 @@ const SUN = { cx: 470, cy: 86, r: 36 };
   /*
    * `--x` és la posició de la costura, de 0 a 1, i és l'única cosa que escriu
    * el guió. El retall de les dues capes, la posició de la maneta i el revelat
-   * dels lliurables en surten per càlcul de CSS: per fotograma només canvia una
+   * del cos i de les acotacions en surten per càlcul de CSS: per fotograma només canvia una
    * variable.
    */
   .stage {
     --x: 0.5;
     /*
-     * Rampes de revelat, tres per banda i encadenades. En repòs cada capa
-     * ensenya el número i el titular i prou; el cos arriba primer i els
-     * lliurables després, que és l'ordre en què es llegirien igualment.
+     * Rampes de revelat, encadenades. En repòs cada capa ensenya el número i
+     * el titular i prou; el cos arriba després del vel. A la banda del plànol
+     * hi ha una tercera rampa, `--more-wire`, que només governa les cotes, i
+     * per això va darrere del cos. La banda de la imatge no en té:
+     * no hi ha res que hagi d'arribar després del cos.
      *
      * El vel va per davant de tots dos i s'acaba de tancar a 0,57, abans que
      * el cos comenci a aparèixer a 0,54 i molt abans que sigui llegible: així
      * no hi ha cap moment amb text a mig aparèixer sobre la imatge sense
-     * protegir. Totes tres s'acaben cap a 0,76, prou lluny del topall perquè
-     * no calgui empènyer fins al final per llegir l'última línia.
+     * protegir. Les rampes s'acaben cap a 0,76, prou lluny del topall perquè
+     * no calgui empènyer fins al final per llegir el cos o veure les cotes.
      */
     --veil-render: clamp(0, calc((var(--x) - 0.5) * 14), 1);
     --open-render: clamp(0, calc((var(--x) - 0.54) * 8.3), 1);
-    --more-render: clamp(0, calc((var(--x) - 0.64) * 8.3), 1);
     --veil-wire: clamp(0, calc((0.5 - var(--x)) * 14), 1);
     --open-wire: clamp(0, calc((0.46 - var(--x)) * 8.3), 1);
     --more-wire: clamp(0, calc((0.36 - var(--x)) * 8.3), 1);
@@ -351,14 +344,6 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     margin-top: var(--space-3);
   }
 
-  .copy__deliverables {
-    margin-top: var(--space-6);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    color: var(--ink-soft);
-  }
-
   .handle,
   .hint {
     display: none;
@@ -371,9 +356,10 @@ const SUN = { cx: 470, cy: 86, r: 36 };
    */
   .stage[data-mode='split'] .stage__pin {
     /* 32rem de terra: és l'alçada que demana el bloc de text més alt —número,
-       titular a dues línies, cos i lliurables— amb els lliurables ja comptats,
-       encara que estiguin tancats. Reservar-los l'espai des del principi és el
-       que fa que obrir-los no mogui res de lloc. */
+       titular a dues línies i cos—. Va ser calibrada quan el bloc encara
+       portava un bloc més; ara ha de ser remesurada al navegador. El cos
+       ocupa el seu lloc des del principi encara que estigui tancat: és el que
+       fa que obrir-lo no mogui res. */
     height: clamp(32rem, 70svh, 42rem);
     overflow: hidden;
     cursor: ew-resize;
@@ -392,7 +378,7 @@ const SUN = { cx: 470, cy: 86, r: 36 };
   /*
    * Les dues capes es reparteixen el rectangle sense encavalcar-se: el que
    * amaga l'una és exactament el que ensenya l'altra. Cada capa fixa aquí les
-   * seves quatre variables —fons, vel, cos, lliurables— i tot el que hi ha a
+   * seves variables —fons, vel, cos i, al plànol, cotes— i tot el que hi ha a
    * dins les hereta; així les regles de detall no han de saber en quina banda
    * són ni repetir-se dues vegades.
    */
@@ -400,7 +386,6 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     --layer-bg: var(--paper);
     --veil: var(--veil-render);
     --open: var(--open-render);
-    --more: var(--more-render);
     background: var(--layer-bg);
     clip-path: inset(0 calc((1 - var(--x)) * 100%) 0 0);
   }
@@ -465,7 +450,7 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     bottom: var(--space-8);
     z-index: 1;
     /* 44%: amb la costura al mig cap dels dos textos no queda tallat, i per
-       tant d'entrada es llegeixen els dos sencers menys els lliurables. */
+       tant d'entrada es llegeixen els dos sencers. */
     max-width: min(38ch, 44%);
   }
 
@@ -478,12 +463,8 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     text-align: right;
   }
 
-  .stage[data-mode='split'] .copy--right .copy__deliverables {
-    align-items: flex-end;
-  }
-
   /*
-   * La recompensa. El cos i els lliurables ocupen el seu lloc des del principi
+   * La recompensa. El cos ocupa el seu lloc des del principi
    * encara que no es vegin: si l'espai no estigués reservat, obrir la banda
    * empenyeria el titular amunt i la peça saltaria a cada moviment de la mà.
    */
@@ -492,12 +473,8 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     transform: translateY(calc((1 - var(--open)) * 0.5rem));
   }
 
-  .stage[data-mode='split'] .detail--late {
-    --open: var(--more);
-  }
-
-  /* Les acotacions del plànol van amb els lliurables: són l'últim tram i la
-     part que només veu qui ha obert la banda del tot. */
+  /* Les acotacions del plànol són l'últim tram, darrere del cos: la part que
+     només veu qui ha obert la banda del tot. */
   .stage[data-mode='split'] .wire-notes {
     opacity: var(--more);
   }

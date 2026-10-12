@@ -24,9 +24,11 @@ import type { LangKey } from './timeline';
  * - **Les etiquetes de la fitxa** (`factLabels`). Són interfície, no contingut:
  *   canvien quan canvia la plantilla, no quan es publica un cas.
  *
- * La portada i la cronologia tampoc no s'han migrat, pel mateix motiu: el nucli
- * invariant de la secció 2.1 i la geometria del diagrama són on la garantia de
- * tipus val més i on el contingut es toca menys.
+ * La portada i la cronologia tampoc no s'han migrat, pel mateix motiu: les
+ * tuples de la portada (ofertes, línies de servei, relat del mètode) i la
+ * geometria del diagrama són on la garantia de tipus val més. La presentació ja
+ * no és un text intocable (decisió de Miquel, 12/10/2026), però continua en
+ * TypeScript perquè la paritat CA–FR hi és imposada pel tipus.
  */
 
 /** Text d'un cas en una llengua, tal com el deixa l'esquema de la col·lecció. */

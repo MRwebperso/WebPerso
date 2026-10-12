@@ -1,4 +1,18 @@
 ---
+/**
+ * Presentació (#presentacio), reconstruïda el 12/10/2026 (D1, D7) en coherència
+ * amb l'oferta i el mètode: `h1` → primer paràgraf (color ple) → llista de tres
+ * serveis, cadascun enllaçat a la seva secció → segon paràgraf (color de lead).
+ * La llista fa que el lector arribi al servei que busca sense recórrer la
+ * pàgina, i el segon paràgraf, que ve després, queda com a context i no com a
+ * porta d'entrada.
+ *
+ * Els enllaços no duen cap regla pròpia: la global `a` (base.css) ja els
+ * subratlla amb el gruix fi del lloc i `a:hover` els pinta amb `--accent`, que
+ * al tema fosc és el groc (10,32:1 sobre `--paper`, 9,26:1 sobre
+ * `--paper-sunk`). Una regla local duplicaria el que ja fa tota la interacció
+ * del lloc i quedaria desfasada al primer canvi de color.
+ */
 import { home } from '../../data/home';
 import type { Lang } from '../../i18n/utils';
 
@@ -18,6 +32,15 @@ const c = home[lang].hero;
     <div>
       <h1 id="presentacio-title">{c.title}</h1>
       <p class="lead hero__intro">{c.intro}</p>
+      <ul class="lead hero__services">
+        {
+          c.services.map((line) => (
+            <li>
+              <a href={`#${line.anchor}`}>{line.text}</a>
+            </li>
+          ))
+        }
+      </ul>
       <p class="lead hero__intro2">{c.intro2}</p>
     </div>
   </div>
@@ -37,7 +60,22 @@ const c = home[lang].hero;
     color: var(--ink);
   }
 
-  /* Un grau per sota del nucli invariant: mateixa mida, el color de lead. */
+  /*
+   * La llista agafa mida, interlínia i color de `.lead`, els mateixos que el
+   * segon paràgraf: són tres línies de la mateixa veu, no una peça a part. Sense
+   * pics ni negreta, perquè el que les distingeix és ser enllaç.
+   */
+  .hero__services {
+    list-style: none;
+    margin: var(--space-6) 0 0;
+    padding: 0;
+  }
+
+  .hero__services li + li {
+    margin-top: var(--space-2);
+  }
+
+  /* Segon paràgraf: mateixa mida que el primer, el color de lead en comptes del ple. */
   .hero__intro2 {
     margin-top: var(--space-6);
   }

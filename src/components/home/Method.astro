@@ -1,9 +1,19 @@
 ---
 /**
- * Secció de mètode (registre 2.4). La IA hi és molt visible i sempre en clau
- * de *com treballo*: cap promesa d'implantar res al client. El fons enfonsat i
- * les tres columnes li donen el mateix pes visual que a la línia de
- * comunicació, sense necessitat de cap efecte.
+ * Secció de mètode (registre 2.4). Des del 12/10/2026 (D4) no es limita a dir
+ * *com treballo*: promet eines pensades per al projecte del client —una
+ * aplicació petita, una cadena de tractament, un producte de comunicació— i diu
+ * qui en controla el resultat. Per això ha caigut l'antic «cap promesa
+ * d'implantar res al client»: la frase-frontera que ho deia («no venc
+ * implantacions d'IA») contradeia l'oferta (D5), i el que es compra ara és
+ * l'eina feta a mida més el criteri de qui verifica el resultat i guia el
+ * model.
+ *
+ * El relat són dos paràgrafs seguits en una sola columna de `--measure`, en lloc
+ * de tres columnes: és prosa que es llegeix d'un cop, no una col·lecció
+ * d'elements comparables. El fons enfonsat li dona el mateix pes visual que a la
+ * línia de comunicació, sense necessitat de cap efecte. El tancament conserva el
+ * filet d'accent: ja no nega res (D5), compromet una verificació.
  */
 import Section from '../Section.astro';
 import { home } from '../../data/home';
@@ -18,48 +28,30 @@ const c = home[lang].method;
 ---
 
 <Section id="metode" eyebrow={c.eyebrow} title={c.title} lead={c.lead} sunk>
-  <ol class="principles">
+  <div class="story">
     {
-      c.principles.map((principle, i) => (
-        <li class="principle reveal" style={`--reveal-i:${i}`}>
-          <p class="principle__num nums">{String(i + 1).padStart(2, '0')}</p>
-          <h3>{principle.title}</h3>
-          <p class="principle__body">{principle.body}</p>
-        </li>
+      c.story.map((paragraph, i) => (
+        <p class="story__p reveal" style={`--reveal-i:${i}`}>
+          {paragraph}
+        </p>
       ))
     }
-  </ol>
+  </div>
 
   <p class="boundary">{c.boundary}</p>
 </Section>
 
 <style>
-  .principles {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: var(--space-8);
+  .story {
+    max-width: var(--measure);
   }
 
-  .principle {
-    border-top: 1px solid var(--rule);
-    padding-top: var(--space-4);
-  }
-
-  .principle__num {
-    margin: 0 0 var(--space-3);
-    font-size: var(--step--1);
-    color: var(--ink-faint);
-  }
-
-  .principle h3 {
-    max-width: 22ch;
-  }
-
-  .principle__body {
-    margin-top: var(--space-3);
+  .story__p {
     color: var(--ink-soft);
+  }
+
+  .story__p + .story__p {
+    margin-top: var(--space-6);
   }
 
   .boundary {
@@ -68,12 +60,5 @@ const c = home[lang].method;
     padding-inline-start: var(--space-6);
     font-size: var(--step-1);
     line-height: var(--leading-snug);
-  }
-
-  @media (min-width: 52rem) {
-    .principles {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-6);
-    }
   }
 </style>
