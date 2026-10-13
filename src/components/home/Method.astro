@@ -14,6 +14,14 @@
  * d'elements comparables. El fons enfonsat li dona el mateix pes visual que a la
  * línia de comunicació, sense necessitat de cap efecte. El tancament conserva el
  * filet d'accent: ja no nega res (D5), compromet una verificació.
+ *
+ * Relat i frontera comparteixen un embolcall (`.column`) la `--measure` del qual
+ * es resol a la mida del cos, i no cadascun a la seva. El `ch` segueix la mida
+ * de lletra de qui l'usa: la frontera, en `--step-1`, amb el seu propi
+ * `max-width` sortia 130 px més ampla que el relat a 1280 px (842 contra 712).
+ * L'embolcall hereta la mida del cos, la mateixa que els paràgrafs, i la
+ * frontera només omple l'amplada que li toca; per això l'embolcall no ha de
+ * posar mai cap `font-size`. Decisió de Miquel del 13/10/2026.
  */
 import Section from '../Section.astro';
 import { home } from '../../data/home';
@@ -28,21 +36,26 @@ const c = home[lang].method;
 ---
 
 <Section id="metode" eyebrow={c.eyebrow} title={c.title} lead={c.lead} sunk>
-  <div class="story">
-    {
-      c.story.map((paragraph, i) => (
-        <p class="story__p reveal" style={`--reveal-i:${i}`}>
-          {paragraph}
-        </p>
-      ))
-    }
-  </div>
+  <div class="column">
+    <div class="story">
+      {
+        c.story.map((paragraph, i) => (
+          <p class="story__p reveal" style={`--reveal-i:${i}`}>
+            {paragraph}
+          </p>
+        ))
+      }
+    </div>
 
-  <p class="boundary">{c.boundary}</p>
+    <p class="boundary">{c.boundary}</p>
+  </div>
 </Section>
 
 <style>
-  .story {
+  /* Sense `font-size` a posta: el `ch` de `--measure` ha de resoldre's a la mida
+     del cos (`--step-0`, heretada de `body`), la dels paràgrafs del relat. Qui
+     hi posés una altra mida tornaria a separar la frontera del relat. */
+  .column {
     max-width: var(--measure);
   }
 
@@ -54,8 +67,12 @@ const c = home[lang].method;
     margin-top: var(--space-6);
   }
 
+  /* Dins de `.column` la frontera ja no és fill directe de `.body` i perd el
+     `--space-12` que `Section` dona als germans; se li torna amb el mateix
+     token. L'espai damunt de `.column` el continua posant `Section`, que ara la
+     té a ella de fill directe en lloc de `.story`. */
   .boundary {
-    max-width: var(--measure);
+    margin-top: var(--space-12);
     border-inline-start: 2px solid var(--accent);
     padding-inline-start: var(--space-6);
     font-size: var(--step-1);
