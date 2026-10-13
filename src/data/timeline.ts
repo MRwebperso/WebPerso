@@ -125,7 +125,7 @@ const ca: TimelineContent = {
     {
       title: 'Les Cevenes',
       zoneLabel: 'Cevenes, França',
-      body: 'Creixo en un poble de mitja muntanya, al peu de les Cevenes. Francès com a primera llengua i una comuna petita com a món sencer. Els territoris on treballo avui s’hi assemblen més del que sembla.',
+      body: 'Creixo en un poble de mitja muntanya, al peu de les Cevenes, amb el francès com a primera llengua i una comuna petita com a món sencer. Els territoris on treballo avui s’assemblen a aquest poble.',
     },
     {
       title: 'Évora i Lisboa',
@@ -135,7 +135,7 @@ const ca: TimelineContent = {
     {
       title: 'Barcelona',
       zoneLabel: 'Barcelona, Espanya',
-      body: 'M’instal·lo a Barcelona: dos màsters i un doctorat en comunicació, amb l’anglès com a llengua de treball. La tesi analitza com s’havia explicat la crisi de l’euro en diverses llengües alhora — cum laude i menció de doctorat internacional, amb una estada a la Universitat d’Aarhus. El català i el castellà passen a ser les llengües de cada dia.',
+      body: 'M’instal·lo a Barcelona: dos màsters i un doctorat en comunicació, amb l’anglès com a llengua de treball. La tesi analitza com s’havia explicat la crisi de l’euro en diverses llengües alhora, i obtinc cum laude i menció de doctorat internacional, amb una estada a la Universitat d’Aarhus. El català i el castellà passen a ser les llengües de cada dia.',
     },
     {
       title: 'Projectes europeus',
@@ -151,10 +151,10 @@ const ca: TimelineContent = {
       yearSuffix: '→ avui',
       title: 'Alt Vallespir',
       zoneLabel: 'Prats de Molló, França',
-      body: 'M’estableixo a Prats de Molló, aquesta vegada per quedar-m’hi. Dirigeixo l’oficina de turisme durant dos anys, en quatre llengües i amb la frontera al capdamunt de la vall, i ara treballo per encàrrec als dos costats. Els contactes escampats per Europa acaben servint el poble on visc.',
+      body: 'M’estableixo a Prats de Molló, aquesta vegada per quedar-m’hi. Dirigeixo l’oficina de turisme durant dos anys, en quatre llengües i amb la frontera al capdamunt de la vall, i ara treballo per encàrrec als dos costats. Els contactes escampats per Europa, els aprofito per al poble on visc.',
       aside: {
         label: ui.ca['case.associative'],
-        body: 'Presideixo CLM, l’associació que duu TVallespir. Hi provo formats, eines i maneres de treballar abans de fer-los servir per encàrrec. Les feines fetes des d’allà surten al portfolio etiquetades: no són facturades, i la distinció compta.',
+        body: 'Presideixo CLM, l’associació que duu TVallespir. Hi provo formats, eines i maneres de treballar abans de fer-los servir per encàrrec. Les feines fetes des d’allà surten al portfolio etiquetades, perquè no són facturades.',
       },
     },
   ],
@@ -174,41 +174,41 @@ const fr: TimelineContent = {
   stateLabels: { learning: 'en apprentissage', acquired: 'acquise' },
   axisLabels: { zone: 'Territoire', acquired: 'Acquises', learning: 'En apprentissage' },
   figureNote:
-    'La carte montre l’étape en cours de lecture et celle d’où l’on vient ; la colonne de droite, dans quelles langues. La ligne pointillée est la frontière.',
+    'La carte montre l’étape en cours de lecture et celle d’où l’on vient ; la colonne de droite, dans quelles langues. La ligne pointillée est la frontière.',
   milestones: [
     {
       title: 'Les Cévennes',
       zoneLabel: 'Cévennes, France',
-      body: 'Je grandis dans un village de moyenne montagne, au pied des Cévennes. Le français comme première langue, et une petite commune pour tout horizon. Les territoires où je travaille aujourd’hui y ressemblent plus qu’on ne croit.',
+      body: 'Je grandis dans un village de moyenne montagne, au pied des Cévennes, avec le français pour première langue et une petite commune pour tout horizon. Les territoires où je travaille aujourd’hui ressemblent à ce village.',
     },
     {
       title: 'Évora et Lisbonne',
       zoneLabel: 'Évora et Lisbonne, Portugal',
-      body: 'L’adolescence à Évora, puis une licence d’économie à l’ISEG, à Lisbonne. Le portugais devient la langue de la maison, des cours et de la rue en même temps : premier changement de pays, premier bilinguisme complet. De l’économie, j’ai gardé l’habitude de regarder d’abord les chiffres d’un territoire.',
+      body: 'L’adolescence à Évora, puis une licence d’économie à l’ISEG, à Lisbonne. Le portugais devient la langue de la maison, des cours et de la rue en même temps : premier changement de pays, premier bilinguisme complet. De l’économie, j’ai gardé l’habitude de regarder d’abord les chiffres d’un territoire.',
     },
     {
       title: 'Barcelone',
       zoneLabel: 'Barcelone, Espagne',
-      body: 'Je m’installe à Barcelone : deux masters et un doctorat en communication, l’anglais comme langue de travail. La thèse analyse la manière dont la crise de l’euro s’est racontée dans plusieurs langues à la fois — mention cum laude, doctorat international, avec un séjour à l’université d’Aarhus. Le catalan et le castillan deviennent les langues du quotidien.',
+      body: 'Je m’installe à Barcelone : deux masters et un doctorat en communication, l’anglais comme langue de travail. La thèse analyse la manière dont la crise de l’euro s’est racontée dans plusieurs langues à la fois ; j’obtiens la mention cum laude et la mention de doctorat international, avec un séjour à l’université d’Aarhus. Le catalan et le castillan deviennent les langues du quotidien.',
     },
     {
       title: 'Projets européens',
       zoneLabel: 'Barcelone, avec des déplacements à travers l’Europe',
-      body: 'J’entre dans les projets européens : partenariats, suivi de subventions, organisation de rencontres. Je coordonne des partenaires de plusieurs pays sur le projet MOVOKEUR et j’organise l’atelier international Antipode de 2015. J’apprends à lire un appel à projets par ses critères d’évaluation avant sa description.',
+      body: 'J’entre dans les projets européens : partenariats, suivi de subventions, organisation de rencontres. Je coordonne des partenaires de plusieurs pays sur le projet MOVOKEUR et j’organise l’atelier international Antipode de 2015. J’apprends à lire un appel à projets par ses critères d’évaluation avant sa description.',
     },
     {
       title: 'Suisse, Allemagne, Vallespir',
       zoneLabel: 'Suisse, Allemagne et Vallespir',
-      body: 'Je quitte la ville. Je passe la pandémie entre la Suisse, l’Allemagne et le Vallespir. En Valais, je fais les vendanges comme saisonnier et, dans le même temps, l’ethnographie des saisonniers pour l’Université de Barcelone : le terrain et le travail sont au même endroit. J’en ressors germanophone.',
+      body: 'Je quitte la ville. Je passe la pandémie entre la Suisse, l’Allemagne et le Vallespir. En Valais, je fais les vendanges comme saisonnier et, dans le même temps, l’ethnographie des saisonniers pour l’Université de Barcelone : le terrain et le travail sont au même endroit. J’en ressors germanophone.',
     },
     {
       yearSuffix: '→ aujourd’hui',
       title: 'Haut-Vallespir',
       zoneLabel: 'Prats-de-Mollo, France',
-      body: 'Je m’installe à Prats-de-Mollo, cette fois pour y rester. Je dirige l’office de tourisme pendant deux ans, en quatre langues et avec la frontière en haut de la vallée, puis je travaille sur commande des deux côtés. Les contacts dispersés en Europe finissent par servir le village où j’habite.',
+      body: 'Je m’installe à Prats-de-Mollo, cette fois pour y rester. Je dirige l’office de tourisme pendant deux ans, en quatre langues et avec la frontière en haut de la vallée, puis je travaille sur commande des deux côtés. Les contacts dispersés en Europe, je m’en sers pour le village où j’habite.',
       aside: {
         label: ui.fr['case.associative'],
-        body: 'Je préside CLM, l’association qui porte TVallespir. J’y essaie des formats, des outils et des façons de travailler avant de les employer sur commande. Les travaux réalisés depuis l’association figurent au portfolio avec leur étiquette : ils ne sont pas facturés, et la distinction compte.',
+        body: 'Je préside CLM, l’association qui porte TVallespir. J’y essaie des formats, des outils et des façons de travailler avant de les employer sur commande. Les travaux réalisés depuis l’association figurent au portfolio avec leur étiquette, car ils ne sont pas facturés.',
       },
     },
   ],
