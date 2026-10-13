@@ -590,7 +590,7 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
     const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
-    /* Repòs al mig: els dos titulars i els dos cossos llegibles alhora. */
+    /* Repòs al mig: els dos titulars llegibles alhora; els cossos esperen que s'empenyi la maneta. */
     const REST = 0.5;
     /* Als extrems queda una franja de l'altra capa. Amb 0 o 1 la maneta se
        n'aniria mig fora del panell, que té el desbordament amagat.
