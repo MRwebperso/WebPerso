@@ -69,47 +69,63 @@ export interface HomeContent {
     eyebrow: string;
     title: string;
     /**
-     * Primer paràgraf de la presentació: tres fets (el doctorat, el lloc de
-     * treball, les llengües). Fins al 12/10/2026 era un text de referència de la
-     * secció 2.1 del brief que no s'havia d'alterar; Miquel va aixecar la
-     * restricció (D1) en demanar de refer la presentació en coherència amb les
-     * tres seccions reescrites, i per això aquest camp ja es pot tocar com els
-     * altres.
+     * Primer paràgraf de la presentació: d'on vinc, de les Cevenes a Prats de
+     * Molló, amb el doctorat pel camí. Des del 13/10/2026 la presentació no
+     * exposa ni els fets ni la promesa de l'oferta: dona una trajectòria i la
+     * voluntat de servei (decisió de Miquel, que va descartar les dues
+     * variants construïdes sobre els fets i sobre la promesa). Fins al
+     * 12/10/2026 aquest camp era un text de referència de la secció 2.1 del
+     * brief que no s'havia d'alterar; Miquel va aixecar la restricció (D1), i
+     * per això es toca com els altres.
      */
     intro: string;
     /**
      * Els tres serveis en tres línies, entre els dos paràgrafs, cadascuna
-     * enllaçada a la seva secció (D7, 12/10/2026): anuncien el visible, el
-     * treball que el sosté i les eines, i el lector hi arriba pel servei que
-     * busca sense haver de llegir la portada de dalt a baix. Tupla: la llargada
-     * i l'ordre han de ser els mateixos en les dues llengües.
+     * enllaçada a la seva secció (D7, 12/10/2026): el visible, el treball que
+     * el sosté i l'ús que faig de la IA. El lector hi arriba pel servei que
+     * busca sense haver de llegir la portada de dalt a baix. Des del
+     * 13/10/2026 la tercera línia ja no ofereix eines: diu com faig servir la
+     * IA, que és el que explica la secció de mètode. Formulada com a servei,
+     * el lector simulat hi llegia un tercer servei que les «dues línies» de
+     * l'oferta no confirmaven. Tupla: la llargada i l'ordre han de ser els
+     * mateixos en les dues llengües.
      */
     services: [ServiceLine, ServiceLine, ServiceLine];
     /**
-     * Segon paràgraf de la presentació (refosa del 4-9-2026, refeta el
-     * 12/10/2026). Va un grau per sota del primer: mateixa mida, el color de
-     * lead en comptes del ple. Hi van els fets de trajectòria (la tesi,
-     * l'oficina de turisme, Camprodon) que ni el primer paràgraf ni la llista
-     * de serveis diuen, i és l'únic lloc de la portada que els pot dir: les
-     * seccions d'oferta i de mètode ja no nomenen cap projecte ni cap entitat.
+     * Segon paràgraf de la presentació (refosa del 4-9-2026, refeta el 12 i el
+     * 13/10/2026). Va un grau per sota del primer: mateixa mida, el color de
+     * lead en comptes del ple. Hi va la vall: l'Alt Vallespir com a vall
+     * aïllada on la comunicació és vital (paraules de Miquel del 13/10/2026),
+     * amb una imatge concreta en lloc d'una màxima, els trenta quilòmetres que
+     * ja diu el cas de «Què fas?». Després, el que hi he fet amb nom propi,
+     * l'oficina de turisme i TVallespir: és l'únic lloc de la portada que els
+     * pot nomenar, perquè les seccions d'oferta i de mètode no diuen cap
+     * projecte ni cap entitat (D3). La xifra de TVallespir porta les xarxes on
+     * es mesura: sola, el lector no sabia de què eren els usuaris.
      */
     intro2: string;
   };
   communication: SectionIntro & { offers: [Offer, Offer] };
   method: SectionIntro & {
     /**
-     * El relat de la secció en dos paràgrafs (D4, 12/10/2026): què s'hi guanya
-     * quan algú que ja fa servir un assistent d'IA treballa amb mi, i qui
-     * controla el resultat. Ocupa el lloc de les tres columnes numerades
-     * d'abans (D5): les tres formes d'eina (aplicació, cadena de tractament,
-     * producte de comunicació) hi surten en prosa i no en llista. Tupla per la
-     * mateixa raó que la resta: la paritat CA–FR la imposa el tipus.
+     * El relat de la secció en dos paràgrafs. Des del 13/10/2026 (decisió de
+     * Miquel) no parteix d'una proposta: reconeix que faig servir la IA i en
+     * presenta un ús crític. El primer paràgraf nomena els riscos (cites
+     * inventades, servidors aliens, instruccions amagades en un correu) i les
+     * precaucions; el segon, el que hi pot guanyar el lector, sigui quina sigui
+     * la seva activitat. La llista d'eines del 12/10 (D4: aplicació, cadena de
+     * tractament, producte de comunicació) ha caigut amb la proposta. De les
+     * dues frases de privacitat que es van proposar, hi va la més prudent, la
+     * que Miquel va confirmar com a certa: no promet més del que es fa. Tupla
+     * per la mateixa raó que la resta: la paritat CA–FR la imposa el tipus.
      */
     story: [string, string];
     /**
      * Compromís de verificació xifrat, no una negació de venda (D5): l'antiga
      * frase («no venc implantacions d'IA») contradeia l'oferta d'eines pensades
-     * per al projecte del client.
+     * per al projecte del client. Des del 13/10/2026 diu que l'hora és només
+     * per a la comprovació: el lector simulat llegia «una hora» com tot el
+     * temps de verificar un dossier sencer, i no s'ho creia.
      */
     boundary: string;
   };
@@ -123,42 +139,42 @@ const ca: HomeContent = {
     eyebrow: 'Miquel Rodrigues · Prats de Molló, Alt Vallespir',
     title: 'Comunicació i recerca als dos costats de la frontera',
     intro:
-      'Soc doctor en comunicació i treballo des de Prats de Molló, en sis llengües.',
+      'Vaig créixer en un poble de les Cevenes. Després d’estudiar a Lisboa, em vaig doctorar en comunicació a Barcelona i hi vaig coordinar socis de diversos països en un projecte de recerca. El 2023 em vaig instal·lar a Prats de Molló per quedar-m’hi.',
     services: [
       { text: 'Comunicació: estratègia i peces acabades', anchor: 'comunicacio' },
       { text: 'Dossiers de finançament i recerca aplicada', anchor: 'comunicacio' },
-      { text: 'Eines d’IA fetes per a cada projecte', anchor: 'metode' },
+      { text: 'Com faig servir la IA, i amb quines precaucions', anchor: 'metode' },
     ],
     intro2:
-      'De la tesi, me n’ha quedat un mètode: abans d’escriure, saber qui llegeix i en quina llengua. Durant dos anys vaig dirigir l’oficina de turisme de Prats. La promoció es feia en quatre llengües i mirava també al sud, a l’altre costat de la frontera, on Camprodon és a mitja hora de casa per la Collada d’Ares.',
+      'L’Alt Vallespir és una vall de muntanya que s’acaba a la frontera. En un lloc tan aïllat, la comunicació és vital: sense ella, ningú no sap què passa a trenta quilòmetres de casa. Del 2023 al 2025 hi vaig dirigir l’oficina de turisme de Prats, i el 2024 vaig llançar TVallespir, un mitjà associatiu i bilingüe que arriba a 150 000 usuaris al mes a Instagram i Facebook. Treballo en sis llengües perquè els projectes d’aquí i de l’altra banda de la frontera arribin més lluny.',
   },
 
   communication: {
     eyebrow: 'Serveis',
     title: 'Dues línies de treball',
-    lead: 'Del que faig per a un projecte, el públic en veu la comunicació. Els dossiers i la recerca queden al darrere i donen sentit a la campanya: si em demanes totes dues coses, per exemple, la campanya parteix del dossier i fa servir dades que ja he comprovat. Treballo per encàrrec per a empreses, amb l’abast acordat per escrit.',
+    lead: 'D’un projecte, el públic en veu la comunicació. El dossier de finançament i la recerca no es veuen, però són els que responen quan algú pregunta per què es fa i què costarà. Si m’encarregues totes dues coses, la campanya parteix de dades que ja he comprovat per al dossier. Treballo per encàrrec per a empreses i ajuntaments, amb l’abast acordat per escrit.',
     offers: [
       {
         title: 'Assessorament i productes de comunicació',
-        body: 'Comencem per l’estratègia: de què parlarà el projecte i a qui. Després en surten les peces, acabades: textos, imatge, vídeo, web. Ho produeixo tot jo. Si el projecte ho demana, hi afegeixo eines basades en IA i informes que agafen les teves dades i les fan llegibles per a qui ha de decidir.',
+        body: 'Primer decidim què ha de dir el projecte, a qui i en quina llengua. Després en surten les peces acabades: textos, imatge, vídeo i web. Les produeixo totes jo, com les del mitjà audiovisual i bilingüe que vaig llançar, que arriba a 150 000 usuaris al mes. Si cal, hi sumo eines d’IA i informes que posen en clar les teves xifres de visites o de vendes.',
       },
       {
         title: 'Redacció de dossiers i recerca aplicada',
-        body: 'La recerca va primer: les dades del territori, el mapa de qui hi decideix. Després escric el dossier que va a buscar el finançament, amb el projecte ben justificat, i el segueixo fins al tancament, quan toca demostrar què s’ha fet amb els diners. La recerca també es pot encarregar sola, en forma de diagnòstic territorial.',
+        body: 'Cada dossier comença per la recerca: les dades del territori i les institucions que hi decideixen. Llavors l’escric, amb el projecte justificat davant els criteris amb què l’avaluaran, i el segueixo fins al tancament, quan toca demostrar què s’ha fet amb els diners. La recerca també es pot encarregar sola, com a diagnòstic territorial.',
       },
     ],
   },
 
   method: {
     eyebrow: 'Mètode',
-    title: 'Com faig servir les eines d’IA',
-    lead: 'Si portes un ajuntament petit o una associació, probablement ja fas servir un assistent d’IA per a les feines de cada dia: resumir un informe, escriure un correu difícil.',
+    title: 'Un ús crític de la IA',
+    lead: 'Treballo amb eines d’IA, com cada vegada més gent, i hi aplico la mateixa desconfiança que a qualsevol font que encara no he comprovat.',
     story: [
-      'Amb aquesta base ens entenem de seguida i puc portar el teu projecte més lluny amb eines pensades per a ell: una aplicació petita, una cadena de tractament interna, un producte de comunicació. Si reps per correu propostes d’activitats, cadascuna escrita a la seva manera, un model en pot fer una fitxa per proposta, sempre amb els mateixos camps: qui l’organitza, què s’hi fa, on i quan. Jo munto aquesta cadena i decideixo en quin punt una persona revisa les fitxes abans que es publiquin.',
-      'Tens els resultats abans i més ben fets. Un model et pot donar, amb el mateix aplom que la resta, la cita d’una revista que no existeix. Un paràgraf de dossier que en surt tal qual, un comitè d’avaluació el reconeix de seguida i el llegeix com a falta d’interès pel projecte. Conec prou les eines per guiar-les cap a una versió millor i prou l’ofici per veure quan encara no hi és.',
+      'Un model s’inventa una cita amb el mateix aplom que les certes. Un comitè d’avaluació, en canvi, reconeix el paràgraf de dossier que n’ha sortit tal qual, i el llegeix com a falta d’interès pel projecte. El que s’hi escriu pot acabar en servidors que no controles, i un correu pot dur instruccions amagades per a l’eina que el processa. Per això les dades personals i els documents interns no hi entren sense que sàpiga on van a parar, i la IA s’hi limita a feines acotades que una persona valida. Conec l’ofici: veig quan un resultat encara no hi és i sé portar el model cap a una versió millor.',
+      'Amb aquestes precaucions, hi ha molt a guanyar, sigui quina sigui la teva activitat. Una associació que rep per correu propostes d’activitats, cadascuna escrita a la seva manera, en pot treure fitxes amb els mateixos camps sense tornar-les a picar. Un ajuntament pot fer de l’acta d’un ple un resum per al butlletí, i una empresa, ordenar les ressenyes dels clients per saber què li demanen.',
     ],
     boundary:
-      'Les dades i les cites que proposa un model, com totes les del lliurament, les comprovo a la font; en un dossier hi dedico una hora.',
+      'Les dades i les cites que proposa un model, com totes les que lliuro, les comprovo a la font; en un dossier, només aquesta comprovació em porta una hora.',
   },
 
   timeline: {
@@ -208,42 +224,42 @@ const fr: HomeContent = {
     eyebrow: 'Miquel Rodrigues · Prats-de-Mollo, Haut-Vallespir',
     title: 'Communication et recherche des deux côtés de la frontière',
     intro:
-      'Docteur en communication, je travaille depuis Prats-de-Mollo, en six langues.',
+      'J’ai grandi dans un village des Cévennes. Après des études à Lisbonne, j’ai soutenu un doctorat en communication à Barcelone, où j’ai ensuite coordonné des partenaires de plusieurs pays dans un projet de recherche. En 2023, je me suis installé à Prats-de-Mollo pour y rester.',
     services: [
-      { text: 'Communication : stratégie et pièces terminées', anchor: 'comunicacio' },
+      { text: 'Communication : stratégie et supports finis', anchor: 'comunicacio' },
       { text: 'Dossiers de financement et recherche appliquée', anchor: 'comunicacio' },
-      { text: 'Outils d’IA faits pour chaque projet', anchor: 'metode' },
+      { text: 'Comment je me sers de l’IA, et avec quelles précautions', anchor: 'metode' },
     ],
     intro2:
-      'Ma thèse m’a laissé une méthode : avant d’écrire, savoir qui lit et dans quelle langue. Pendant deux ans, j’ai dirigé l’office de tourisme de Prats. La promotion se faisait en quatre langues et regardait aussi vers le sud, de l’autre côté de la frontière, où Camprodon est à une demi-heure de chez moi par le col d’Ares.',
+      'Le Haut-Vallespir est une vallée de montagne qui bute sur la frontière. Dans un endroit aussi isolé, la communication devient vitale : sans elle, personne ne sait ce qui se passe à trente kilomètres de chez soi. De 2023 à 2025, j’y ai dirigé l’office de tourisme de Prats, et en 2024 j’ai lancé TVallespir, un média associatif et bilingue qui touche 150 000 utilisateurs par mois sur Instagram et Facebook. Je travaille en six langues pour que les projets d’ici et de l’autre côté de la frontière portent plus loin.',
   },
 
   communication: {
     eyebrow: 'Services',
     title: 'Deux volets de travail',
-    lead: 'De mon travail sur un projet, le public en voit la communication. Les dossiers et la recherche restent en coulisse et donnent du sens à la campagne : si vous me demandez les deux, par exemple, la campagne part du dossier et utilise des données que j’ai déjà vérifiées. Je travaille sur commande pour des entreprises, dans un périmètre convenu par écrit.',
+    lead: 'Ce que le public voit d’un projet, c’est sa communication. Le dossier de financement et la recherche restent en coulisse, mais ce sont eux qui répondent quand on demande pourquoi le projet se fait et ce qu’il coûtera. Si vous me confiez les deux, la campagne part de données que j’ai déjà vérifiées pour le dossier. Je travaille sur commande pour des entreprises et des mairies, dans un périmètre convenu par écrit.',
     offers: [
       {
         title: 'Conseil et produits de communication',
-        body: 'Nous commençons par la stratégie : de quoi le projet va parler et à qui. Viennent ensuite les pièces, terminées : textes, image, vidéo, site. Je produis tout moi-même. Si le projet le demande, j’y ajoute des outils appuyés sur l’IA et des rapports qui prennent vos données et les rendent lisibles par ceux qui décident.',
+        body: 'On fixe d’abord ce que le projet doit dire, à qui et dans quelle langue. Puis les supports finis : textes, image, vidéo, site. Je les produis moi-même, comme ceux du média audiovisuel bilingue que j’ai lancé, qui touche 150 000 utilisateurs par mois. Au besoin, j’y ajoute des outils d’IA et des rapports qui mettent au clair vos chiffres de fréquentation ou de ventes.',
       },
       {
         title: 'Rédaction de dossiers et recherche appliquée',
-        body: 'La recherche vient d’abord : les données du territoire, la carte de ceux qui y décident. J’écris ensuite le dossier qui va chercher le financement, avec un projet bien justifié, et je le suis jusqu’à la clôture, quand il faut montrer ce qu’on a fait de l’argent. La recherche peut aussi se commander seule, sous la forme d’un diagnostic territorial.',
+        body: 'Chaque dossier commence par la recherche : les données du territoire et les institutions qui y décident. Je l’écris ensuite en justifiant le projet selon les critères qui serviront à l’évaluer, et je le suis jusqu’à la clôture, quand il faut montrer ce qu’on a fait de l’argent. La recherche peut aussi se commander seule, sous forme de diagnostic territorial.',
       },
     ],
   },
 
   method: {
     eyebrow: 'Méthode',
-    title: 'Comment je me sers des outils d’IA',
-    lead: 'Si vous faites tourner une petite mairie ou une association, vous vous servez probablement déjà d’un assistant d’IA pour les tâches courantes : résumer un rapport, rédiger un courriel délicat.',
+    title: 'Un usage critique de l’IA',
+    lead: 'Je travaille avec des outils d’IA, comme de plus en plus de gens, et je leur applique la même méfiance qu’à toute source que je n’ai pas encore vérifiée.',
     story: [
-      'Sur cette base, nous nous comprenons vite et je peux emmener votre projet plus loin avec des outils pensés pour lui : une petite application, une chaîne de traitement interne, un produit de communication. Si vous recevez par courriel des propositions d’activités, chacune rédigée à sa façon, un modèle peut en tirer une fiche par proposition, toujours avec les mêmes champs : qui l’organise, ce qu’on y fait, où et quand. Je monte cette chaîne et je décide à quel moment une personne relit les fiches avant leur publication.',
-      'Vous avez les résultats plus tôt et mieux faits. Un modèle peut vous donner, avec le même aplomb que le reste, la citation d’une revue qui n’existe pas. Un paragraphe de dossier qui en sort tel quel, un comité d’évaluation le repère aussitôt et le lit comme un manque d’intérêt pour le projet. Je connais assez les outils pour les mener vers une meilleure version et assez le métier pour voir quand elle n’y est pas encore.',
+      'Un modèle invente une citation avec le même aplomb que les vraies. Un comité d’évaluation, lui, repère le paragraphe de dossier qui en sort tel quel, et il y lit un manque d’intérêt pour le projet. Ce qu’on y écrit peut finir sur des serveurs que vous ne contrôlez pas, et un courriel peut contenir des instructions cachées destinées à l’outil qui le traite. Alors les données personnelles et les documents internes n’y entrent pas sans que je sache où ils vont, et l’IA s’en tient à des tâches délimitées qu’une personne valide. Je connais le métier : je vois quand un résultat n’y est pas encore, et je sais mener le modèle vers une meilleure version.',
+      'Avec ces précautions, il y a beaucoup à gagner, quelle que soit votre activité. Une association qui reçoit par courriel des propositions d’activités, chacune rédigée à sa façon, peut en tirer des fiches aux mêmes champs sans rien ressaisir. Une mairie peut faire du compte rendu d’un conseil municipal un résumé pour le bulletin, et une entreprise trier les avis de ses clients pour savoir ce qu’ils lui demandent.',
     ],
     boundary:
-      'Les données et les citations qu’avance un modèle, comme toutes celles de la livraison, je les vérifie à la source ; sur un dossier, j’y passe une heure.',
+      'Les données et les citations qu’avance un modèle, comme toutes celles que je livre, je les vérifie à la source ; sur un dossier, cette seule vérification me prend une heure.',
   },
 
   timeline: {
