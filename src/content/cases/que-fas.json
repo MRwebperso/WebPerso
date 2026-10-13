@@ -62,8 +62,8 @@
     ]
   },
   "fr": {
-    "title": "« Què fas ? », l’agenda culturel de Catalogne Nord",
-    "cardTitle": "« Què fas ? »",
+    "title": "« Què fas ? », l’agenda culturel de Catalogne Nord",
+    "cardTitle": "« Què fas ? »",
     "cardSubtitle": "L’agenda culturel de Catalogne Nord, sans aucun coût mensuel",
     "summary": "Un agenda d’événements pour les cinq comarques du nord, construit à la condition de ne rien coûter chaque mois et de rester réparable par une seule personne.",
     "context": "CLM",
@@ -79,15 +79,15 @@
     "chapters": [
       {
         "title": "Le problème",
-        "body": "Les associations culturelles du nord annoncent chacune de son côté, et personne ne sait ce qui se passe à trente kilomètres de chez soi. Concevoir un agrégateur ne présente aucune difficulté. La difficulté vient après, quand l’enthousiasme du début retombe. Les contraintes, je me les suis donc imposées avant de commencer : aucun coût récurrent, aucun compte utilisateur, aucune base de données, et un code que je puisse moi-même réparer dans six mois sans demander d’aide à personne."
+        "body": "Les associations culturelles du nord annoncent chacune de son côté, et personne ne sait ce qui se passe à trente kilomètres de chez soi. Concevoir un agrégateur ne présente aucune difficulté. La difficulté vient après, quand l’enthousiasme du début retombe. Les contraintes, je me les suis donc imposées avant de commencer : aucun coût récurrent, aucun compte utilisateur, aucune base de données, et un code que je puisse moi-même réparer dans six mois sans demander d’aide à personne."
       },
       {
         "title": "Ce que j’ai fait",
-        "body": "Une association écrit un courriel comme elle l’écrirait à une personne. Un modèle de langue en extrait les seize champs de la fiche d’événement, toujours les mêmes et toujours en texte brut, à température zéro. Je relis les fiches dix minutes par semaine et je publie celles qui passent. Le site est du HTML, du CSS et du JavaScript sans framework : il lit un seul fichier de données et affiche chaque événement en catalan au-dessus et en français en dessous, la typographie distinguant les deux langues. La part d’IA fait exactement un travail —transformer de la prose libre en fiche structurée— et rien de ce qu’elle produit n’arrive au public sans passer par la relecture."
+        "body": "Une association écrit un courriel comme elle l’écrirait à une personne. Un modèle de langue en extrait les seize champs de la fiche d’événement, toujours les mêmes et toujours en texte brut, à température zéro. Je relis les fiches dix minutes par semaine et je publie celles qui passent. Le site est du HTML, du CSS et du JavaScript sans framework : il lit un seul fichier de données et affiche chaque événement en catalan au-dessus et en français en dessous, la typographie distinguant les deux langues. La part d’IA fait exactement un travail —transformer de la prose libre en fiche structurée— et rien de ce qu’elle produit n’arrive au public sans passer par la relecture."
       },
       {
         "title": "Où cela en est",
-        "body": "Le site est construit et dans sa forme définitive. De tout ce que j’ai produit, c’est le cas qui explique le mieux comment j’emploie les outils d’IA : une pièce délimitée dans un processus qu’une personne valide. La chaîne d’automatisation est écrite et relue ; il reste à la brancher sur le compte définitif, qui doit être propriétaire à la fois de la boîte, de la feuille et du script."
+        "body": "Le site est construit et dans sa forme définitive. De tout ce que j’ai produit, c’est le cas qui explique le mieux comment j’emploie les outils d’IA : une pièce délimitée dans un processus qu’une personne valide. La chaîne d’automatisation est écrite et relue ; il reste à la brancher sur le compte définitif, qui doit être propriétaire à la fois de la boîte, de la feuille et du script."
       }
     ]
   }
