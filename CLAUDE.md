@@ -14,7 +14,7 @@ npm run build    # esquemes + comprovacions que travessen fitxers, sense tipus
 
 **No hi ha cap framework de proves ni cap linter.** No inventis `npm test`; la xarxa de seguretat són `check` i `build`, i no cobreixen el mateix. `check` no atrapa l'`order` duplicat entre casos ni la carpeta de casos buida, perquè aquestes dues comprovacions viuen en temps d'execució a [getCases()](src/data/cases.ts) i només salten compilant. Si has tocat `src/content/cases/`, l'ordre que val és `build`.
 
-La compilació deixa `.vercel/output/`, no `dist/`. Un `dist/` al disc és sobrer d'abans de l'adaptador.
+El que es desplega és `.vercel/output/`. El `dist/` del disc el refà cada compilació: l'adaptador hi deixa el client i el sitemap abans de copiar-los a `.vercel/output/static/`. És un pas intermedi, ignorat per git; no el llegeixis com la sortida.
 
 ## Paritat CA–FR: tres capes, tres fitxers
 
