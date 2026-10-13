@@ -49,7 +49,7 @@
     "chapters": [
       {
         "title": "El problema",
-        "body": "Les associacions culturals del nord anuncien cadascuna pel seu compte, i el resultat és que ningú no sap què passa a trenta quilòmetres de casa. La dificultat d’un agregador arriba quan l’entusiasme inicial s’apaga. Per això les restriccions me les vaig posar jo abans de començar: codi que jo mateix pugui reparar d’aquí a sis mesos sense demanar ajuda a ningú, cap cost recurrent, cap compte d’usuari i cap base de dades."
+        "body": "Les associacions culturals del nord anuncien cadascuna pel seu compte, i el resultat és que ningú no sap què passa a trenta quilòmetres de casa. La dificultat d’un agregador arriba quan l’entusiasme inicial s’apaga. Per això les restriccions me les vaig posar jo abans de començar: cap cost recurrent, cap compte d’usuari, cap base de dades i un codi que jo mateix pugui reparar d’aquí a sis mesos sense demanar ajuda a ningú."
       },
       {
         "title": "Què vaig fer",
@@ -79,7 +79,7 @@
     "chapters": [
       {
         "title": "Le problème",
-        "body": "Les associations culturelles du nord annoncent chacune de son côté, et personne ne sait ce qui se passe à trente kilomètres de chez soi. La difficulté d’un agrégateur vient quand l’enthousiasme du début retombe. Les contraintes, je me les suis donc imposées avant de commencer : un code que je puisse moi-même réparer dans six mois sans demander d’aide à personne, aucun coût récurrent, aucun compte utilisateur et aucune base de données."
+        "body": "Les associations culturelles du nord annoncent chacune de son côté, et personne ne sait ce qui se passe à trente kilomètres de chez soi. La difficulté d’un agrégateur vient quand l’enthousiasme du début retombe. Les contraintes, je me les suis donc imposées avant de commencer : aucun coût récurrent, aucun compte utilisateur, aucune base de données et un code que je puisse moi-même réparer dans six mois sans demander d’aide à personne."
       },
       {
         "title": "Ce que j’ai fait",
