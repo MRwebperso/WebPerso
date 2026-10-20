@@ -4,8 +4,8 @@ import type { Lang } from '../i18n/utils';
  * Contingut editorial de la one-page.
  *
  * La paritat no és una bona intenció: `ca` i `fr` compleixen la mateixa
- * interfície, i la parella d'ofertes, les tres línies de servei del hero i els
- * dos paràgrafs de relat del mètode són tuples de longitud fixa.
+ * interfície, i la parella d'ofertes i els dos paràgrafs de relat del mètode
+ * són tuples de longitud fixa.
  * Afegir una línia o un paràgraf en una llengua i no en l'altra no compila.
  * Contrapartida assumida: allargar una d'aquestes llistes vol dir tocar el tipus
  * abans de tocar cap text.
@@ -22,18 +22,6 @@ import type { Lang } from '../i18n/utils';
 interface Offer {
   title: string;
   body: string;
-}
-
-/**
- * Una línia de la llista de serveis del hero: el text i la secció a la qual
- * enllaça. Les àncores són els `id` de `Offer.astro` i de `Method.astro`, que
- * no es tradueixen, i per això són iguals en les dues llengües; el tipus les
- * tanca sobre les dues seccions que existeixen, de manera que una àncora
- * escrita malament no compila en lloc de trencar-se en silenci al navegador.
- */
-interface ServiceLine {
-  text: string;
-  anchor: 'comunicacio' | 'metode';
 }
 
 interface SectionIntro {
@@ -76,21 +64,12 @@ export interface HomeContent {
      * variants construïdes sobre els fets i sobre la promesa). Fins al
      * 12/10/2026 aquest camp era un text de referència de la secció 2.1 del
      * brief que no s'havia d'alterar; Miquel va aixecar la restricció (D1), i
-     * per això es toca com els altres.
+     * per això es toca com els altres. El 20/10/2026 Miquel el va demanar més
+     * llarg: hi entren les llengües de cada etapa, que fins aleshores eren el
+     * lead de la trajectòria, i el treball de camp al Valais. Així les sis
+     * llengües del segon paràgraf ja no arriben soles.
      */
     intro: string;
-    /**
-     * Els tres serveis en tres línies, entre els dos paràgrafs, cadascuna
-     * enllaçada a la seva secció (D7, 12/10/2026): el visible, el treball que
-     * el sosté i l'ús que faig de la IA. El lector hi arriba pel servei que
-     * busca sense haver de llegir la portada de dalt a baix. Des del
-     * 13/10/2026 la tercera línia ja no ofereix eines: diu com faig servir la
-     * IA, que és el que explica la secció de mètode. Formulada com a servei,
-     * el lector simulat hi llegia un tercer servei que les «dues línies» de
-     * l'oferta no confirmaven. Tupla: la llargada i l'ordre han de ser els
-     * mateixos en les dues llengües.
-     */
-    services: [ServiceLine, ServiceLine, ServiceLine];
     /**
      * Segon paràgraf de la presentació (refosa del 4-9-2026, refeta el 12 i el
      * 13/10/2026). Va un grau per sota del primer: mateixa mida, el color de
@@ -98,10 +77,13 @@ export interface HomeContent {
      * aïllada on la comunicació és vital (paraules de Miquel del 13/10/2026),
      * amb una imatge concreta en lloc d'una màxima, els trenta quilòmetres que
      * ja diu el cas de «Què fas?». Després, el que hi he fet amb nom propi,
-     * l'oficina de turisme i TVallespir: és l'únic lloc de la portada que els
-     * pot nomenar, perquè les seccions d'oferta i de mètode no diuen cap
-     * projecte ni cap entitat (D3). La xifra de TVallespir porta les xarxes on
-     * es mesura: sola, el lector no sabia de què eren els usuaris.
+     * TVallespir: és l'únic lloc de la portada que el pot nomenar, perquè les
+     * seccions d'oferta i de mètode no diuen cap projecte ni cap entitat (D3).
+     * La xifra de TVallespir porta les xarxes on es mesura: sola, el lector no
+     * sabia de què eren els usuaris. L'oficina de turisme en va sortir el
+     * 20/10/2026: Miquel no la veu pertinent a la presentació, i els casos ja
+     * la conten. El mateix dia va caure la llista de tres serveis enllaçats
+     * que anava entre els dos paràgrafs (D7).
      */
     intro2: string;
   };
@@ -121,38 +103,39 @@ export interface HomeContent {
      */
     story: [string, string];
     /**
-     * Compromís de verificació xifrat, no una negació de venda (D5): l'antiga
-     * frase («no venc implantacions d'IA») contradeia l'oferta d'eines pensades
-     * per al projecte del client. Des del 13/10/2026 diu que l'hora és només
-     * per a la comprovació: el lector simulat llegia «una hora» com tot el
-     * temps de verificar un dossier sencer, i no s'ho creia.
+     * La frase destacada amb el filet d'accent. Des del 20/10/2026 diu el
+     * coneixement d'especialista que fa possible supervisar, reconduir i
+     * verificar el que produeix la IA (decisió de Miquel). Substitueix el
+     * compromís de verificació xifrat de D5 («les comprovo a la font; […] una
+     * hora»), que Miquel no volia destacar. Tampoc no torna l'antiga negació
+     * de venda («no venc implantacions d'IA»).
      */
     boundary: string;
   };
-  timeline: SectionIntro;
+  /**
+   * Sense lead des del 20/10/2026: el paràgraf de les llengües va passar al
+   * primer de la presentació, i el seu lloc l'ocuparà l'enllaç al CV dinàmic
+   * que Miquel ha de passar.
+   */
+  timeline: Omit<SectionIntro, 'lead'>;
   cases: SectionIntro;
   contact: SectionIntro & { emailLabel: string; form: ContactForm };
 }
 
 const ca: HomeContent = {
   hero: {
-    eyebrow: 'Miquel Rodrigues · Prats de Molló, Alt Vallespir',
-    title: 'Comunicació i recerca als dos costats de la frontera',
+    eyebrow: 'Miquel Rodrigues',
+    title: 'Comunicació i recerca aplicades a les teves necessitats',
     intro:
-      'Vaig créixer en un poble de les Cevenes. Després d’estudiar a Lisboa, em vaig doctorar en comunicació a Barcelona i hi vaig coordinar socis de diversos països en un projecte de recerca. El 2023 em vaig instal·lar a Prats de Molló per quedar-m’hi.',
-    services: [
-      { text: 'Comunicació: estratègia i peces acabades', anchor: 'comunicacio' },
-      { text: 'Dossiers de finançament i recerca aplicada', anchor: 'comunicacio' },
-      { text: 'Com faig servir la IA, i amb quines precaucions', anchor: 'metode' },
-    ],
+      'Vaig créixer en un poble de les Cevenes i vaig estudiar economia a Lisboa, on el portuguès es va convertir en la llengua de cada dia. A Barcelona em vaig doctorar en comunicació, amb una tesi sobre com es va explicar la crisi de l’euro en diverses llengües alhora. Hi vaig coordinar socis de diferents països en un projecte de recerca europeu, en anglès, mentre vivia en català i en castellà. Vaig passar la pandèmia entre Suïssa i Alemanya: al Valais feia la verema com a temporer i, alhora, l’etnografia dels temporers per a la Universitat de Barcelona. En vaig tornar parlant alemany. El 2023 em vaig instal·lar a Prats de Molló per quedar-m’hi.',
     intro2:
-      'L’Alt Vallespir és una vall de muntanya que s’acaba a la frontera. En un lloc tan aïllat, la comunicació és vital: sense ella, ningú no sap què passa a trenta quilòmetres de casa. Del 2023 al 2025 hi vaig dirigir l’oficina de turisme de Prats, i el 2024 vaig llançar TVallespir, un mitjà associatiu i bilingüe que arriba a 150 000 usuaris al mes a Instagram i Facebook. Treballo en sis llengües perquè els projectes d’aquí i de l’altra banda de la frontera arribin més lluny.',
+      'L’Alt Vallespir és una vall de muntanya que s’acaba a la frontera. En un lloc tan aïllat, la comunicació és vital: sense ella, ningú no sap què passa a trenta quilòmetres de casa. El 2024 hi vaig llançar TVallespir, un mitjà associatiu i bilingüe que arriba a 150 000 usuaris al mes a Instagram i Facebook. Treballo en sis llengües perquè els projectes d’aquí i de l’altra banda de la frontera arribin més lluny.',
   },
 
   communication: {
     eyebrow: 'Serveis',
     title: 'Dues línies de treball',
-    lead: 'D’un projecte, el públic en veu la comunicació. El dossier de finançament i la recerca no es veuen, però són els que responen quan algú pregunta per què es fa i què costarà. Si m’encarregues totes dues coses, la campanya parteix de dades que ja he comprovat per al dossier. Treballo per encàrrec per a empreses i ajuntaments, amb l’abast acordat per escrit.',
+    lead: 'D’un projecte, el públic en veu la comunicació. El dossier de finançament i la recerca no es veuen, però són els que responen quan algú pregunta per què es fa i què costarà. Treballo per encàrrec per a empreses i ajuntaments, amb l’abast acordat per escrit.',
     offers: [
       {
         title: 'Assessorament i productes de comunicació',
@@ -174,19 +157,18 @@ const ca: HomeContent = {
       'Amb aquestes precaucions, hi ha molt a guanyar, sigui quina sigui la teva activitat. Una associació que rep per correu propostes d’activitats, cadascuna escrita a la seva manera, en pot treure fitxes amb els mateixos camps sense tornar-les a picar. Un ajuntament pot fer de l’acta d’un ple un resum per al butlletí, i una empresa, ordenar les ressenyes dels clients per saber què li demanen.',
     ],
     boundary:
-      'Les dades i les cites que proposa un model, com totes les que lliuro, les comprovo a la font; en un dossier, només aquesta comprovació em porta una hora.',
+      'Tinc els coneixements d’especialista que calen per supervisar la qualitat del que produeix la IA, reconduir-la quan s’equivoca i comprovar-ne les dades a la font.',
   },
 
   timeline: {
     eyebrow: 'Trajectòria',
     title: 'Una trajectòria en tres eixos',
-    lead: 'A Barcelona treballava en anglès i vivia en català i en castellà. L’alemany el vaig aprendre durant la pandèmia, entre Suïssa i Alemanya.',
   },
 
   cases: {
     eyebrow: 'Casos',
     title: 'Selecció de feines',
-    lead: 'Sis feines, explicades de cap a cap, inclosos els punts que continuen oberts. La meitat eren llocs de treball; l’altra meitat, feina associativa i recerca a la universitat.',
+    lead: 'Una mostra del que he fet, en sis feines explicades de cap a cap, inclosos els punts que continuen oberts.',
   },
 
   contact: {
@@ -221,23 +203,18 @@ const ca: HomeContent = {
 
 const fr: HomeContent = {
   hero: {
-    eyebrow: 'Miquel Rodrigues · Prats-de-Mollo, Haut-Vallespir',
-    title: 'Communication et recherche des deux côtés de la frontière',
+    eyebrow: 'Miquel Rodrigues',
+    title: 'Communication et recherche appliquées à vos besoins',
     intro:
-      'J’ai grandi dans un village des Cévennes. Après des études à Lisbonne, j’ai soutenu un doctorat en communication à Barcelone, où j’ai ensuite coordonné des partenaires de plusieurs pays dans un projet de recherche. En 2023, je me suis installé à Prats-de-Mollo pour y rester.',
-    services: [
-      { text: 'Communication : stratégie et supports finis', anchor: 'comunicacio' },
-      { text: 'Dossiers de financement et recherche appliquée', anchor: 'comunicacio' },
-      { text: 'Comment je me sers de l’IA, et avec quelles précautions', anchor: 'metode' },
-    ],
+      'J’ai grandi dans un village des Cévennes, puis j’ai étudié l’économie à Lisbonne, où le portugais est devenu la langue de tous les jours. À Barcelone, j’ai soutenu un doctorat en communication, avec une thèse sur la manière dont la crise de l’euro s’est racontée en plusieurs langues à la fois. J’y ai ensuite coordonné des partenaires de différents pays sur un projet de recherche européen. Je travaillais en anglais, je vivais en catalan et en castillan. J’ai passé la pandémie entre la Suisse et l’Allemagne : en Valais, je faisais les vendanges comme saisonnier et, en même temps, l’ethnographie des saisonniers pour l’Université de Barcelone. J’en suis revenu germanophone. En 2023, je me suis installé à Prats-de-Mollo pour y rester.',
     intro2:
-      'Le Haut-Vallespir est une vallée de montagne qui bute sur la frontière. Dans un endroit aussi isolé, la communication devient vitale : sans elle, personne ne sait ce qui se passe à trente kilomètres de chez soi. De 2023 à 2025, j’y ai dirigé l’office de tourisme de Prats, et en 2024 j’ai lancé TVallespir, un média associatif et bilingue qui touche 150 000 utilisateurs par mois sur Instagram et Facebook. Je travaille en six langues pour que les projets d’ici et de l’autre côté de la frontière portent plus loin.',
+      'Le Haut-Vallespir est une vallée de montagne qui bute sur la frontière. Dans un endroit aussi isolé, la communication devient vitale : sans elle, personne ne sait ce qui se passe à trente kilomètres de chez soi. En 2024, j’y ai lancé TVallespir, un média associatif et bilingue qui touche 150 000 utilisateurs par mois sur Instagram et Facebook. Je travaille en six langues pour que les projets d’ici et de l’autre côté de la frontière portent plus loin.',
   },
 
   communication: {
     eyebrow: 'Services',
     title: 'Deux volets de travail',
-    lead: 'Ce que le public voit d’un projet, c’est sa communication. Le dossier de financement et la recherche restent en coulisse, mais ce sont eux qui répondent quand on demande pourquoi le projet se fait et ce qu’il coûtera. Si vous me confiez les deux, la campagne part de données que j’ai déjà vérifiées pour le dossier. Je travaille sur commande pour des entreprises et des mairies, dans un périmètre convenu par écrit.',
+    lead: 'Ce que le public voit d’un projet, c’est sa communication. Le dossier de financement et la recherche restent en coulisse, mais ce sont eux qui répondent quand on demande pourquoi le projet se fait et ce qu’il coûtera. Je travaille sur commande pour des entreprises et des mairies, dans un périmètre convenu par écrit.',
     offers: [
       {
         title: 'Conseil et produits de communication',
@@ -259,19 +236,18 @@ const fr: HomeContent = {
       'Avec ces précautions, il y a beaucoup à gagner, quelle que soit votre activité. Une association qui reçoit par courriel des propositions d’activités, chacune rédigée à sa façon, peut en tirer des fiches aux mêmes champs sans rien ressaisir. Une mairie peut faire du compte rendu d’un conseil municipal un résumé pour le bulletin, et une entreprise trier les avis de ses clients pour savoir ce qu’ils lui demandent.',
     ],
     boundary:
-      'Les données et les citations qu’avance un modèle, comme toutes celles que je livre, je les vérifie à la source ; sur un dossier, cette seule vérification me prend une heure.',
+      'J’ai les connaissances de spécialiste qu’il faut pour superviser la qualité de ce que produit l’IA, la recadrer quand elle se trompe et en vérifier les données à la source.',
   },
 
   timeline: {
     eyebrow: 'Parcours',
     title: 'Un parcours en trois axes',
-    lead: 'À Barcelone, je travaillais en anglais et je vivais en catalan et en castillan. L’allemand, je l’ai appris pendant la pandémie, entre la Suisse et l’Allemagne.',
   },
 
   cases: {
     eyebrow: 'Cas',
     title: 'Sélection de travaux',
-    lead: 'Six travaux, expliqués de bout en bout, points encore ouverts compris. La moitié étaient des emplois ; l’autre moitié, du travail associatif et de la recherche à l’université.',
+    lead: 'Un aperçu de ce que j’ai fait, en six travaux expliqués de bout en bout, points encore ouverts compris.',
   },
 
   contact: {
