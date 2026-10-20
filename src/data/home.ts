@@ -113,11 +113,14 @@ export interface HomeContent {
     boundary: string;
   };
   /**
-   * Sense lead des del 20/10/2026: el paràgraf de les llengües va passar al
-   * primer de la presentació, i el seu lloc l'ocuparà l'enllaç al CV dinàmic
-   * que Miquel ha de passar.
+   * Sense lead de text des del 20/10/2026: el paràgraf de les llengües va
+   * passar al primer de la presentació, i el seu lloc l'ocupa l'enllaç a La
+   * Ruta, el CV dinàmic (Miquel, 20/10/2026, variant A en les dues llengües).
+   * `text` és la frase i `label` el text de l'enllaç; la fletxa la posa el
+   * component. El francès diu que la peça és en català: Miquel no la tradueix,
+   * perquè el que vol és que el català hi sigui pertinent.
    */
-  timeline: Omit<SectionIntro, 'lead'>;
+  timeline: Omit<SectionIntro, 'lead'> & { ruta: { text: string; label: string } };
   cases: SectionIntro;
   contact: SectionIntro & { emailLabel: string; form: ContactForm };
 }
@@ -163,6 +166,7 @@ const ca: HomeContent = {
   timeline: {
     eyebrow: 'Trajectòria',
     title: 'Una trajectòria en tres eixos',
+    ruta: { text: 'La mateixa trajectòria, en moviment:', label: 'La Ruta' },
   },
 
   cases: {
@@ -242,6 +246,7 @@ const fr: HomeContent = {
   timeline: {
     eyebrow: 'Parcours',
     title: 'Un parcours en trois axes',
+    ruta: { text: 'Le même parcours, en mouvement et en catalan :', label: 'La Ruta' },
   },
 
   cases: {

@@ -55,7 +55,16 @@ const { id, eyebrow, title, lead, sunk = false, figure = false } = Astro.props;
     </div>
     <div class="body">
       <h2 id={`${id}-title`}>{title}</h2>
-      {lead && <p class="lead section__lead">{lead}</p>}
+      {/* El slot `lead` és per al lead que porta més que text: la trajectòria hi
+           posa l'enllaç a La Ruta (20/10/2026). Mateixa classe i mateix marge que
+           el `lead` de text, que en queda com a contingut per omissió. */}
+      {
+        (lead || Astro.slots.has('lead')) && (
+          <p class="lead section__lead">
+            <slot name="lead">{lead}</slot>
+          </p>
+        )
+      }
       <slot />
     </div>
     <slot name="wide" />

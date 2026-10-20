@@ -36,6 +36,15 @@ const steps = milestones.map((milestone, i) => {
 ---
 
 <Section id="trajectoria" eyebrow={intro.eyebrow} title={intro.title} figure>
+  {/* La Ruta no és una pàgina d'aquest projecte: `vercel.json` reescriu /ruta/
+       cap al projecte de Vercel de la-ruta, i a `astro dev` l'enllaç dona 404.
+       Fora del registre de rutes de `utils.ts` a posta: és en català a les dues
+       llengües (Miquel, 20/10/2026), d'aquí el `hreflang`. La fletxa, amb espai
+       insecable, no baixa mai sola de línia. */}
+  <Fragment slot="lead">
+    {intro.ruta.text}{' '}
+    <a href="/ruta/" hreflang="ca">{intro.ruta.label}<span aria-hidden="true">{' →'}</span></a>
+  </Fragment>
   <div class="scrolly" slot="wide" data-timeline>
     <div class="scrolly__figure">
       <TimelineFigure lang={lang} />
