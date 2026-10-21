@@ -9,12 +9,12 @@ import type { LangKey, LangState } from './lang-keys';
  * i no es tradueixen (la geometria del dibuix viu a `timeline-instrument.ts`):
  * el diagrama es dibuixa dels mateixos números en les dues llengües.
  * Només els textos van per llengua, i la paritat la imposen els tipus: sis
- * fites en tupla, el text de cada fita en `Record` per `id` i les sis llengües
- * en `Record`. Afegir una fita o una llengua en una llengua i no en l'altra no
- * compila.
+ * fites en tupla i el text de cada fita en `Record` per `id`. Afegir una fita
+ * en una llengua i no en l'altra no compila.
  *
- * El vocabulari de l'eix llengua (`langKeys`, `LangKey`, `LangState`) és a
- * `lang-keys.ts`: qui el necessita no ha d'arrossegar el text d'aquest fitxer.
+ * El vocabulari de l'eix llengua (`langKeys`, `LangKey`, `LangState`) i els
+ * noms de les sis llengües (`langNames`) són a `lang-keys.ts`: qui els
+ * necessita no ha d'arrossegar el text d'aquest fitxer.
  */
 
 export const zoneKeys = ['europa', 'nord', 'sud'] as const;
@@ -99,7 +99,6 @@ interface MilestoneCopy {
 export interface TimelineContent {
   zoneNames: Record<Zone, string>;
   frontier: string;
-  langNames: Record<LangKey, string>;
   stateLabels: { learning: string; acquired: string };
   axisLabels: { zone: string; acquired: string; learning: string };
   figureNote: string;
@@ -114,14 +113,6 @@ export interface TimelineContent {
 const ca: TimelineContent = {
   zoneNames: { europa: 'Europa', nord: 'Nord', sud: 'Sud' },
   frontier: 'Frontera',
-  langNames: {
-    fr: 'francès',
-    pt: 'portuguès',
-    ca: 'català',
-    es: 'castellà',
-    en: 'anglès',
-    de: 'alemany',
-  },
   stateLabels: { learning: 'en aprenentatge', acquired: 'adquirida' },
   axisLabels: { zone: 'Territori', acquired: 'Adquirides', learning: 'En aprenentatge' },
   figureNote:
@@ -168,14 +159,6 @@ const ca: TimelineContent = {
 const fr: TimelineContent = {
   zoneNames: { europa: 'Europe', nord: 'Nord', sud: 'Sud' },
   frontier: 'Frontière',
-  langNames: {
-    fr: 'français',
-    pt: 'portugais',
-    ca: 'catalan',
-    es: 'castillan',
-    en: 'anglais',
-    de: 'allemand',
-  },
   stateLabels: { learning: 'en apprentissage', acquired: 'acquise' },
   axisLabels: { zone: 'Territoire', acquired: 'Acquises', learning: 'En apprentissage' },
   figureNote:

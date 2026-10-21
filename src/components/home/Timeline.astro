@@ -13,7 +13,7 @@
 import Section from '../Section.astro';
 import TimelineFigure from './TimelineFigure.astro';
 import { home } from '../../data/home';
-import { langKeys } from '../../data/lang-keys';
+import { langKeys, langNames } from '../../data/lang-keys';
 import { milestones, timeline } from '../../data/timeline';
 import { encodeLangs } from '../../data/timeline-instrument';
 import { homeSections, type Lang } from '../../i18n/utils';
@@ -31,8 +31,8 @@ const steps = milestones.map((milestone) => {
   return {
     milestone,
     copy,
-    acquired: langKeys.filter((key) => milestone.langs[key] === 2).map((key) => c.langNames[key]),
-    learning: langKeys.filter((key) => milestone.langs[key] === 1).map((key) => c.langNames[key]),
+    acquired: langKeys.filter((key) => milestone.langs[key] === 2).map((key) => langNames[lang][key]),
+    learning: langKeys.filter((key) => milestone.langs[key] === 1).map((key) => langNames[lang][key]),
   };
 });
 ---

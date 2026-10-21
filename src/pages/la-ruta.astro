@@ -16,14 +16,12 @@
 import '../styles/base.css';
 import { getCases } from '../data/cases';
 import { stagesFor, stageForYear } from '../data/ruta';
-import { langKeys } from '../data/lang-keys';
-import { timeline } from '../data/timeline';
+import { langKeys, langNames } from '../data/lang-keys';
 import TravessaList from '../components/travessa/TravessaList.astro';
 import CaseInset from '../components/travessa/CaseInset.astro';
 
 const cases = await getCases();
 const stages = stagesFor('ca');
-const c = timeline.ca;
 
 // Cada cas s'asseu al despatx de la seva època per any; l'ordre de lectura
 // (`order`) el conserva el mode llista. Les dues coses alhora, com a la v1.
@@ -137,7 +135,7 @@ const deskCases = stages.map((s) =>
           {
             langKeys.map((key) => (
               <li data-lang={key} data-state="0">
-                <span>{c.langNames[key]}</span>
+                <span>{langNames.ca[key]}</span>
               </li>
             ))
           }
@@ -159,12 +157,11 @@ const deskCases = stages.map((s) =>
     <CaseInset cases={cases} />
 
     <script>
-      import { langKeys, type LangKey, type LangState } from '../data/lang-keys';
-      import { milestones, timeline } from '../data/timeline';
+      import { langKeys, langNames, type LangKey, type LangState } from '../data/lang-keys';
+      import { milestones } from '../data/timeline';
       import { ROAD_LEN, stagesFor, type Sign, type Stage } from '../data/ruta';
 
       const stages = stagesFor('ca');
-      const c = timeline.ca;
       const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
       const root = document.documentElement;
 
@@ -261,7 +258,7 @@ const deskCases = stages.map((s) =>
         const y = horizon + t * (H - horizon);
         const cx = W / 2 + curve * Math.pow(1 - t, 2) * W * 0.35;
         const half = t * W * 0.44;
-        const name = c.langNames[sign.lang].toUpperCase();
+        const name = langNames.ca[sign.lang].toUpperCase();
 
         if (sign.kind === 'entrada') {
           // Senyal verd d'entrada de país, al voral.

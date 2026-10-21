@@ -43,7 +43,7 @@
  * existeix en text a cada pas. Així la peça pot ser ambiciosa sense que
  * l'accessibilitat depengui de saber llegir un diagrama.
  */
-import { langKeys } from '../../data/lang-keys';
+import { langKeys, langNames } from '../../data/lang-keys';
 import { milestones, timeline } from '../../data/timeline';
 import { VIEW, buildInstrument, encodeCameras, hatchTransform } from '../../data/timeline-instrument';
 import type { Lang } from '../../i18n/utils';
@@ -216,7 +216,7 @@ const lastCopy = c.milestones[last.id];
           langKeys.map((key) => (
             <li class="lang" data-lang={key} data-state={last.langs[key]}>
               <span class="pip" />
-              <span class="lang__name">{c.langNames[key]}</span>
+              <span class="lang__name">{langNames[lang][key]}</span>
             </li>
           ))
         }

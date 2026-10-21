@@ -8,7 +8,7 @@
  * Va en HTML i no en SVG perquè és marge, no món: no el toca la càmera, i és
  * una de les coses que no es mouen mai mentre la carena passa.
  */
-import { langKeys } from '../../data/lang-keys';
+import { langKeys, langNames } from '../../data/lang-keys';
 import { milestones, timeline } from '../../data/timeline';
 
 const c = timeline.ca;
@@ -22,7 +22,7 @@ const first = milestones[0];
       langKeys.map((key) => (
         <li class="stave__lane" data-lang={key} data-state={first.langs[key]}>
           <span class="stave__pip" />
-          <span class="stave__name ui">{c.langNames[key]}</span>
+          <span class="stave__name ui">{langNames.ca[key]}</span>
         </li>
       ))
     }

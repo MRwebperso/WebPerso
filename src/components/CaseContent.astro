@@ -14,7 +14,7 @@
  * no hi ha cap tractament que distingeixi els uns dels altres.
  */
 import { caseLabels, type CaseRecord } from '../data/cases';
-import { timeline } from '../data/timeline';
+import { langNames } from '../data/lang-keys';
 import { useTranslations } from '../i18n/ui';
 import { homeSections, localize, type Lang } from '../i18n/utils';
 
@@ -36,13 +36,16 @@ const t = useTranslations(lang);
 const labels = caseLabels[lang];
 const copy = record.copy[lang];
 
-// L'ordre de les llengües surt del registre de la cronologia, no de l'ordre en
+// L'ordre de les llengües surt del registre (`langKeys`), no de l'ordre en
 // què s'han escrit al cas: així la llista es llegeix igual a tot el lloc.
 // `getCases()` ja les dona en aquest ordre (21/10/2026): una importació més
 // en aquest fitxer movia el seu full d'estils darrere del de `BaseLayout` a
 // les pàgines de cas, perquè Astro ordena els fulls per la posició de cada
-// importació.
-const workLangs = record.langs.map((key) => timeline[lang].langNames[key]);
+// importació. Els noms venien de `timeline`, la cronologia sencera per a sis
+// mots, i són de `lang-keys.ts` des d'aquell mateix dia, a la mateixa línia
+// d'importació: no se'n mou la posició, i l'ordre dels fulls es va comprovar
+// contra la compilació d'abans.
+const workLangs = record.langs.map((key) => langNames[lang][key]);
 
 const rows: { label: string; value: string }[] = [
   { label: labels.factLabels.context, value: copy.context },

@@ -15,7 +15,7 @@
  *   ordre.
  * - Cada opció es diu com a la fitxa en català, amb la primera lletra en
  *   majúscula i la clau entre parèntesis: `caseLabels.ca` per al marc, la
- *   línia de feina i la intensitat; `langNames` de la cronologia per a les
+ *   línia de feina i la intensitat; `langNames.ca` de `lang-keys.ts` per a les
  *   llengües, que és d'on les treu la pàgina del cas. Les excepcions
  *   deliberades (`EXCEPTIONS`) porten el nom exacte que s'ha decidit.
  * - Els mínims i els màxims del formulari són els de l'esquema, llegits de
@@ -35,7 +35,7 @@ import { bundle, fromRoot } from './lib.mjs';
 import { caseCategories } from '../../src/data/case-categories.ts';
 import { caseKinds } from '../../src/data/case-kinds.ts';
 import { skillUses } from '../../src/data/case-skills.ts';
-import { langKeys } from '../../src/data/lang-keys.ts';
+import { langKeys, langNames } from '../../src/data/lang-keys.ts';
 
 /*
  * Excepcions deliberades: opcions que el formulari no diu com la fitxa, i que
@@ -83,7 +83,6 @@ export default async function decap(t) {
   const { collections } = await bundle('src/content.config.ts');
   const schema = shapeOf(collections.cases.schema);
   const { caseLabels } = await bundle('src/data/cases.ts');
-  const { timeline } = await bundle('src/data/timeline.ts');
   const ca = caseLabels.ca;
 
   // ── Llistes tancades: valors i noms ──
@@ -92,7 +91,7 @@ export default async function decap(t) {
     ['kind', field(form, 'kind'), caseKinds, ca.kindLabels],
     ['category', field(form, 'category'), caseCategories, ca.categoryLabels],
     ['skills.use', skills && field(skills.fields, 'use'), skillUses, ca.useLabels],
-    ['langs', field(form, 'langs'), langKeys, timeline.ca.langNames],
+    ['langs', field(form, 'langs'), langKeys, langNames.ca],
   ];
   const seen = new Set();
   for (const [name, f, vocabulary, labels] of selects) {
