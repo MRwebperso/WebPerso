@@ -9,7 +9,7 @@
  * arriba a l'oferta baixant, i la presentació queda com un relat seguit.
  */
 import { home } from '../../data/home';
-import type { Lang } from '../../i18n/utils';
+import { homeSections, type Lang } from '../../i18n/utils';
 
 interface Props {
   lang: Lang;
@@ -17,15 +17,16 @@ interface Props {
 
 const { lang } = Astro.props;
 const c = home[lang].hero;
+const { id } = homeSections.presentation;
 ---
 
-<section class="hero" id="presentacio" aria-labelledby="presentacio-title">
+<section class="hero" id={id} aria-labelledby={`${id}-title`}>
   <div class="wrap section-grid">
     <div class="rail">
       <p class="eyebrow">{c.eyebrow}</p>
     </div>
     <div>
-      <h1 id="presentacio-title">{c.title}</h1>
+      <h1 id={`${id}-title`}>{c.title}</h1>
       <p class="lead hero__intro">{c.intro}</p>
       <p class="lead hero__intro2">{c.intro2}</p>
     </div>

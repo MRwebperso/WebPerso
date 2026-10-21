@@ -16,7 +16,7 @@
 import { caseLabels, type CaseRecord } from '../data/cases';
 import { timeline } from '../data/timeline';
 import { useTranslations } from '../i18n/ui';
-import { localize, type Lang } from '../i18n/utils';
+import { homeSections, localize, type Lang } from '../i18n/utils';
 
 interface Props {
   lang: Lang;
@@ -53,7 +53,7 @@ const rows: { label: string; value: string }[] = [
   { label: labels.factLabels.deliverables, value: copy.deliverables.join(' · ') },
 ];
 
-const selection = `${localize(lang)}#casos`;
+const selection = `${localize(lang)}#${homeSections.cases.id}`;
 
 const href = (item: CaseRecord) => localize(lang, ['casos', item.id]);
 const titleOf = (item: CaseRecord) => item.copy[lang].title;

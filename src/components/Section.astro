@@ -12,8 +12,6 @@ interface Props {
   lead?: string;
   /** Fons enfonsat, per a les seccions que han de pesar igual que l'oferta. */
   sunk?: boolean;
-  /** La secció omple el slot `wide` amb una figura. Vegeu la nota de sota. */
-  figure?: boolean;
 }
 
 /*
@@ -32,16 +30,23 @@ interface Props {
  * vertical i l'adherència del rètol no es mouen: només canvia qui ocupa la
  * banda esquerra a les files de figura.
  *
- * I d'aquí surt `figure`, que és la contrapartida (28/08/2026): amb la figura
+ * I d'aquí surt `section--figure`, que és la contrapartida (28/08/2026): amb la figura
  * ocupant les dues columnes, un rètol adherit li baixa per damunt. A la
  * trajectòria es veia de seguida —«PARCOURS» acabava al costat de l'any de la
  * fita, com si en fos part— i a l'oferta i als casos hi passava igual, només
  * que amb menys text a sota per delatar-ho. A les seccions amb figura, doncs, el
  * rètol es queda quiet: es llegeix un cop amb el titular i marxa amb ell, com a
  * la del mètode, que és la que no té figura i per tant mai no va donar problema.
+ *
+ * Des del 21/10/2026 totes dues coses les decideix aquest fitxer i prou: una
+ * secció amb figura és una secció que omple el slot `wide`, i és la regla de
+ * sota la que posa el que hi entra a les dues columnes. Abans qui omplia el
+ * slot havia de passar també `figure` i repetir `grid-column: 1 / -1` al seu
+ * CSS, amb un comentari que remetia aquí.
  */
 
-const { id, eyebrow, title, lead, sunk = false, figure = false } = Astro.props;
+const { id, eyebrow, title, lead, sunk = false } = Astro.props;
+const figure = Astro.slots.has('wide');
 ---
 
 <section
@@ -82,6 +87,14 @@ const { id, eyebrow, title, lead, sunk = false, figure = false } = Astro.props;
 
   .body > :global(* + *:not(.section__lead)) {
     margin-top: var(--space-12);
+  }
+
+  /* El que entra pel slot `wide`: els fills directes de la graella són el raïl,
+     el cos i el que porti el slot, i aquest darrer ocupa les dues columnes
+     (vegeu la nota de dalt). Es tria per descart i no amb un embolcall, que
+     afegiria un element a l'HTML de les tres figures. */
+  .section-grid > :global(:not(.rail):not(.body)) {
+    grid-column: 1 / -1;
   }
 
   /* Per sota de 62rem el raïl no és columna ni és adherit, o sigui que no hi ha

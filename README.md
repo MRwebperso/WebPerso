@@ -14,7 +14,7 @@ Les tres ordres que validen no cobreixen el mateix, i val la pena saber-ho:
 |---|---|
 | `npm run check` | Tipus, i els esquemes de les col·leccions de contingut: paritat de lliurables, camps buits, valors de `kind` fora de la llista |
 | `npm run build` | Els mateixos esquemes de col·lecció que `check`, però no els tipus, i a més les comprovacions que travessen fitxers: `order` duplicat entre casos, carpeta de casos buida |
-| `npm run verify` | Els contractes que no són ni tipus ni esquema, comprovats en Node pla ([scripts/verify/](scripts/verify/)): la geometria de la cronologia (quatre trams, què es veu a cada pas, l'enquadrament final, la frontera comuna) i els dos formats d'atribut que van de l'HTML al guió; el contracte de la maneta de l'oferta (repòs, límits, teclat, amortiment, aria) i que les rampes del seu CSS diguin els mateixos nombres. No és un marc de proves: no compila el lloc ni obre cap navegador, o sigui que no veu l'HTML, el CSS ni el comportament, i no substitueix cap de les dues ordres de sobre |
+| `npm run verify` | Els contractes que no són ni tipus ni esquema, comprovats en Node pla ([scripts/verify/](scripts/verify/)): la geometria de la cronologia (quatre trams, què es veu a cada pas, l'enquadrament final, la frontera comuna) i els dos formats d'atribut que van de l'HTML al guió; el contracte de la maneta de l'oferta (repòs, límits, teclat, amortiment, aria) i que les rampes del seu CSS diguin els mateixos nombres; i, sobre la sortida de l'última compilació, que cada enllaç intern i cada `#àncora` tinguin destí i que les dues portades tinguin les seccions en l'ordre de `homeSections`. No és un marc de proves: no compila el lloc ni obre cap navegador —l'enllaç el llegeix de l'últim `npm run build`, que cal fer abans—, o sigui que no veu el comportament ni el que es pinta, i no substitueix cap de les dues ordres de sobre |
 
 ## Canvi de domini
 
@@ -33,7 +33,7 @@ export const siteUrl = process.env.SITE_URL ?? 'https://…';
 - Els segments de ruta es tradueixen des del registre de [src/i18n/utils.ts](src/i18n/utils.ts) (`casos` → `cas`). Els identificadors de cas no es tradueixen.
 - El commutador de llengua porta a la **ruta mirall de la pàgina on ets**, mai a la portada, i conserva la secció (àncora). Funciona sense JS; amb JS és instantani (pre-càrrega + transició de vista).
 - `src/i18n/ui.ts` imposa la paritat per tipus: si una clau existeix en català i no en francès, `npm run check` falla.
-- Les àncores de secció (`#casos`, `#metode`…) són idèntiques en les dues llengües, perquè la commutació pugui mantenir la posició.
+- Les àncores de secció (`#casos`, `#metode`…) són idèntiques en les dues llengües, perquè la commutació pugui mantenir la posició. Viuen en un sol lloc, `homeSections` de [src/i18n/utils.ts](src/i18n/utils.ts), en l'ordre de la portada: d'allà les llegeixen la navegació, les seccions, la tornada de les pàgines de cas i el guió del carril.
 
 ## Sistema de disseny
 

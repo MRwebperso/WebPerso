@@ -16,7 +16,7 @@ import { home } from '../../data/home';
 import { langKeys } from '../../data/lang-keys';
 import { milestones, timeline } from '../../data/timeline';
 import { encodeLangs } from '../../data/timeline-instrument';
-import type { Lang } from '../../i18n/utils';
+import { homeSections, type Lang } from '../../i18n/utils';
 
 interface Props {
   lang: Lang;
@@ -37,7 +37,7 @@ const steps = milestones.map((milestone) => {
 });
 ---
 
-<Section id="trajectoria" eyebrow={intro.eyebrow} title={intro.title} figure>
+<Section id={homeSections.timeline.id} eyebrow={intro.eyebrow} title={intro.title}>
   {/* La Ruta no és una pàgina d'aquest projecte: `vercel.json` reescriu /ruta/
        cap al projecte de Vercel de la-ruta, i a `astro dev` l'enllaç dona 404.
        Fora del registre de rutes de `utils.ts` a posta: és en català a les dues
@@ -102,12 +102,10 @@ const steps = milestones.map((milestone) => {
 </Section>
 
 <style>
-  .scrolly {
-    /* Les dues columnes de la secció, també amb el raïl obert (28/08/2026):
-       vegeu la nota del slot `wide` a `Section.astro`. El mapa és la figura que
-       més ho nota —el territori es dibuixa en 74rem en lloc de 59. */
-    grid-column: 1 / -1;
-  }
+  /* `.scrolly` ocupa les dues columnes de la secció, també amb el raïl obert:
+     `Section.astro` hi posa tot el que entra pel slot `wide` (28/08/2026). El
+     mapa és la figura que més ho nota —el territori es dibuixa en 74rem en
+     lloc de 59. */
 
   .scrolly__figure {
     display: none;

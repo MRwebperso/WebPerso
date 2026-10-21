@@ -46,7 +46,7 @@ import { caseLabels, getCasesByRecency } from '../../data/cases';
 import { skillNotches, skillScale } from '../../data/case-skills';
 import { home } from '../../data/home';
 import { useTranslations } from '../../i18n/ui';
-import { localize, type Lang } from '../../i18n/utils';
+import { homeSections, localize, type Lang } from '../../i18n/utils';
 
 interface Props {
   lang: Lang;
@@ -59,7 +59,7 @@ const labels = caseLabels[lang];
 const cases = await getCasesByRecency();
 ---
 
-<Section id="casos" eyebrow={intro.eyebrow} title={intro.title} lead={intro.lead} figure>
+<Section id={homeSections.cases.id} eyebrow={intro.eyebrow} title={intro.title} lead={intro.lead}>
   <div class="carril" slot="wide">
     <ol class="pista" aria-label={t('cases.track')}>
       {
@@ -154,14 +154,19 @@ const cases = await getCasesByRecency();
    * a la primera càrrega, i la crida directa duplicava la lligada (en moviment
    * reduït, una fletxa saltava dues fitxes; constatat el 9/10/2026).
    */
+  import { homeSections } from '../../i18n/utils';
+
+  // L'àncora de la secció, de `homeSections`: escrita a mà, si canviava les
+  // fletxes quedaven mortes sense cap avís.
+  const scope = `#${homeSections.cases.id}`;
   let ditch: AbortController | null = null;
 
   function bindCases() {
     ditch?.abort();
     ditch = null;
 
-    const pista = document.querySelector<HTMLElement>('#casos .pista');
-    const rems = [...document.querySelectorAll<HTMLButtonElement>('#casos .rem')];
+    const pista = document.querySelector<HTMLElement>(`${scope} .pista`);
+    const rems = [...document.querySelectorAll<HTMLButtonElement>(`${scope} .rem`)];
     if (!pista || rems.length === 0) return;
 
     ditch = new AbortController();
@@ -224,11 +229,10 @@ const cases = await getCasesByRecency();
    */
   .carril {
     --pas: var(--space-6);
-    /* Les dues columnes de la secció, també amb el raïl obert (28/08/2026):
-       vegeu la nota del slot `wide` a `Section.astro`. El carril arrenca a la
-       vora esquerra del contingut i guanya 15rem de recorregut. */
-    grid-column: 1 / -1;
-    /* Sense això, la contribució de mida del carril és la suma de les sis
+    /* `Section.astro` el posa a les dues columnes de la secció, també amb el
+       raïl obert, com tot el que entra pel slot `wide` (28/08/2026): el carril
+       arrenca a la vora esquerra del contingut i guanya 15rem de recorregut.
+       Sense això, la contribució de mida del carril és la suma de les sis
        fitxes i el desbordament el pren la pàgina en lloc de la pista. */
     min-width: 0;
   }

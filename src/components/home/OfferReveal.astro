@@ -275,12 +275,12 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     --veil-wire: clamp(0, calc((0.5 - var(--x)) * 14), 1);
     --open-wire: clamp(0, calc((0.46 - var(--x)) * 8.3), 1);
     --more-wire: clamp(0, calc((0.36 - var(--x)) * 8.3), 1);
-    /* Les dues columnes de la secció, també amb el raïl obert (28/08/2026):
-       vegeu la nota del slot `wide` a `Section.astro`. Aquí és el que arregla
-       la lectura als extrems: el repòs de la costura cau al centre real de la
-       pàgina i no al centre del terç dret, i els dos blocs de text —topall de
-       `min(38ch, 44%)`— passen de ~26rem a ~32rem d'amplada disponible. */
-    grid-column: 1 / -1;
+    /* `Section.astro` el posa a les dues columnes de la secció, també amb el
+       raïl obert, com tot el que entra pel slot `wide` (28/08/2026). Aquí és
+       el que arregla la lectura als extrems: el repòs de la costura cau al
+       centre real de la pàgina i no al centre del terç dret, i els dos blocs
+       de text —topall de `min(38ch, 44%)`— passen de ~26rem a ~32rem
+       d'amplada disponible. */
     margin-top: var(--space-12);
   }
 

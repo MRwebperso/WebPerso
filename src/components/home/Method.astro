@@ -25,7 +25,7 @@
  */
 import Section from '../Section.astro';
 import { home } from '../../data/home';
-import type { Lang } from '../../i18n/utils';
+import { homeSections, type Lang } from '../../i18n/utils';
 
 interface Props {
   lang: Lang;
@@ -35,7 +35,7 @@ const { lang } = Astro.props;
 const c = home[lang].method;
 ---
 
-<Section id="metode" eyebrow={c.eyebrow} title={c.title} lead={c.lead} sunk>
+<Section id={homeSections.method.id} eyebrow={c.eyebrow} title={c.title} lead={c.lead} sunk>
   <div class="column">
     <div class="story">
       {

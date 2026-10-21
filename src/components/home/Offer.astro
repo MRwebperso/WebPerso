@@ -9,7 +9,7 @@
 import Section from '../Section.astro';
 import OfferReveal from './OfferReveal.astro';
 import { home } from '../../data/home';
-import type { Lang } from '../../i18n/utils';
+import { homeSections, type Lang } from '../../i18n/utils';
 
 interface Props {
   lang: Lang;
@@ -19,6 +19,6 @@ const { lang } = Astro.props;
 const c = home[lang].communication;
 ---
 
-<Section id="comunicacio" eyebrow={c.eyebrow} title={c.title} lead={c.lead} figure>
+<Section id={homeSections.communication.id} eyebrow={c.eyebrow} title={c.title} lead={c.lead}>
   <OfferReveal lang={lang} slot="wide" />
 </Section>

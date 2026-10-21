@@ -1,3 +1,5 @@
+import type { UIKey } from './ui';
+
 /**
  * Nucli lingüístic. Paritat estricta CA–FR: cap llengua no és la subordinada
  * de l'altra. Tota ruta existeix en les dues llengües (rutes mirall
@@ -41,8 +43,37 @@ export const segments = {
 
 type SegmentKey = keyof typeof segments;
 
-/** Índex invers: segment publicat → clau canònica, per llengua. */
-const canonicalBySegment: Record<Lang, Map<string, SegmentKey>> = (() => {
+/**
+ * Seccions de la portada, en l'ordre de lectura —el de les claus d'aquest
+ * objecte—, amb l'àncora publicada i, les que surten a la navegació de la
+ * capçalera, la clau del rètol a `ui.ts`. La presentació no hi surt
+ * (`nav: null`).
+ *
+ * Les àncores no es tradueixen, com els identificadors de cas: són idèntiques
+ * en les dues llengües perquè el commutador pugui conservar la secció on ets.
+ * Viuen aquí, al costat del registre de segments, i no escrites a cada lloc
+ * (decisió de Miquel, 21/10/2026): la capçalera, les seccions, l'enllaç de
+ * tornada de les pàgines de cas i el guió del carril de casos les repetien a
+ * mà, i el guió es quedava mort sense cap avís si l'àncora canviava.
+ * `scripts/verify/links.mjs` comprova a la sortida compilada que cada
+ * `#àncora` té destí i que la portada té les seccions en aquest ordre.
+ */
+export const homeSections = {
+  presentation: { id: 'presentacio', nav: null },
+  communication: { id: 'comunicacio', nav: 'nav.communication' },
+  method: { id: 'metode', nav: 'nav.method' },
+  timeline: { id: 'trajectoria', nav: 'nav.timeline' },
+  cases: { id: 'casos', nav: 'nav.cases' },
+  contact: { id: 'contacte', nav: 'nav.contact' },
+} as const satisfies Record<string, { id: string; nav: UIKey | null }>;
+
+/** Índex invers: segment publicat → clau canònica, per llengua.
+ *
+ * `@__PURE__` diu al paquet de client que la funció no té efectes fora del
+ * resultat: el guió del carril de casos importa `homeSections` d'aquest
+ * fitxer, i sense l'anotació s'enduia aquest índex, que no fa servir
+ * (21/10/2026). */
+const canonicalBySegment: Record<Lang, Map<string, SegmentKey>> = /* @__PURE__ */ (() => {
   const index = {} as Record<Lang, Map<string, SegmentKey>>;
   for (const lang of langCodes) {
     index[lang] = new Map();

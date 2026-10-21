@@ -25,7 +25,7 @@ import Cases from './home/Cases.astro';
 import Contact from './home/Contact.astro';
 import { home } from '../data/home';
 import { useTranslations } from '../i18n/ui';
-import type { Lang } from '../i18n/utils';
+import { homeSections, type Lang } from '../i18n/utils';
 
 interface Props {
   lang: Lang;
@@ -43,7 +43,7 @@ const portrait = { width: 1414, height: 2000, ratio: 0.75 };
 
 <MinimalistHero
   mainText={home[lang].hero.title}
-  readMoreLink="#presentacio"
+  readMoreLink={`#${homeSections.presentation.id}`}
   readMoreLabel={t('hero.more')}
   imageSrc="/hero-portrait.png"
   fallbackSrc="/hero-portrait-placeholder.svg"
