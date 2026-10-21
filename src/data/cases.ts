@@ -46,7 +46,8 @@ export type CaseCopy = CaseData['ca'];
  * qualsevol quan l'esquema en demana tres exactament. El preu és que la forma
  * d'un camp ja no es llegeix aquí, sinó a `src/content.config.ts`. Quins fets
  * passen al cas resolt, en canvi, continua sent una decisió d'aquest fitxer:
- * `order` es queda fora perquè ja ha fet la seva feina ordenant.
+ * `order` hi és, perquè `byRecency` el necessita per desfer els empats d'any
+ * sense dependre de l'ordre en què li arriba la llista (21/10/2026).
  *
  * `copy` no es deriva, i és deliberat. `Record<Lang, CaseCopy>` és el que
  * queda de la paritat en temps de tipus, i no és poca cosa: si algun dia
@@ -57,6 +58,8 @@ export type CaseCopy = CaseData['ca'];
 export interface CaseRecord {
   /** Slug de la URL. No es tradueix: és nom propi de projecte o d'entitat. */
   id: string;
+  /** Ordre de lectura editorial. Únic entre casos (vegeu `resolveCases`). */
+  order: CaseData['order'];
   kind: CaseData['kind'];
   category: CaseData['category'];
   year: CaseData['year'];
@@ -115,6 +118,7 @@ export function resolveCases(entries: CaseEntry[]): CaseRecord[] {
     .sort((a, b) => a.data.order - b.data.order)
     .map((entry) => ({
       id: entry.id,
+      order: entry.data.order,
       kind: entry.data.kind,
       category: entry.data.category,
       year: entry.data.year,
@@ -140,17 +144,17 @@ export async function getCases(): Promise<CaseRecord[]> {
  * navegació entre casos. El carril, en canvi, dibuixa una cronologia amb un
  * filet i una osca per any: si no anés per any, la línia mentiria.
  *
- * Els empats els desfà `order`, i no per casualitat: els casos ja arriben
- * ordenats per `order` (és el que retorna `resolveCases`) i
- * `Array.prototype.sort` és estable des d'ES2019, o sigui que dos casos del
- * mateix any conserven l'ordre editorial. Hi ha dos casos del 2026 i dos del
- * 2023, així que l'empat no és hipotètic. Separada de `getCasesByRecency()`
- * pel mateix motiu que `resolveCases` (21/10/2026): l'estabilitat era una
- * propietat que només es llegia al comentari, i ara `verify cases` la comprova.
- * No toca l'entrada: ordena una còpia.
+ * Els empats els desfà `order`, de manera explícita: abans els desfeia
+ * l'estabilitat de `Array.prototype.sort` (ES2019) sobre una llista que ja
+ * arribava ordenada per `order`, i això només valia si el cridant la passava
+ * així; amb una llista filtrada o reordenada, els casos del mateix any sortien
+ * en ordre arbitrari i sense cap error (21/10/2026). Hi ha dos casos del 2026 i
+ * dos del 2023, així que l'empat no és hipotètic. Separada de
+ * `getCasesByRecency()` pel mateix motiu que `resolveCases`, i `verify cases` la
+ * comprova també amb la llista del revés. No toca l'entrada: ordena una còpia.
  */
 export function byRecency(records: CaseRecord[]): CaseRecord[] {
-  return records.slice().sort((a, b) => b.year - a.year);
+  return records.slice().sort((a, b) => b.year - a.year || a.order - b.order);
 }
 
 /** Els casos del més recent al més antic. Vegeu `byRecency`. */
