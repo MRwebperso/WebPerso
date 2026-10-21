@@ -68,6 +68,9 @@ export interface CaseRecord {
   copy: Record<Lang, CaseCopy>;
 }
 
+/** El que `resolveCases` necessita d'una entrada de la col·lecció: l'`id` i les dades. */
+type CaseEntry = Pick<CollectionEntry<'cases'>, 'id' | 'data'>;
+
 /**
  * Els casos en ordre de lectura.
  *
@@ -80,10 +83,16 @@ export interface CaseRecord {
  *   carpeta, i l'ordre és una decisió editorial, no un atzar del sistema de
  *   fitxers. Els buits, en canvi, es toleren: esborrar un cas des del CMS no ha
  *   de fer caure la compilació.
+ *
+ * És una funció pura, separada de `getCases()`, perquè es pugui provar sense
+ * Astro (decisió de Miquel, 21/10/2026). Mentre les dues comprovacions i
+ * l'ordenació vivien dins de `getCases()`, lligades a `astro:content`, només
+ * saltaven compilant: `npm run check` no les veu, i dir que «`build` les
+ * atrapa» era l'únic control. Ara `scripts/verify/cases.mjs` hi passa fixtures
+ * (carpeta buida, `order` repetit, entrades barrejades) sense compilar el lloc.
+ * El preu és una funció exportada més, que només crida `getCases()`.
  */
-export async function getCases(): Promise<CaseRecord[]> {
-  const entries = await getCollection('cases');
-
+export function resolveCases(entries: CaseEntry[]): CaseRecord[] {
   if (entries.length === 0) {
     throw new Error(
       'No hi ha cap cas a src/content/cases/. La secció de casos i les seves pàgines quedarien buides.',
@@ -118,6 +127,11 @@ export async function getCases(): Promise<CaseRecord[]> {
     }));
 }
 
+/** Els casos en ordre de lectura (`order`), de la col·lecció de debò. Vegeu `resolveCases`. */
+export async function getCases(): Promise<CaseRecord[]> {
+  return resolveCases(await getCollection('cases'));
+}
+
 /**
  * Els casos del més recent al més antic, per al carril de la portada.
  *
@@ -126,13 +140,22 @@ export async function getCases(): Promise<CaseRecord[]> {
  * navegació entre casos. El carril, en canvi, dibuixa una cronologia amb un
  * filet i una osca per any: si no anés per any, la línia mentiria.
  *
- * Els empats els desfà `order`, i no per casualitat: `getCases()` ja retorna
- * ordenat per `order` i `Array.prototype.sort` és estable des d'ES2019, o
- * sigui que dos casos del mateix any conserven l'ordre editorial. Hi ha dos
- * casos del 2026 i dos del 2023, així que l'empat no és hipotètic.
+ * Els empats els desfà `order`, i no per casualitat: els casos ja arriben
+ * ordenats per `order` (és el que retorna `resolveCases`) i
+ * `Array.prototype.sort` és estable des d'ES2019, o sigui que dos casos del
+ * mateix any conserven l'ordre editorial. Hi ha dos casos del 2026 i dos del
+ * 2023, així que l'empat no és hipotètic. Separada de `getCasesByRecency()`
+ * pel mateix motiu que `resolveCases` (21/10/2026): l'estabilitat era una
+ * propietat que només es llegia al comentari, i ara `verify cases` la comprova.
+ * No toca l'entrada: ordena una còpia.
  */
+export function byRecency(records: CaseRecord[]): CaseRecord[] {
+  return records.slice().sort((a, b) => b.year - a.year);
+}
+
+/** Els casos del més recent al més antic. Vegeu `byRecency`. */
 export async function getCasesByRecency(): Promise<CaseRecord[]> {
-  return (await getCases()).sort((a, b) => b.year - a.year);
+  return byRecency(await getCases());
 }
 
 /** El que rep cada pàgina de cas: el cas i els dos veïns de la navegació de baix. */
