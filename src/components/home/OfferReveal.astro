@@ -32,6 +32,7 @@
  * en perd cap, sigui quin sigui el mode.
  */
 import { home } from '../../data/home';
+import { MAX, MIN, REST, ariaValue } from '../../data/offer-handle';
 import { useTranslations } from '../../i18n/ui';
 import type { Lang } from '../../i18n/utils';
 
@@ -220,9 +221,9 @@ const SUN = { cx: 470, cy: 86, r: 36 };
       role="slider"
       tabindex="0"
       aria-label={t('offer.split')}
-      aria-valuemin="5"
-      aria-valuemax="95"
-      aria-valuenow="50"
+      aria-valuemin={ariaValue(MIN)}
+      aria-valuemax={ariaValue(MAX)}
+      aria-valuenow={ariaValue(REST)}
       aria-orientation="horizontal"
     >
       <span class="handle__grip" aria-hidden="true">
@@ -248,6 +249,11 @@ const SUN = { cx: 470, cy: 86, r: 36 };
    * el guió. El retall de les dues capes, la posició de la maneta i el revelat
    * del cos i de les acotacions en surten per càlcul de CSS: per fotograma només canvia una
    * variable.
+   *
+   * El repòs (0.5) i els nombres de les rampes són els de `REST` i `RAMPS` de
+   * `src/data/offer-handle.ts`. Es queden escrits aquí perquè el CSS no pot
+   * importar res i passar-los per l'HTML hi afegiria un `style`; els manté
+   * iguals `scripts/verify/maneta.mjs`, que llegeix aquestes línies.
    */
   .stage {
     --x: 0.5;
@@ -548,10 +554,14 @@ const SUN = { cx: 470, cy: 86, r: 36 };
   /*
    * Pilot de la costura. Tres entrades —ratolí per sobre, arrossegament i
    * teclat— sobre un sol estat: `target` és on ha d'anar la costura i `current`
-   * on és. L'amortiment va per constant de temps (90 ms, el mateix valor que la
-   * travessa) i el bucle de fotogrames només corre mentre les dues no
-   * coincideixen: en repòs no hi ha cap `requestAnimationFrame` viu.
+   * on és. L'amortiment va per constant de temps i el bucle de fotogrames només
+   * corre mentre les dues no coincideixen: en repòs no hi ha cap
+   * `requestAnimationFrame` viu. Els nombres i les regles pures (repòs, límits,
+   * pas de teclat, amortiment, valor d'aria) són a `src/data/offer-handle.ts`;
+   * aquí només hi ha el punter i el DOM.
    */
+  import { EPSILON, REST, aimAt, ariaValue, damp, keyTarget } from '../../data/offer-handle';
+
   /*
    * Per què cal tornar a lligar-ho a `astro:page-load` (28/08/2026): amb el
    * `ClientRouter` engegat, el commutador de llengua no recarrega la pàgina
@@ -583,16 +593,6 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     // Llindar de component (48rem): vegeu l'escala a `tokens.css`.
     const narrow = matchMedia('(max-width: 48rem)');
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-    const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
-
-    /* Repòs al mig: els dos titulars llegibles alhora; els cossos esperen que s'empenyi la maneta. */
-    const REST = 0.5;
-    /* Als extrems queda una franja de l'altra capa. Amb 0 o 1 la maneta se
-       n'aniria mig fora del panell, que té el desbordament amagat.
-       `aria-valuemin` i `aria-valuemax` de la maneta (5 i 95) en són el mirall
-       en percentatge; si canvien aquí, s'han de canviar allà. */
-    const MIN = 0.05;
-    const MAX = 0.95;
 
     let target = REST;
     let current = REST;
@@ -607,16 +607,14 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     let lastPointer = 'mouse';
 
     function paint(p: number) {
-      if (Math.abs(p - painted) < 0.0004) return;
+      if (Math.abs(p - painted) < EPSILON) return;
       painted = p;
       stage!.style.setProperty('--x', p.toFixed(4));
     }
 
     function step(now: number) {
-      const dt = clamp(now - last, 0, 140);
+      current = damp(current, target, now - last, reduce.matches);
       last = now;
-      current += (target - current) * (reduce.matches ? 1 : 1 - Math.exp(-dt / 90));
-      if (Math.abs(target - current) < 0.0004) current = target;
       paint(current);
       running = current !== target;
       if (running) requestAnimationFrame(step);
@@ -630,8 +628,8 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     }
 
     function aim(v: number, byUser = true) {
-      target = clamp(v, MIN, MAX);
-      handle!.setAttribute('aria-valuenow', String(Math.round(target * 100)));
+      target = aimAt(v);
+      handle!.setAttribute('aria-valuenow', ariaValue(target));
       if (byUser) stage!.dataset.touched = '';
       kick();
     }
@@ -680,13 +678,7 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     });
 
     handle.addEventListener('keydown', (e) => {
-      let v: number | null = null;
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') v = target - 0.04;
-      else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') v = target + 0.04;
-      else if (e.key === 'PageDown') v = target - 0.16;
-      else if (e.key === 'PageUp') v = target + 0.16;
-      else if (e.key === 'Home') v = MIN;
-      else if (e.key === 'End') v = MAX;
+      const v = keyTarget(e.key, target);
       if (v === null) return;
       e.preventDefault();
       held = true;

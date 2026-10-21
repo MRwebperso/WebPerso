@@ -14,7 +14,7 @@ Les tres ordres que validen no cobreixen el mateix, i val la pena saber-ho:
 |---|---|
 | `npm run check` | Tipus, i els esquemes de les col·leccions de contingut: paritat de lliurables, camps buits, valors de `kind` fora de la llista |
 | `npm run build` | Els mateixos esquemes de col·lecció que `check`, però no els tipus, i a més les comprovacions que travessen fitxers: `order` duplicat entre casos, carpeta de casos buida |
-| `npm run verify` | Els contractes que no són ni tipus ni esquema, comprovats en Node pla ([scripts/verify/](scripts/verify/)): la geometria de la cronologia (quatre trams, què es veu a cada pas, l'enquadrament final, la frontera comuna) i els dos formats d'atribut que van de l'HTML al guió. No és un marc de proves: no compila el lloc ni obre cap navegador, o sigui que no veu l'HTML, el CSS ni el comportament, i no substitueix cap de les dues ordres de sobre |
+| `npm run verify` | Els contractes que no són ni tipus ni esquema, comprovats en Node pla ([scripts/verify/](scripts/verify/)): la geometria de la cronologia (quatre trams, què es veu a cada pas, l'enquadrament final, la frontera comuna) i els dos formats d'atribut que van de l'HTML al guió; el contracte de la maneta de l'oferta (repòs, límits, teclat, amortiment, aria) i que les rampes del seu CSS diguin els mateixos nombres. No és un marc de proves: no compila el lloc ni obre cap navegador, o sigui que no veu l'HTML, el CSS ni el comportament, i no substitueix cap de les dues ordres de sobre |
 
 ## Canvi de domini
 

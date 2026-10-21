@@ -5,7 +5,7 @@
  */
 import { Tally } from './lib.mjs';
 
-const checks = ['timeline'];
+const checks = ['timeline', 'maneta'];
 
 let failed = 0;
 for (const name of checks) {
