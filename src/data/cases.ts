@@ -4,7 +4,7 @@ import { type CaseKind } from './case-kinds';
 import { type SkillUse } from './case-skills';
 import type { Lang } from '../i18n/utils';
 import { ui } from '../i18n/ui';
-import { langKeys, type LangKey } from './lang-keys';
+import { langKeys } from './lang-keys';
 
 /**
  * Portfolio — accés als casos i etiquetes de la fitxa.
@@ -31,29 +31,40 @@ import { langKeys, type LangKey } from './lang-keys';
  * TypeScript perquè la paritat CA–FR hi és imposada pel tipus.
  */
 
+/** Les dades d'un cas tal com les deixa l'esquema de la col·lecció. */
+type CaseData = CollectionEntry<'cases'>['data'];
+
 /** Text d'un cas en una llengua, tal com el deixa l'esquema de la col·lecció. */
-export type CaseCopy = CollectionEntry<'cases'>['data']['ca'];
+export type CaseCopy = CaseData['ca'];
 
 /**
  * Un cas resolt: els fets, que són únics, i el text en les dues llengües.
  *
- * `Record<Lang, CaseCopy>` és el que queda de la paritat en temps de tipus, i
- * no és poca cosa: si algun dia s'afegeix una tercera llengua al registre de
- * `src/i18n/utils.ts`, aquest fitxer deixa de compilar fins que l'esquema de la
- * col·lecció tingui la clau nova. La paritat entre `ca` i `fr` dins de cada cas
- * la garanteix l'esquema.
+ * Els tipus dels fets surten de l'esquema de la col·lecció i no s'hi tornen a
+ * escriure (21/10/2026). Abans eren copiats a mà, i la còpia ja s'havia
+ * separat de l'original sense que res avisés: `skills` hi era una llista
+ * qualsevol quan l'esquema en demana tres exactament. El preu és que la forma
+ * d'un camp ja no es llegeix aquí, sinó a `src/content.config.ts`. Quins fets
+ * passen al cas resolt, en canvi, continua sent una decisió d'aquest fitxer:
+ * `order` es queda fora perquè ja ha fet la seva feina ordenant.
+ *
+ * `copy` no es deriva, i és deliberat. `Record<Lang, CaseCopy>` és el que
+ * queda de la paritat en temps de tipus, i no és poca cosa: si algun dia
+ * s'afegeix una tercera llengua al registre de `src/i18n/utils.ts`, aquest
+ * fitxer deixa de compilar fins que l'esquema de la col·lecció tingui la clau
+ * nova. La paritat entre `ca` i `fr` dins de cada cas la garanteix l'esquema.
  */
 export interface CaseRecord {
   /** Slug de la URL. No es tradueix: és nom propi de projecte o d'entitat. */
   id: string;
-  kind: CaseKind;
-  category: CaseCategory;
-  year: number;
-  langs: readonly LangKey[];
+  kind: CaseData['kind'];
+  category: CaseData['category'];
+  year: CaseData['year'];
+  langs: Readonly<CaseData['langs']>;
   /** Les tres competències de la targeta, amb el nom en les dues llengües. */
-  skills: readonly { use: SkillUse; ca: string; fr: string }[];
+  skills: Readonly<CaseData['skills']>;
   /** Entitats de l'encàrrec, per les sigles del cul de la targeta. */
-  orgs: readonly { abbr: string; ca: string; fr: string }[];
+  orgs: Readonly<CaseData['orgs']>;
   copy: Record<Lang, CaseCopy>;
 }
 
