@@ -598,16 +598,23 @@ const SUN = { cx: 470, cy: 86, r: 36 };
 
     const handleState = createHandle();
     let painted = -1;
+    let announced = '';
     let running = false;
     let last = 0;
 
+    /* Per fotograma només canvia `--x`: l'aria i `data-touched` s'escriuen quan
+       canvien, no a cada pintada. Tornar a posar el mateix valor a un
+       `aria-valuenow` pot reanunciar la maneta a cada fotograma. */
     function paint(v: HandleView) {
       if (Math.abs(v.x - painted) >= EPSILON) {
         painted = v.x;
         stage!.style.setProperty('--x', v.x.toFixed(4));
       }
-      handle!.setAttribute('aria-valuenow', v.aria);
-      if (v.touched) stage!.dataset.touched = '';
+      if (v.aria !== announced) {
+        announced = v.aria;
+        handle!.setAttribute('aria-valuenow', v.aria);
+      }
+      if (v.touched && stage!.dataset.touched === undefined) stage!.dataset.touched = '';
     }
 
     function step(now: number) {
@@ -660,6 +667,9 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     pin.addEventListener('pointerleave', () => apply(handleState.leave()));
 
     handle.addEventListener('keydown', (e) => {
+      /* Amb Alt, Ctrl o Cmd la tecla és del navegador (Alt+← és Enrere): no es
+         pren ni s'empassa. */
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
       const v = handleState.key(e.key);
       if (!v) return;
       e.preventDefault();
