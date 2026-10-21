@@ -25,8 +25,9 @@
  *   tres capítols.
  *
  * No hi entra el que Decap fa amb el fitxer —si el dibuixa, si desa bé—, que
- * només es veu obrint `/admin/`. `js-yaml` ja és al dipòsit com a dependència
- * d'Astro, com `esbuild` (vegeu `lib.mjs`).
+ * només es veu obrint `/admin/`. `js-yaml` i `esbuild` (vegeu `lib.mjs`) són a
+ * `devDependencies` des del 21/10/2026: abans només hi eren perquè Astro se'ls
+ * porta, i res no garantia que s'hi quedessin.
  */
 import fs from 'node:fs';
 import { load } from 'js-yaml';

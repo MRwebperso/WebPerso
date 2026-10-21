@@ -1,8 +1,9 @@
 /*
  * El JS de client, sobre la sortida de l'última compilació
- * (`.vercel/output/static`; cal `npm run build` abans). Dos invariants que fins
- * al 21/10/2026 només guardava la convenció, i que cap tipus ni cap esquema no
- * veu:
+ * (`.vercel/output/static`; cal `npm run build` abans, i `compiledSite` de
+ * `lib.mjs` ho exigeix: en vermell si la sortida és més vella que els fonts).
+ * Dos invariants que fins al 21/10/2026 només guardava la convenció, i que cap
+ * tipus ni cap esquema no veu:
  *
  * - Cap tros de client compartit. Els guions de la portada i dels casos van en
  *   línia a l'HTML, i ho poden fer perquè cada mòdul que importen
@@ -26,9 +27,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { bundle, fromRoot } from './lib.mjs';
-
-const OUT = fromRoot('.vercel/output/static');
+import { bundle, compiledSite, fromRoot } from './lib.mjs';
 
 /** Els dos guions que Astro mateix serveix des de `/_astro/`, sense el hash. */
 const ASTRO_OWN = ['ClientRouter.astro_astro_type_script_index_0_lang', 'page'];
@@ -50,15 +49,15 @@ function scriptsOf(html) {
 }
 
 /** Els fitxers de `/_astro/` que arrossega un guió, seguint-ne les importacions relatives. */
-function closure(files) {
+function closure(out, files) {
   const seen = new Set();
   const queue = [...files];
   while (queue.length) {
     const file = queue.pop();
     // Un `src` que no porta enlloc ja el diu `links.mjs`.
-    if (seen.has(file) || !fs.existsSync(path.join(OUT, '_astro', file))) continue;
+    if (seen.has(file) || !fs.existsSync(path.join(out, '_astro', file))) continue;
     seen.add(file);
-    const code = fs.readFileSync(path.join(OUT, '_astro', file), 'utf8');
+    const code = fs.readFileSync(path.join(out, '_astro', file), 'utf8');
     for (const m of code.matchAll(/(?:from|import)\s*\(?\s*["']\.\/([^"']+\.js)["']/g)) queue.push(m[1]);
   }
   return seen;
@@ -72,12 +71,9 @@ const fragmentOf = (text) =>
     .reduce((a, b) => (b.length > a.length ? b : a), '');
 
 export default async function build(t) {
-  if (!t.ok(fs.existsSync(OUT), 'hi ha sortida compilada a .vercel/output/static (cal `npm run build` abans)')) return;
-
-  const sitemaps = fs.readdirSync(OUT).filter((n) => /^sitemap-\d+\.xml$/.test(n));
-  const pages = sitemaps.flatMap((n) =>
-    [...fs.readFileSync(path.join(OUT, n), 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => decodeURIComponent(new URL(m[1]).pathname)),
-  );
+  const site = compiledSite(t);
+  if (!site) return;
+  const pages = site.sitemap;
   if (!t.ok(pages.length > 0, 'el sitemap porta pàgines')) return;
 
   // ── Cap tros de client compartit ──
@@ -85,9 +81,9 @@ export default async function build(t) {
   const loaded = [];
   const htmlText = [];
   for (const page of pages) {
-    const file = path.join(OUT, page, 'index.html');
-    if (!t.ok(fs.existsSync(file), `la pàgina del sitemap ${page} existeix`)) continue;
-    const html = fs.readFileSync(file, 'utf8');
+    const file = path.posix.join(page, 'index.html').slice(1);
+    if (!t.ok(site.pages.includes(file), `la pàgina del sitemap ${page} existeix`)) continue;
+    const html = site.read(file);
     const scripts = scriptsOf(html);
     // L'arrel (`/`, la tria de llengua) només porta `page`; la resta, tots dos.
     t.equal(
@@ -110,7 +106,7 @@ export default async function build(t) {
     ...Object.entries(timeline[lang].milestones).map(([id, m]) => [`cronologia ${lang} «${id}»`, m.body]),
     ...cases.map((c) => [`cas ${lang} «${c.ca.title}»`, c[lang].summary]),
   ]);
-  const js = [...inline, ...[...closure(loaded)].map((f) => fs.readFileSync(path.join(OUT, '_astro', f), 'utf8'))];
+  const js = [...inline, ...[...closure(site.out, loaded)].map((f) => site.read(`_astro/${f}`))];
   for (const [where, sentence] of sentences) {
     const fragment = fragmentOf(sentence);
     if (!t.ok(fragment.length >= 20, `${where}: hi ha un tros de frase prou llarg per buscar («${fragment}»)`)) continue;
@@ -118,5 +114,5 @@ export default async function build(t) {
     if (!t.ok(htmlText.some((h) => h.includes(fragment)), `${where}: «${fragment}» és a l'HTML d'alguna pàgina`)) continue;
     t.ok(!js.some((code) => code.includes(fragment)), `${where}: «${fragment}» no és a cap guió de client`);
   }
-  t.note(`${sentences.length} frases de la còpia, cap en ${new Set(inline).size} guions en línia diferents ni en ${closure(loaded).size} fitxers de /_astro/`);
+  t.note(`${sentences.length} frases de la còpia, cap en ${new Set(inline).size} guions en línia diferents ni en ${closure(site.out, loaded).size} fitxers de /_astro/`);
 }

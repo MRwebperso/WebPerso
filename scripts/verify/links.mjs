@@ -1,6 +1,7 @@
 /*
  * Enllaços i àncores, sobre la sortida de l'última compilació
- * (`.vercel/output/static`; cal `npm run build` abans).
+ * (`.vercel/output/static`; cal `npm run build` abans, i `compiledSite` de
+ * `lib.mjs` ho exigeix: en vermell si la sortida és més vella que els fonts).
  *
  * - Cada camí intern (`href` i `src` que comencen per `/`) existeix.
  * - Cada `#àncora` té un `id` a la pàgina on porta.
@@ -11,10 +12,9 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fromRoot } from './lib.mjs';
+import { compiledSite } from './lib.mjs';
 import { homeSections } from '../../src/i18n/utils.ts';
 
-const OUT = fromRoot('.vercel/output/static');
 const OUTSIDE = [/^\/ruta\//, /^\/api\//];
 
 /*
@@ -29,19 +29,10 @@ const OUTSIDE = [/^\/ruta\//, /^\/api\//];
  */
 const KNOWN = [{ page: '404.html', href: '/fr/404/' }];
 
-function walk(dir, out = []) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, out);
-    else if (e.name.endsWith('.html')) out.push(p);
-  }
-  return out;
-}
-
 /** El fitxer que serveix un camí, com fa l'amfitrió estàtic. */
-function fileFor(urlPath) {
+function fileFor(out, urlPath) {
   const clean = decodeURIComponent(urlPath);
-  const candidate = path.join(OUT, clean);
+  const candidate = path.join(out, clean);
   if (clean.endsWith('/')) return path.join(candidate, 'index.html');
   if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
   return null;
@@ -57,14 +48,15 @@ function idsOf(file) {
 }
 
 export default async function links(t) {
-  if (!t.ok(fs.existsSync(OUT), 'hi ha sortida compilada a .vercel/output/static (cal `npm run build` abans)')) return;
+  const site = compiledSite(t);
+  if (!site) return;
+  const { out, pages } = site;
 
-  const pages = walk(OUT);
   let checked = 0;
   const known = new Set();
-  for (const page of pages) {
-    const rel = path.relative(OUT, page).split(path.sep).join('/');
-    const html = fs.readFileSync(page, 'utf8');
+  for (const rel of pages) {
+    const page = path.join(out, rel);
+    const html = site.read(rel);
     // Sense el contingut dels <script>: hi ha selectors i plantilles, no enllaços.
     const markup = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
     for (const [, attr, value] of markup.matchAll(/\s(href|src)="([^"]*)"/g)) {
@@ -74,7 +66,7 @@ export default async function links(t) {
       const [pathPart, fragment] = raw.split('#');
       const target = pathPart === '' ? page : pathPart.split('?')[0];
       if (target !== page && OUTSIDE.some((re) => re.test(target))) continue;
-      const file = target === page ? page : fileFor(target);
+      const file = target === page ? page : fileFor(out, target);
       checked++;
       const exists = file !== null && fs.existsSync(file);
       if (!exists && KNOWN.some((k) => k.page === rel && k.href === raw)) {
@@ -97,9 +89,9 @@ export default async function links(t) {
 
   const order = Object.values(homeSections).map((s) => s.id);
   for (const lang of ['ca', 'fr']) {
-    const file = path.join(OUT, lang, 'index.html');
-    if (!t.ok(fs.existsSync(file), `hi ha portada ${lang}`)) continue;
-    const html = fs.readFileSync(file, 'utf8');
+    const file = `${lang}/index.html`;
+    if (!t.ok(pages.includes(file), `hi ha portada ${lang}`)) continue;
+    const html = site.read(file);
     const found = [...html.matchAll(/<section\b[^>]*\sid="([^"]+)"/g)].map((m) => m[1]);
     t.equal(found, order, `la portada ${lang} té les seccions de \`homeSections\` en el mateix ordre`);
   }
