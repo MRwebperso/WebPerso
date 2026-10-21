@@ -534,18 +534,13 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     padding-inline: var(--space-3);
     color: var(--ink-faint);
     pointer-events: none;
-    /* Un cop s'ha entès el gest, la instrucció sobra. */
+    /* Un cop s'ha entès el gest, la instrucció sobra. Sense retard, o sigui
+       que amb moviment reduït ja la retalla la regla global de `base.css`. */
     transition: opacity var(--dur-slow) var(--ease-out);
   }
 
   .stage[data-touched] .hint {
     opacity: 0;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .hint {
-      transition: none;
-    }
   }
 </style>
 

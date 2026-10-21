@@ -655,21 +655,17 @@ const cases = await getCasesByRecency();
     }
   }
 
+  /*
+   * El moviment reduït el decideix `base.css`, que escurça a 0,01 ms la durada
+   * de tota transició i animació, sense llista de selectors (decisió de
+   * Miquel, 21/10/2026). Abans aquí es repetia la mateixa regla per a catorze
+   * selectors, i dues vegades se'n va quedar algun fora (`beff7a3`,
+   * `2a4e6a3`). Només hi queda la mesura, perquè la regla global retalla la
+   * durada i no el retard: la diagonal de `--k × 60 ms` continuaria fent
+   * esperar fins a 360 ms l'última osca.
+   */
   @media (prefers-reduced-motion: reduce) {
-    .cas,
-    .osca,
-    .cas::before,
-    .cas__periode,
-    .cas__titol,
-    .cas__subtitol,
-    .cas__marc,
-    .cas__repos,
-    .cas__detall,
-    .habilitats__nom,
-    .mesura i,
-    .entitats abbr,
-    .entrada,
-    .rem {
+    .mesura i {
       transition: none;
     }
   }
