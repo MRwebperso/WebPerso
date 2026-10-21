@@ -23,9 +23,7 @@
  * Els fixtures neixen d'un cas real (clonat, amb `order` i `year` canviats) i no
  * d'una forma escrita a mà: si l'esquema canvia, el fixture segueix sent vàlid.
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import { bundle, fromRoot } from './lib.mjs';
+import { bundle, caseFiles } from './lib.mjs';
 
 /** L'error que llança `fn`, o `null` si no en llança cap. */
 function thrown(fn) {
@@ -44,14 +42,7 @@ export default async function cases(t) {
   const { collections } = await bundle('src/content.config.ts');
 
   // ── Els fitxers de debò ──
-  const casesDir = fromRoot('src/content/cases');
-  const real = fs
-    .readdirSync(casesDir)
-    .filter((n) => n.endsWith('.json'))
-    .map((n) => ({
-      id: path.basename(n, '.json'),
-      data: collections.cases.schema.parse(JSON.parse(fs.readFileSync(path.join(casesDir, n), 'utf8'))),
-    }));
+  const real = caseFiles().map(({ id, raw }) => ({ id, data: collections.cases.schema.parse(raw) }));
   if (!t.ok(real.length > 0, 'hi ha fitxers a src/content/cases/')) return;
   const orderOf = new Map(real.map((e) => [e.id, e.data.order]));
 
@@ -86,6 +77,7 @@ export default async function cases(t) {
       `a igualtat d'any (${recent[i].year}), «${recent[i - 1].id}» va davant de «${recent[i].id}» com a l'ordre editorial`,
     );
   }
+  t.equal(ids(byRecency(resolved.slice().reverse())), ids(recent), 'byRecency dona el mateix amb la llista del revés: el desempat és `order`, no l\'ordre d\'entrada');
   t.note(`${real.length} casos reals, ${ties} empats d'any desfets per order`);
 
   // ── Fixtures ──
@@ -122,4 +114,5 @@ export default async function cases(t) {
   const input = resolveCases(tied);
   t.equal(ids(byRecency(input)), ['c1', 'c3', 'c5', 'c2', 'c4'], 'fixture d\'empats: byRecency va per any i, a igualtat, per order');
   t.equal(ids(input), ['c1', 'c2', 'c3', 'c4', 'c5'], 'fixture d\'empats: byRecency no toca la llista que rep');
+  t.equal(ids(byRecency(input.slice().reverse())), ['c1', 'c3', 'c5', 'c2', 'c4'], 'fixture d\'empats: byRecency no depèn de l\'ordre en què rep la llista');
 }

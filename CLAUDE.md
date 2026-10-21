@@ -14,7 +14,7 @@ Abans d'escriure o reescriure cap text de `home.ts`, dels casos o de la cronolog
 npm run dev      # astro dev, port 4321 (o $PORT si està ocupat)
 npm run check    # tipus + esquemes de col·lecció
 npm run build    # esquemes + comprovacions que travessen fitxers, sense tipus
-npm run verify   # contractes en Node pla: cronologia, maneta, enllaços, paleta, CMS, sortida del build
+npm run verify   # contractes en Node pla: cronologia, maneta, enllaços, paleta, CMS, sortida del build, casos
 ```
 
 **No hi ha cap framework de proves ni cap linter.** No inventis `npm test`; la xarxa de seguretat són `check`, `build` i `verify`, i no cobreixen el mateix. `verify` no és un marc de proves: són scripts de Node pla a `scripts/verify/` que no compilen el lloc ni obren cap navegador. `links` llegeix la sortida de l'últim `npm run build`, que cal fer abans, i `links` i `build` es posen en vermell si aquesta sortida és més vella que `src/`, `public/`, `astro.config.mjs` o `package.json`; `palette` calcula les ràtios del tema fosc a partir de `theme-dark.css`; `decap` contrasta `public/admin/config.yml` amb l'esquema dels casos. `check` no atrapa l'`order` duplicat entre casos ni la carpeta de casos buida, perquè aquestes dues comprovacions viuen en temps d'execució a [resolveCases()](src/data/cases.ts); `verify cases` sí que les atrapa, sense compilar (sobre els fitxers de `src/content/cases/` i sobre fixtures), i `build` continua fent-les saltar. Si has tocat `src/content/cases/`, l'ordre que val és `build`.

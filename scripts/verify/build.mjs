@@ -2,7 +2,7 @@
  * El JS de client, sobre la sortida de l'última compilació
  * (`.vercel/output/static`; cal `npm run build` abans, i `compiledSite` de
  * `lib.mjs` ho exigeix: en vermell si la sortida és més vella que els fonts).
- * Dos invariants que fins al 21/10/2026 només guardava la convenció, i que cap
+ * Tres invariants que fins al 21/10/2026 només guardava la convenció, i que cap
  * tipus ni cap esquema no veu:
  *
  * - Cap tros de client compartit. Els guions de la portada i dels casos van en
@@ -19,6 +19,9 @@
  *   guions en línia ni als fitxers de `/_astro/` que les pàgines carreguen. Que
  *   hi surtin vol dir que un guió ha importat un valor de `timeline.ts`, de
  *   `ui.ts` o d'un cas, i que el text de les dues llengües viatja dins el JS.
+ * - Cap nom de llengua al JS de client. Els noms (`langNames`, de
+ *   `lang-keys.ts`) són massa curts per a la comprovació de frases de dalt: es
+ *   busquen sencers, entre cometes.
  *
  * «Les pàgines del lloc» són les del sitemap, que ja deixa fora els prototips
  * (vegeu `astro.config.mjs`). Els prototips en queden fora a posta: importen
@@ -27,7 +30,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { bundle, compiledSite, fromRoot } from './lib.mjs';
+import { bundle, caseFiles, compiledSite } from './lib.mjs';
 
 /** Els dos guions que Astro mateix serveix des de `/_astro/`, sense el hash. */
 const ASTRO_OWN = ['ClientRouter.astro_astro_type_script_index_0_lang', 'page'];
@@ -100,8 +103,7 @@ export default async function build(t) {
 
   // ── Cap text de la còpia al JS de client ──
   const { timeline } = await bundle('src/data/timeline.ts');
-  const casesDir = fromRoot('src/content/cases');
-  const cases = fs.readdirSync(casesDir).filter((n) => n.endsWith('.json')).map((n) => JSON.parse(fs.readFileSync(path.join(casesDir, n), 'utf8')));
+  const cases = caseFiles().map(({ raw }) => raw);
   const sentences = ['ca', 'fr'].flatMap((lang) => [
     ...Object.entries(timeline[lang].milestones).map(([id, m]) => [`cronologia ${lang} «${id}»`, m.body]),
     ...cases.map((c) => [`cas ${lang} «${c.ca.title}»`, c[lang].summary]),
@@ -115,4 +117,22 @@ export default async function build(t) {
     t.ok(!js.some((code) => code.includes(fragment)), `${where}: «${fragment}» no és a cap guió de client`);
   }
   t.note(`${sentences.length} frases de la còpia, cap en ${new Set(inline).size} guions en línia diferents ni en ${closure(site.out, loaded).size} fitxers de /_astro/`);
+
+  // ── Cap nom de llengua al JS de client ──
+  // `langNames` és a `lang-keys.ts`, que els guions ja importen per `langKeys`:
+  // que els noms no arribin al client ho fa l'empaquetador en esborrar el que no
+  // s'usa (decisió de Miquel, 21/10/2026). La comprovació de frases de dalt no
+  // ho veu: només casa trossos de 20 caràcters o més i un nom en té sis. Es
+  // busca el nom sencer entre cometes, un cop desfets els escapaments de JS
+  // (esbuild escriu `\xE8` per a `è`). Els prototips en queden fora, com a dalt.
+  const { langNames } = await bundle('src/data/lang-keys.ts');
+  const decoded = js.map((code) => code.replace(/\\x([0-9a-fA-F]{2})|\\u([0-9a-fA-F]{4})/g, (_, a, b) => String.fromCharCode(parseInt(a ?? b, 16))));
+  for (const [lang, names] of Object.entries(langNames)) {
+    for (const [key, name] of Object.entries(names)) {
+      const where = `nom de llengua ${lang}/${key} «${name}»`;
+      if (!t.ok(htmlText.some((h) => h.includes(name)), `${where} és a l'HTML d'alguna pàgina`)) continue;
+      const quoted = ['"', "'", '`'].map((q) => `${q}${name}${q}`);
+      t.ok(!decoded.some((code) => quoted.some((q) => code.includes(q))), `${where} no és a cap guió de client`);
+    }
+  }
 }

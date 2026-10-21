@@ -3,7 +3,10 @@
  *
  * No és un marc de proves (decisió de Miquel, 21/10/2026): són comprovacions
  * de contractes que ni `astro check` ni `astro build` no veuen, escrites en
- * Node pla i sense cap dependència nova. Cada fitxer de comprovació exporta
+ * Node pla. Les úniques dependències són `esbuild` (per carregar els mòduls
+ * TypeScript que Node no pot, vegeu `bundle`) i `js-yaml` (per llegir la
+ * configuració del CMS), totes dues a `devDependencies` des del 21/10/2026.
+ * Cada fitxer de comprovació exporta
  * una funció que rep un `t` i hi apunta les afirmacions; `run.mjs` les passa
  * totes i surt amb codi 1 si en falla cap.
  */
@@ -112,26 +115,29 @@ export async function bundle(entry) {
  * ho resol un sol lloc, i en vermell si la sortida falta o és més vella que el
  * fitxer més nou de `src/`, `public/`, `astro.config.mjs` o `package.json`.
  *
- * L'edat de la sortida és la de la pàgina HTML més vella, i no la del
- * directori ni la del fitxer més nou. L'adaptador copia `public/` conservant
- * les dates (el `favicon.svg` de la sortida és de juliol), de manera que
- * qualsevol fitxer copiat faria semblar vella una sortida acabada de fer; les
- * pàgines, en canvi, s'escriuen a cada compilació. El preu és que un fitxer
+ * L'edat de la sortida és la de la pàgina HTML més vella que la compilació
+ * ha generat, i no la del directori ni la del fitxer més nou. L'adaptador
+ * copia `public/` conservant les dates (el `favicon.svg` de la sortida és de
+ * juliol), de manera que qualsevol fitxer copiat faria semblar vella una
+ * sortida acabada de fer: això val també per als `.html` de `public/` (un
+ * `googleXXXX.html` de Search Console), que per això no compten; les pàgines
+ * generades, en canvi, s'escriuen a cada compilació. El preu és que un fitxer
  * editat mentre la compilació encara escriu pàgines també salta com a vell:
  * s'assumeix, perquè aquesta sortida és justament la dubtosa.
+ *
+ * Els directoris compten com a fonts (21/10/2026): esborrar o reanomenar un
+ * fitxer no toca la data de cap dels que queden, i sense la del directori una
+ * pàgina o un cas esborrats deixaven la sortida per fresca.
  */
 const SOURCES = ['src', 'public', 'astro.config.mjs', 'package.json'];
 
-/** El fitxer amb la data de modificació més recent de `SOURCES`. */
+/** El fitxer o directori amb la data de modificació més recent de `SOURCES`. */
 function newestSource() {
-  let newest = { file: null, mtimeMs: 0 };
+  let newest = { file: null, mtimeMs: 0, dir: false };
   const visit = (p) => {
     const stat = fs.statSync(p);
-    if (stat.isDirectory()) {
-      for (const name of fs.readdirSync(p)) visit(path.join(p, name));
-    } else if (stat.mtimeMs > newest.mtimeMs) {
-      newest = { file: p, mtimeMs: stat.mtimeMs };
-    }
+    if (stat.mtimeMs > newest.mtimeMs) newest = { file: p, mtimeMs: stat.mtimeMs, dir: stat.isDirectory() };
+    if (stat.isDirectory()) for (const name of fs.readdirSync(p)) visit(path.join(p, name));
   };
   for (const source of SOURCES) if (fs.existsSync(fromRoot(source))) visit(fromRoot(source));
   return newest;
@@ -157,29 +163,66 @@ function htmlFiles(dir, base = dir, found = []) {
  *   els prototips (vegeu `astro.config.mjs`). Són dues llistes i no una perquè
  *   responen a preguntes diferents: `links` vol tot el que es pot servir,
  *   `build` només les pàgines del lloc.
- * - `read(rel)`: el contingut en utf8 d'un fitxer de la sortida, pel camí relatiu.
+ * - `origin`: l'origen (`https://domini`) que declara el sitemap, o `null` si en
+ *   surt buit. És el de la compilació i no el de `siteUrl`, que es llegeix a
+ *   l'entorn del moment de verificar: una sortida feta amb un altre `SITE_URL`
+ *   (el de Vercel, una variable exportada) en faria caure cada canonical sense
+ *   cap causa a la vista (21/10/2026).
+ * - `read(rel)`: el contingut en utf8 d'un fitxer de la sortida, pel camí
+ *   relatiu. Es llegeix una sola vegada per procés.
+ *
+ * Es calcula un sol cop per procés i es comparteix entre `links` i `build`, que
+ * abans cada una tornava a recórrer `src/`, la sortida i el sitemap. Una sortida
+ * vella o absent no es guarda: cada comprovació en torna a apuntar l'error al
+ * seu `t`.
  */
+let compiled = null;
+
 export function compiledSite(t) {
+  if (compiled) return compiled;
+
   const out = fromRoot('.vercel/output/static');
   if (!t.ok(fs.existsSync(out), 'hi ha sortida compilada a .vercel/output/static: cal `npm run build`')) return null;
 
   const pages = htmlFiles(out);
-  if (!t.ok(pages.length > 0, 'la sortida compilada porta pàgines HTML: cal `npm run build`')) return null;
+  // Només les pàgines que ha generat la compilació: les de `public/` es copien amb la data d'origen.
+  const generated = pages.filter((rel) => !fs.existsSync(fromRoot('public', rel)));
+  if (!t.ok(generated.length > 0, 'la sortida compilada porta pàgines HTML generades: cal `npm run build`')) return null;
 
-  const builtAt = Math.min(...pages.map((rel) => fs.statSync(path.join(out, rel)).mtimeMs));
+  const builtAt = Math.min(...generated.map((rel) => fs.statSync(path.join(out, rel)).mtimeMs));
   const newest = newestSource();
   const fresh = newest.mtimeMs <= builtAt;
   const stamp = (ms) => new Date(ms).toISOString().replace('T', ' ').slice(0, 19);
   const message = fresh
     ? ''
-    : `la sortida compilada és més vella que ${path.relative(root, newest.file).split(path.sep).join('/')} ` +
+    : `la sortida compilada és més vella que ${path.relative(root, newest.file).split(path.sep).join('/')}${newest.dir ? '/ (s\'hi ha afegit, tret o reanomenat un fitxer)' : ''} ` +
       `(${stamp(newest.mtimeMs)} contra ${stamp(builtAt)} UTC): cal \`npm run build\``;
   if (!t.ok(fresh, message)) return null;
 
-  const read = (rel) => fs.readFileSync(path.join(out, rel), 'utf8');
-  const sitemap = fs
+  const files = new Map();
+  const read = (rel) => {
+    if (!files.has(rel)) files.set(rel, fs.readFileSync(path.join(out, rel), 'utf8'));
+    return files.get(rel);
+  };
+  const locs = fs
     .readdirSync(out)
     .filter((n) => /^sitemap-\d+\.xml$/.test(n))
-    .flatMap((n) => [...read(n).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => decodeURIComponent(new URL(m[1]).pathname)));
-  return { out, pages, sitemap, read };
+    .flatMap((n) => [...read(n).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1])));
+  const sitemap = locs.map((url) => decodeURIComponent(url.pathname));
+  compiled = { out, pages, sitemap, origin: locs[0]?.origin ?? null, read };
+  return compiled;
+}
+
+/**
+ * Els fitxers de `src/content/cases/`: l'`id` (el nom sense extensió, com el
+ * posa el carregador d'Astro) i el JSON tal com és, sense passar per l'esquema.
+ * Un sol lloc per a `build` i `cases`, perquè no examinin conjunts diferents si
+ * el carregador d'`src/content.config.ts` canvia de glob.
+ */
+export function caseFiles() {
+  const dir = fromRoot('src/content/cases');
+  return fs
+    .readdirSync(dir)
+    .filter((n) => n.endsWith('.json'))
+    .map((n) => ({ id: path.basename(n, '.json'), raw: JSON.parse(fs.readFileSync(path.join(dir, n), 'utf8')) }));
 }

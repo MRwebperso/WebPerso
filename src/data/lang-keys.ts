@@ -17,10 +17,11 @@
  * un camp d'un contingut de portada. Preu assumit: aquest mòdul que el guió de
  * client ja importa ara porta text. No n'hi arriba al client del lloc, perquè
  * els guions només llegeixen `langKeys` i l'empaquetador esborra la resta: cap
- * dels 64 guions en línia de la compilació no en porta cap nom. Ho va comprovar
- * una lectura del JS compilat (21/10/2026), no cap prova de `verify`. L'únic
- * guió que en porta és el del prototip `/la-ruta/`, que pinta els senyals amb
- * `langNames.ca`, i que s'ha d'esborrar.
+ * dels 64 guions en línia de la compilació no en porta cap nom. Ho vigila
+ * `verify build` (21/10/2026): cap nom sencer entre cometes als guions de
+ * client del lloc. L'únic guió que en porta és el del prototip `/la-ruta/`, que
+ * pinta els senyals amb `langNames.ca`, i que s'ha d'esborrar; la comprovació
+ * no el mira, com no mira cap prototip.
  *
  * Sense cap importació de valor: Node el carrega tal qual, sense compilació.
  * L'única importació és de tipus (`Lang`) i s'esborra en compilar: la
