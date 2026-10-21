@@ -28,9 +28,16 @@ interface Props {
   description?: string;
   /** Pàgines de servei (arrel, 404) fora de l'índex dels cercadors. */
   noindex?: boolean;
+  /**
+   * Pàgina que no té mirall a l'altra llengua (la 404): no du ni canonical ni
+   * `hreflang` ni `og:url`, i el commutador de llengua porta a la portada de
+   * l'altra llengua. Cal dir-ho, perquè per a qualsevol altra pàgina
+   * `getAlternates()` dona per fet que el mirall existeix.
+   */
+  noMirror?: boolean;
 }
 
-const { lang, title, description, noindex = false } = Astro.props;
+const { lang, title, description, noindex = false, noMirror = false } = Astro.props;
 const t = useTranslations(lang);
 
 const pageTitle = title ?? t('meta.title');
@@ -38,8 +45,16 @@ const pageDescription = description ?? t('meta.description');
 
 // Cap URL absoluta escrita a mà: totes surten d'`Astro.site` (una línia a
 // src/config/site.mjs). Si el domini canvia, aquí no es toca res.
-const alternates = getAlternates(Astro.url);
-const canonical = new URL(alternates[lang], Astro.site);
+//
+// La 404 és una de sola per a les dues llengües i l'amfitrió la serveix a la URL
+// que ha fallat, de manera que no té cap adreça pròpia que declarar: sense
+// canonical, i `noindex` la ha de deixar fora de l'índex (Miquel, 21/10/2026).
+// Abans `getAlternates()` hi traduïa el camí `/404` com si fos una pàgina, i
+// la capçalera apuntava a `/ca/404/` i `/fr/404/`, que no existeixen. Preu
+// assumit: el cas especial és una bandera explícita i no es dedueix del camí,
+// de manera que una pàgina nova sense mirall l'ha de demanar.
+const alternates = noMirror ? null : getAlternates(Astro.url);
+const canonical = alternates ? new URL(alternates[lang], Astro.site) : null;
 ---
 
 <!doctype html>
@@ -53,14 +68,14 @@ const canonical = new URL(alternates[lang], Astro.site);
     <link rel="preload" href={serifLatin} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={sansLatin} as="font" type="font/woff2" crossorigin />
 
-    <link rel="canonical" href={canonical} />
+    {canonical && <link rel="canonical" href={canonical} />}
 
-    <AlternateLinks alternates={alternates} />
+    {alternates && <AlternateLinks alternates={alternates} />}
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDescription} />
-    <meta property="og:url" content={canonical} />
+    {canonical && <meta property="og:url" content={canonical} />}
     <meta property="og:locale" content={languages[lang].ogLocale} />
     {
       langCodes
@@ -83,7 +98,7 @@ const canonical = new URL(alternates[lang], Astro.site);
   </head>
   <body>
     <a class="skip-link" href="#content">{t('skip.content')}</a>
-    <Header lang={lang} />
+    <Header lang={lang} noMirror={noMirror} />
     <main id="content">
       <slot />
     </main>

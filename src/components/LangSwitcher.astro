@@ -6,18 +6,25 @@
  * actual (mai a la portada). Amb JS, la commutació és instantània —
  * pre-càrrega en `hover` + transició de vista — i la tria queda desada per a
  * l'entrada següent pel domini nu.
+ *
+ * L'única excepció és la pàgina sense mirall (`noMirror`, la 404): no hi ha
+ * cap «mateixa pàgina» a l'altra llengua, de manera que el commutador hi porta
+ * a la portada de l'altra llengua, amb la mateixa etiqueta i el mateix estil
+ * (Miquel, 21/10/2026). Abans portava a `/fr/404/`, que no existeix.
  */
 import { useTranslations } from '../i18n/ui';
-import { getAlternates, languages, otherLang, type Lang } from '../i18n/utils';
+import { getAlternates, languages, localize, otherLang, type Lang } from '../i18n/utils';
 
 interface Props {
   lang: Lang;
+  /** Pàgina sense mirall: el commutador porta a la portada de l'altra llengua. */
+  noMirror?: boolean;
 }
 
-const { lang } = Astro.props;
+const { lang, noMirror = false } = Astro.props;
 const t = useTranslations(lang);
 const target = otherLang(lang);
-const href = getAlternates(Astro.url)[target];
+const href = noMirror ? localize(target) : getAlternates(Astro.url)[target];
 ---
 
 <a

@@ -1,14 +1,16 @@
 ---
 /**
  * Pàgina d'error única per a tot el domini: l'amfitrió estàtic la serveix
- * sense saber la llengua, per tant es mostra en les dues.
+ * sense saber la llengua, per tant es mostra en les dues. Per la mateixa raó no
+ * té mirall (`noMirror`): ni canonical ni `hreflang`, i el commutador porta a la
+ * portada de l'altra llengua (vegeu `BaseLayout.astro`).
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { ui } from '../i18n/ui';
 import { langCodes, languages, localize } from '../i18n/utils';
 ---
 
-<BaseLayout lang="ca" title={`${ui.ca['404.title']} · ${ui.fr['404.title']}`} noindex>
+<BaseLayout lang="ca" title={`${ui.ca['404.title']} · ${ui.fr['404.title']}`} noindex noMirror>
   <section class="wrap notfound">
     {
       langCodes.map((code) => (

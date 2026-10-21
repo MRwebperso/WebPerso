@@ -6,9 +6,11 @@ import { homeSections, localize, type Lang } from '../i18n/utils';
 
 interface Props {
   lang: Lang;
+  /** Pàgina sense mirall: el commutador de llengua porta a la portada. */
+  noMirror?: boolean;
 }
 
-const { lang } = Astro.props;
+const { lang, noMirror = false } = Astro.props;
 const t = useTranslations(lang);
 const home = localize(lang);
 
@@ -48,7 +50,7 @@ const nav = Object.values(homeSections).flatMap(({ id, nav: key }) => (key === n
         }
       </ul>
     </nav>
-    <LangSwitcher lang={lang} />
+    <LangSwitcher lang={lang} noMirror={noMirror} />
   </div>
 </header>
 
