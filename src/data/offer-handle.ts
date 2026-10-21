@@ -18,6 +18,18 @@
  * «per fotograma només canvia `--x`» és la regla de la peça. `RAMPS` n'és el
  * mirall, no la font, i la comprovació és el que els manté iguals.
  *
+ * La política del gest també hi viu (decisió de Miquel, 21/10/2026): qui
+ * mana —ratolí, dit o teclat—, què torna la costura al repòs i què passa en
+ * passar a pantalla estreta eren `let` dins del guió, fora de l'abast de
+ * `verify`, i hi cabia una deriva que ningú no podia veure: en passar a estret
+ * el guió tornava la costura al mig sense tocar l'aria, de manera que, en
+ * tornar a ample, la costura era al 50 i la maneta seguia anunciant el 80
+ * d'abans. `createHandle` ho recull tot com un autòmat sense DOM, i la posició
+ * i l'aria surten del mateix estat. El preu és un objecte `HandleView` per
+ * gest i per fotograma, i uns quants centenars de bytes més al guió en línia,
+ * que ha de continuar per sota del límit d'Astro (4096) perquè no surti cap
+ * tros compartit: `verify build` ho vigila.
+ *
  * Sense cap importació: Node el carrega tal qual.
  */
 
@@ -94,4 +106,86 @@ export function keyTarget(key: string, target: number): number | null {
 export function ramp(name: RampName, x: number): number {
   const { side, from, slope } = RAMPS[name];
   return clamp((side === 'render' ? x - from : from - x) * slope, 0, 1);
+}
+
+/** Què ha de pintar el guió després de cada gest o fotograma. */
+export interface HandleView {
+  /** On és la costura ara (`--x`), no on va. */
+  x: number;
+  /** El que anuncia la maneta: el valor de la destinació, com sempre. */
+  aria: string;
+  /** Falta camí: cal un fotograma més. */
+  moving: boolean;
+  /** Algú ha tocat la maneta; no es desfà (`data-touched`). */
+  touched: boolean;
+}
+
+/**
+ * L'autòmat de la maneta: l'estat i les regles del gest, sense DOM.
+ *
+ * Cada gest torna què cal pintar, o `null` si no ha fet res (un dit que passa
+ * per sobre, una tecla aliena, un ratolí que se'n va quan no s'ha de moure).
+ * Les regles són les d'abans, passades del guió tal qual:
+ * - Amb el teclat o amb el dit, la costura es queda on l'han deixat. Només el
+ *   ratolí que se'n va la torna al mig, perquè allà sí que hi ha un gest clar
+ *   de marxar.
+ * - Un ratolí que torna a entrar recupera el comandament encara que l'hagués
+ *   fixat el teclat. Sense botó premut només mana el ratolí.
+ * - En passar a pantalla estreta tot torna al repòs; en tornar a ample no es
+ *   toca res, que el repòs ja hi és.
+ * `reduced` entra a cada fotograma i no en crear-lo: la preferència pot canviar
+ * amb la pàgina oberta, i el guió la llegeix en viu.
+ */
+export function createHandle() {
+  let target = REST;
+  let current = REST;
+  let dragging = false;
+  let held = false;
+  let mouse = true;
+  let touched = false;
+
+  const view = (): HandleView => ({ x: current, aria: ariaValue(target), moving: current !== target, touched });
+  const aim = (v: number, byUser = true) => {
+    target = aimAt(v);
+    if (byUser) touched = true;
+    return view();
+  };
+
+  return {
+    down(type: string, v: number) {
+      mouse = type === 'mouse';
+      dragging = true;
+      held = !mouse;
+      return aim(v);
+    },
+    move(type: string, v: number) {
+      mouse = type === 'mouse';
+      if (!dragging && !mouse) return null;
+      if (!dragging) held = false;
+      return aim(v);
+    },
+    up() {
+      dragging = false;
+    },
+    leave() {
+      return dragging || held || !mouse ? null : aim(REST, false);
+    },
+    key(k: string) {
+      const v = keyTarget(k, target);
+      if (v === null) return null;
+      held = true;
+      return aim(v);
+    },
+    narrow(isNarrow: boolean) {
+      if (isNarrow) {
+        target = current = REST;
+        held = false;
+      }
+      return view();
+    },
+    tick(dt: number, reduced: boolean) {
+      current = damp(current, target, dt, reduced);
+      return view();
+    },
+  };
 }

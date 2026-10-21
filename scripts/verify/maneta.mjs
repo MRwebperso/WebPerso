@@ -7,6 +7,10 @@
  * - L'amortiment arriba al lloc, en pocs fotogrames o d'un sol pas amb
  *   moviment reduït.
  * - L'aria anuncia el percentatge enter de la posició.
+ * - La política del gest, contra l'autòmat `createHandle`: qui mana (ratolí,
+ *   dit, ploma, teclat), què torna la costura al repòs en marxar, què passa en
+ *   passar a estret i enrere, i que l'aria surti sempre del mateix estat que
+ *   la posició.
  * - El `--x` de repòs i les cinc rampes del CSS diuen els mateixos nombres que
  *   el mòdul.
  * - Els passos del teclat, τ, el sostre del pas de temps i ε són els valors
@@ -26,6 +30,7 @@ import {
   TAU_MS,
   aimAt,
   ariaValue,
+  createHandle,
   damp,
   keyTarget,
   ramp,
@@ -102,6 +107,133 @@ export default async function maneta(t) {
     [0.666, '67'],
   ]) {
     t.equal(ariaValue(v), expected, `aria de ${v}: ${expected}`);
+  }
+
+  // ── La política del gest: l'autòmat ──
+  /*
+   * Valors esperats escrits a mà, no calculats amb les fórmules del mòdul.
+   * `peek` llegeix l'estat sense tocar-lo (`narrow(false)` no fa res), i
+   * `settle` fa córrer fotogrames amb moviment reduït, que arriben d'un sol pas.
+   */
+  const peek = (h) => h.narrow(false);
+  const settle = (h) => h.tick(16, true);
+  const near = (a, b) => Math.abs(a - b) < 1e-9;
+  const AT_REST = { x: 0.5, aria: '50', moving: false, touched: false };
+
+  t.equal(createHandle().tick(16, false), AT_REST, 'sense cap gest, l’autòmat és al repòs: x 0,5, aria 50, quiet i sense tocar');
+  {
+    const h = createHandle();
+    t.equal(h.down('mouse', 0.8), { x: 0.5, aria: '80', moving: true, touched: true }, 'un clic a 0,8: l’aria ja anuncia 80 i la costura encara és al 0,5, en camí');
+    const v = settle(h);
+    t.ok(v.x === 0.8 && v.aria === '80' && !v.moving, 'amb moviment reduït la costura salta al 0,8 d’un sol pas i s’atura');
+  }
+  {
+    const h = createHandle();
+    h.down('mouse', 0.8);
+    const v = h.tick(16, false);
+    t.ok(Math.abs(v.x - 0.5489) < 0.0001, `amb amortiment, un fotograma de 16 ms no la porta al 0,8 sinó cap al 0,5489 (obtingut ${v.x})`);
+    t.ok(v.moving && v.aria === '80', 'amb amortiment segueix en camí, i l’aria ja és la de la destinació');
+    let frames = 0;
+    let w = v;
+    while (w.moving && frames < 500) {
+      w = h.tick(16, false);
+      frames++;
+    }
+    t.ok(w.x === 0.8 && !w.moving, `l’amortiment acaba exactament al 0,8 (${frames + 1} fotogrames)`);
+  }
+  t.equal([createHandle().down('mouse', -3).aria, createHandle().down('touch', 7).aria], ['5', '95'], 'un gest fora del panell s’anuncia retallat: 5 i 95');
+
+  // El viatge a estret i enrere: la deriva que va motivar l'autòmat.
+  for (const type of ['mouse', 'touch']) {
+    const h = createHandle();
+    h.down(type, 0.8);
+    settle(h);
+    t.equal(h.narrow(true), { x: 0.5, aria: '50', moving: false, touched: true }, `${type}: en passar a estret, la costura i l’aria tornen al repòs junts`);
+    t.equal(h.narrow(false), { x: 0.5, aria: '50', moving: false, touched: true }, `${type}: en tornar a ample, l’aria diu 50 i no el 80 d’abans; el «tocat» no es desfà`);
+  }
+  {
+    const h = createHandle();
+    h.down('mouse', 0.8);
+    t.equal(h.narrow(true), { x: 0.5, aria: '50', moving: false, touched: true }, 'a estret enmig d’un camí: no queda res en camí');
+  }
+
+  // Dit, ploma i teclat fixen la costura; només el ratolí que se'n va la torna al mig.
+  for (const type of ['touch', 'pen']) {
+    const h = createHandle();
+    h.down(type, 0.3);
+    h.up();
+    t.equal(h.leave(), null, `${type}: en aixecar-se i marxar, la costura no torna al mig`);
+    t.equal(peek(h).aria, '30', `${type}: continua anunciant 30`);
+  }
+  {
+    const h = createHandle();
+    t.equal(h.move('touch', 0.7), null, 'un dit que passa per sobre sense prémer no existeix');
+    t.equal(h.move('pen', 0.7), null, 'una ploma que sobrevola sense prémer tampoc');
+    t.equal(peek(h), AT_REST, 'i no ha mogut res ni ha marcat «tocat»');
+  }
+  {
+    const h = createHandle();
+    t.equal(h.key('Enter'), null, 'una tecla aliena no fa res (i el guió no n’atura el comportament)');
+    t.equal(h.key('ArrowRight')?.aria, '54', 'fletxa dreta des del repòs: 54');
+    t.equal(h.leave(), null, 'després del teclat, un ratolí que marxa no torna la costura al mig');
+    t.equal(h.key('End')?.aria, '95', 'Fi: 95');
+    t.equal(h.key('Home')?.aria, '5', 'Inici: 5');
+    t.equal(h.key('PageUp')?.aria, '21', 'Re Pàg des del 0,05: 21');
+    const v = settle(h);
+    t.ok(near(v.x, 0.21), `amb moviment reduït arriba al 0,21 (${v.x})`);
+  }
+  {
+    const h = createHandle();
+    h.key('ArrowRight');
+    h.key('ArrowRight');
+    h.key('ArrowRight');
+    t.equal(h.key('ArrowRight')?.aria, '66', 'quatre fletxes dretes: 66, cada pas parteix de la destinació i no d’on és la costura');
+  }
+  {
+    const h = createHandle();
+    t.equal(h.move('mouse', 0.8)?.aria, '80', 'el ratolí mana sense prémer: passar-hi per sobre porta la destinació al 0,8');
+    settle(h);
+    t.equal(h.leave(), { x: 0.8, aria: '50', moving: true, touched: true }, 'el ratolí que se’n va torna la destinació al repòs, aria inclosa, i la costura hi va en camí');
+    t.equal(settle(h), { x: 0.5, aria: '50', moving: false, touched: true }, 'i hi arriba');
+  }
+  {
+    const h = createHandle();
+    h.down('mouse', 0.7);
+    t.equal(h.leave(), null, 'un ratolí que surt mentre arrossega no torna la costura al mig');
+    h.up();
+    t.equal(h.leave()?.aria, '50', 'una vegada deixat anar, sí');
+  }
+  {
+    const h = createHandle();
+    h.down('touch', 0.9);
+    t.equal(h.move('touch', 1.2)?.aria, '95', 'un dit que arrossega fora del panell queda retallat al 95');
+    h.up();
+    t.equal(h.leave(), null, 'i en aixecar-se no torna');
+  }
+  {
+    const h = createHandle();
+    h.key('ArrowRight');
+    t.equal(h.leave(), null, 'fixada pel teclat…');
+    t.equal(h.move('mouse', 0.2)?.aria, '20', '…un ratolí que torna a entrar recupera el comandament');
+    t.equal(h.leave()?.aria, '50', 'i, en marxar, la torna al mig');
+  }
+  {
+    const h = createHandle();
+    h.move('mouse', 0.7);
+    t.equal(h.move('touch', 0.1), null, 'un dit que passa després del ratolí no mou res…');
+    t.equal(h.leave(), null, '…però compta com a darrer punter: en marxar no torna la costura al mig');
+  }
+  {
+    const h = createHandle();
+    h.key('ArrowRight');
+    h.narrow(true);
+    t.equal(h.leave(), { x: 0.5, aria: '50', moving: false, touched: true }, 'passar a estret desfà el «fixat» del teclat: el ratolí que marxa respon (i ja és al mig)');
+  }
+  {
+    const h = createHandle();
+    h.down('mouse', 0.8);
+    h.narrow(true);
+    t.equal(h.leave(), null, 'com abans, passar a estret no desfà un arrossegament que encara no s’ha deixat anar');
   }
 
   // ── El CSS diu el mateix ──

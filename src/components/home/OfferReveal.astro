@@ -552,15 +552,17 @@ const SUN = { cx: 470, cy: 86, r: 36 };
 
 <script>
   /*
-   * Pilot de la costura. Tres entrades —ratolí per sobre, arrossegament i
-   * teclat— sobre un sol estat: `target` és on ha d'anar la costura i `current`
-   * on és. L'amortiment va per constant de temps i el bucle de fotogrames només
-   * corre mentre les dues no coincideixen: en repòs no hi ha cap
-   * `requestAnimationFrame` viu. Els nombres i les regles pures (repòs, límits,
-   * pas de teclat, amortiment, valor d'aria) són a `src/data/offer-handle.ts`;
-   * aquí només hi ha el punter i el DOM.
+   * Pilot de la costura: l'adaptador al DOM. Les tres entrades —ratolí per
+   * sobre, arrossegament i teclat— es tradueixen a gestos de l'autòmat de
+   * `src/data/offer-handle.ts` (`createHandle`), que té l'estat i les regles
+   * (qui mana, què torna la costura al repòs, què passa en passar a estret) i
+   * respon què cal pintar; aquí només hi ha el punter, el DOM i el bucle de
+   * fotogrames, que corre mentre l'autòmat diu que falta camí: en repòs no hi
+   * ha cap `requestAnimationFrame` viu. La posició i l'aria surten del mateix
+   * estat i es pinten juntes (decisió de Miquel, 21/10/2026: abans l'aria només
+   * l'escrivia el gest, i un viatge a estret i enrere la deixava desfasada).
    */
-  import { EPSILON, REST, aimAt, ariaValue, damp, keyTarget } from '../../data/offer-handle';
+  import { EPSILON, createHandle, type HandleView } from '../../data/offer-handle';
 
   /*
    * Per què cal tornar a lligar-ho a `astro:page-load` (28/08/2026): amb el
@@ -594,44 +596,37 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     const narrow = matchMedia('(max-width: 48rem)');
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
-    let target = REST;
-    let current = REST;
+    const handleState = createHandle();
     let painted = -1;
     let running = false;
     let last = 0;
-    let dragging = false;
-    /* Amb el teclat o amb el dit, la costura es queda on l'han deixat. Només el
-       ratolí que se'n va la torna al mig, perquè allà sí que hi ha un gest clar
-       de marxar. */
-    let held = false;
-    let lastPointer = 'mouse';
 
-    function paint(p: number) {
-      if (Math.abs(p - painted) < EPSILON) return;
-      painted = p;
-      stage!.style.setProperty('--x', p.toFixed(4));
+    function paint(v: HandleView) {
+      if (Math.abs(v.x - painted) >= EPSILON) {
+        painted = v.x;
+        stage!.style.setProperty('--x', v.x.toFixed(4));
+      }
+      handle!.setAttribute('aria-valuenow', v.aria);
+      if (v.touched) stage!.dataset.touched = '';
     }
 
     function step(now: number) {
-      current = damp(current, target, now - last, reduce.matches);
+      const v = handleState.tick(now - last, reduce.matches);
       last = now;
-      paint(current);
-      running = current !== target;
+      paint(v);
+      running = v.moving;
       if (running) requestAnimationFrame(step);
     }
 
-    function kick() {
-      if (running) return;
-      running = true;
-      last = performance.now();
-      requestAnimationFrame(step);
-    }
-
-    function aim(v: number, byUser = true) {
-      target = aimAt(v);
-      handle!.setAttribute('aria-valuenow', ariaValue(target));
-      if (byUser) stage!.dataset.touched = '';
-      kick();
+    /* Pinta el que ha respost l'autòmat i, si falta camí, engega el bucle. */
+    function apply(v: HandleView | null) {
+      if (!v) return;
+      paint(v);
+      if (v.moving && !running) {
+        running = true;
+        last = performance.now();
+        requestAnimationFrame(step);
+      }
     }
 
     function at(e: PointerEvent) {
@@ -641,10 +636,7 @@ const SUN = { cx: 470, cy: 86, r: 36 };
 
     pin.addEventListener('pointerdown', (e) => {
       if (stage.dataset.mode !== 'split') return;
-      lastPointer = e.pointerType;
-      dragging = true;
-      held = e.pointerType !== 'mouse';
-      aim(at(e));
+      apply(handleState.down(e.pointerType, at(e)));
       /* La captura és una comoditat —deixa arrossegar fora del panell— i no
          una condició: si el navegador la rebutja, el gest ha de continuar. */
       try {
@@ -654,46 +646,36 @@ const SUN = { cx: 470, cy: 86, r: 36 };
 
     pin.addEventListener('pointermove', (e) => {
       if (stage.dataset.mode !== 'split') return;
-      lastPointer = e.pointerType;
-      /* Sense botó premut només mana el ratolí: un dit que passa per sobre no
-         existeix, i un que arrossega ja ha passat per `pointerdown`. */
-      if (!dragging && e.pointerType !== 'mouse') return;
-      /* El ratolí que torna a entrar recupera el comandament encara que abans
-         l'hagués fixat el teclat. */
-      if (!dragging) held = false;
-      aim(at(e));
+      apply(handleState.move(e.pointerType, at(e)));
     });
 
     function release(e: PointerEvent) {
-      dragging = false;
+      handleState.up();
       if (pin!.hasPointerCapture(e.pointerId)) pin!.releasePointerCapture(e.pointerId);
     }
 
     pin.addEventListener('pointerup', release);
     pin.addEventListener('pointercancel', release);
 
-    pin.addEventListener('pointerleave', () => {
-      if (dragging || held || lastPointer !== 'mouse') return;
-      aim(REST, false);
-    });
+    pin.addEventListener('pointerleave', () => apply(handleState.leave()));
 
     handle.addEventListener('keydown', (e) => {
-      const v = keyTarget(e.key, target);
-      if (v === null) return;
+      const v = handleState.key(e.key);
+      if (!v) return;
       e.preventDefault();
-      held = true;
-      aim(v);
+      apply(v);
     });
 
     function sync() {
+      const v = handleState.narrow(narrow.matches);
       if (narrow.matches) {
         delete stage!.dataset.mode;
         /* En sortir del mode partit la variable ha de tornar al repòs: amb un
-           valor residual, el retall quedaria escrit al mode apilat. */
-        target = current = REST;
+           valor residual, el retall quedaria escrit al mode apilat. L'autòmat
+           ja ha tornat la posició i l'aria al repòs; aquí només cal forçar el
+           repintat, que no el salta la tolerància. */
         painted = -1;
-        held = false;
-        paint(REST);
+        paint(v);
       } else {
         stage!.dataset.mode = 'split';
       }
