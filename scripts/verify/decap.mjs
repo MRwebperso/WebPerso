@@ -16,7 +16,8 @@
  * - Cada opció es diu com a la fitxa en català, amb la primera lletra en
  *   majúscula i la clau entre parèntesis: `caseLabels.ca` per al marc, la
  *   línia de feina i la intensitat; `langNames` de la cronologia per a les
- *   llengües, que és d'on les treu la pàgina del cas.
+ *   llengües, que és d'on les treu la pàgina del cas. Les excepcions
+ *   deliberades (`EXCEPTIONS`) porten el nom exacte que s'ha decidit.
  * - Els mínims i els màxims del formulari són els de l'esquema, llegits de
  *   l'esquema mateix i no copiats aquí: `order` enter i a partir d'1, `year`
  *   enter, tres competències exactament, d'una a tres entitats, sigla d'1 a 4
@@ -36,17 +37,19 @@ import { skillUses } from '../../src/data/case-skills.ts';
 import { langKeys } from '../../src/data/lang-keys.ts';
 
 /*
- * Opcions que no es diuen com a la fitxa i que ja eren així quan es va
- * escriure la comprovació (21/10/2026). No s'han tocat perquè canviar-les
- * canvia el que veu qui edita: queden anotades, no amagades. Si un dia
- * coincideixen, la comprovació avisa que l'entrada sobra.
+ * Excepcions deliberades: opcions que el formulari no diu com la fitxa, i que
+ * s'hi queden per decisió, no per oblit. Cadascuna porta l'etiqueta exacta del
+ * formulari: l'excepció no deixa passar qualsevol nom, només el decidit. Si un
+ * dia la fitxa i el formulari coincideixen, o l'opció desapareix, la
+ * comprovació avisa que l'entrada sobra.
  *
  * - `associative`: a la fitxa no hi ha un nom de marc sinó l'etiqueta que
  *   obliga la secció 2.2 del brief («Realitzat en el marc associatiu», de
  *   `ui.ts`); al formulari hi ha un nom curt com els altres quatre, i la pista
- *   del camp ja diu que «Marc associatiu» porta aquella etiqueta.
+ *   del camp ja diu que «Marc associatiu» porta aquella etiqueta. Miquel va
+ *   decidir el 21/10/2026 quedar-se el nom curt al CMS: no és un pendent.
  */
-const KNOWN = [{ field: 'kind', value: 'associative' }];
+const EXCEPTIONS = [{ field: 'kind', value: 'associative', label: 'Marc associatiu (associative)', decided: '21/10/2026' }];
 
 /** Treu els embolcalls de zod (`superRefine`, `optional`…) fins al tipus de debò. */
 const inner = (s) => {
@@ -96,18 +99,20 @@ export default async function decap(t) {
     t.equal(f.options.map((o) => o.value), [...vocabulary], `config.yml: les opcions de \`${name}\` són el vocabulari, en el mateix ordre`);
     for (const o of f.options) {
       const expected = labels[o.value] === undefined ? undefined : `${cap(labels[o.value])} (${o.value})`;
-      const known = KNOWN.some((k) => k.field === name && k.value === o.value);
-      if (known && o.label !== expected) {
+      const exception = EXCEPTIONS.find((k) => k.field === name && k.value === o.value);
+      if (exception) {
         seen.add(`${name}:${o.value}`);
+        t.ok(o.label !== expected, `l'excepció «${name}:${o.value}» ja coincideix amb la fitxa: traieu-la d'EXCEPTIONS`);
+        t.equal(o.label, exception.label, `config.yml: l'opció \`${o.value}\` de \`${name}\` porta el nom decidit el ${exception.decided}`);
         continue;
       }
       t.equal(o.label, expected, `config.yml: l'opció \`${o.value}\` de \`${name}\` es diu com a la fitxa`);
     }
   }
-  for (const k of KNOWN) {
+  for (const k of EXCEPTIONS) {
     const key = `${k.field}:${k.value}`;
-    if (t.ok(seen.has(key), `el nom conegut «${key}» ja coincideix amb la fitxa: traieu-lo de KNOWN`)) {
-      t.note(`nom diferent i conegut: ${key} (vegeu KNOWN)`);
+    if (t.ok(seen.has(key), `l'excepció «${key}» ja no és al formulari: traieu-la d'EXCEPTIONS`)) {
+      t.note(`excepció deliberada: ${key} es diu «${k.label}» al CMS (decisió del ${k.decided}, vegeu EXCEPTIONS)`);
     }
   }
   t.ok(field(form, 'langs')?.multiple === true, 'config.yml: `langs` admet més d\'una llengua');

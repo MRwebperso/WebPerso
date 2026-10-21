@@ -9,10 +9,13 @@
  * - L'aria anuncia el percentatge enter de la posició.
  * - El `--x` de repòs i les cinc rampes del CSS diuen els mateixos nombres que
  *   el mòdul.
+ * - Els passos del teclat, τ, el sostre del pas de temps i ε són els valors
+ *   aprovats, escrits aquí com a nombres i no llegits del mòdul.
  */
 import fs from 'node:fs';
 import { fromRoot } from './lib.mjs';
 import {
+  DT_CAP_MS,
   EPSILON,
   KEY_STEP,
   MAX,
@@ -20,6 +23,7 @@ import {
   PAGE_STEP,
   RAMPS,
   REST,
+  TAU_MS,
   aimAt,
   ariaValue,
   damp,
@@ -27,7 +31,20 @@ import {
   ramp,
 } from '../../src/data/offer-handle.ts';
 
+/*
+ * Els valors aprovats del contracte de la maneta: els que escrivia en literal
+ * el guió d'`OfferReveal.astro` abans que passessin al mòdul (18ec8d2: ±0,04,
+ * ±0,16, τ de 90 ms, sostre de 140 ms, ε de 0,0004). Es copien aquí a posta: comparar
+ * `KEY_STEP` amb `KEY_STEP` no podia fallar mai (revisió del 21/10/2026), i un
+ * canvi en el mòdul ha de fer vermella la comprovació fins que algú decideixi
+ * que el valor nou és el bo i el posi també aquí.
+ */
+const APPROVED = { KEY_STEP: 0.04, PAGE_STEP: 0.16, TAU_MS: 90, DT_CAP_MS: 140, EPSILON: 0.0004 };
+
 export default async function maneta(t) {
+  // ── Els nombres aprovats ──
+  t.equal({ KEY_STEP, PAGE_STEP, TAU_MS, DT_CAP_MS, EPSILON }, APPROVED, 'passos, τ, sostre del pas de temps i ε: els valors aprovats');
+
   // ── Repòs ──
   for (const name of Object.keys(RAMPS).filter((n) => !n.startsWith('veil'))) {
     t.equal(ramp(name, REST), 0, `al repòs, «${name}» val 0`);
@@ -68,11 +85,23 @@ export default async function maneta(t) {
     t.equal(damp(from, to, 16, true), to, `de ${from} a ${to}, amb moviment reduït: d’un sol pas`);
   }
   t.ok(damp(REST, MAX, 10_000, false) < MAX, 'un fotograma endarrerit no fa saltar la costura fins al final');
+  t.equal(damp(REST, MAX, 10_000, false), damp(REST, MAX, 140, false), 'un fotograma de 10 s avança el mateix que un de 140 ms: el sostre s’aplica');
 
   // ── Aria ──
   t.equal([ariaValue(MIN), ariaValue(MAX), ariaValue(REST)], ['5', '95', '50'], 'aria: 5, 95 i 50, els valors del marcatge');
-  for (let v = MIN; v <= MAX + 1e-9; v += 0.01) {
-    if (!t.ok(ariaValue(v) === String(Math.round(v * 100)), `aria de ${v}`)) break;
+  /*
+   * Abans es comparava `ariaValue(v)` amb `String(Math.round(v * 100))`, que és
+   * el cos de la funció mateixa. Ara, valors esperats escrits a mà: 0,29 × 100
+   * dona 28,999…, i ha d'anunciar 29, no 28; la meitat arrodoneix amunt.
+   */
+  for (const [v, expected] of [
+    [0.29, '29'],
+    [0.57, '57'],
+    [0.125, '13'],
+    [0.334, '33'],
+    [0.666, '67'],
+  ]) {
+    t.equal(ariaValue(v), expected, `aria de ${v}: ${expected}`);
   }
 
   // ── El CSS diu el mateix ──
