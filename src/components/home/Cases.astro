@@ -284,25 +284,19 @@ const cases = await getCasesByRecency();
      * Les veïnes reculen pel color i no per l'opacitat (decisió de l'usuari,
      * 8/10/2026): amb `opacity: 0.55` el text petit queia a 4,21:1
      * (`--ink-soft`), 3,00:1 (`--ink-faint`) i 3,72:1 (el títol en `--accent`,
-     * un `h3` en `--step-1` de gruix 500, que no és text gran). El mètode és
-     * redefinir cada color de text sobre el segment cap a `--paper`: `--ink` a
-     * 0,55 (#8e8e8e, 6,04:1); `--accent` al mateix nivell que `--ink` (#b28809,
-     * 6,05:1), perquè el títol continuï sent el text més fort de la fitxa;
-     * `--ink-faint` al terra de 4,55:1 (#767a80, 4,59:1); i `--ink-soft` a la
-     * mitjana geomètrica entre `--ink` i el terra (#828487, 5,28:1), perquè la
-     * jerarquia entre els grisos sobrevisqui. Ràtios sobre el `--paper` fosc
-     * (#0a0a0a). Les gràfiques, `--rule` (#1d1e21) i `--paper-sunk` (#111213),
-     * segueixen a 0,55 perquè no porten text.
+     * un `h3` en `--step-1` de gruix 500, que no és text gran). Cada color de
+     * la fitxa passa al seu `-dim` de `theme-dark.css`, que és on hi ha les
+     * regles que els fan sortir i les ràtios (21/10/2026).
      */
     .pista:hover .cas,
     .pista:focus-within .cas {
       width: 15rem;
-      --ink: #8e8e8e;
-      --accent: #b28809;
-      --ink-soft: #828487;
-      --ink-faint: #767a80;
-      --rule: #1d1e21;
-      --paper-sunk: #111213;
+      --ink: var(--ink-dim);
+      --accent: var(--accent-dim);
+      --ink-soft: var(--ink-soft-dim);
+      --ink-faint: var(--ink-faint-dim);
+      --rule: var(--rule-dim);
+      --paper-sunk: var(--paper-sunk-dim);
     }
 
     /* La fitxa activa torna als colors del tema amb `inherit`, sense copiar-ne

@@ -38,22 +38,50 @@
      formulari, barres de desplaçament i el fons abans del primer pintat. */
   color-scheme: dark;
 
+  /*
+   * Els `-dim` són el joc amb què reculen les fitxes veïnes del carril de
+   * casos (`Cases.astro`) quan se n'obre una: pel color i no per l'opacitat
+   * (decisió de Miquel, 8/10/2026). Cadascun va al costat del seu color i en
+   * surt per una d'aquestes quatre regles, totes sobre el segment que va de
+   * `--paper` al color (barreja en sRGB, canal a canal, arrodonida a
+   * l'enter). Les ràtios són sobre `--paper`, el fons de la fitxa en repòs:
+   *
+   *   (a) Al 55 % del segment: `--ink` (6,04:1), i `--rule` i `--paper-sunk`,
+   *       que no porten text.
+   *   (b) `--accent`: el primer punt que arriba al contrast de `--ink-dim`
+   *       (6,05:1), perquè el títol continuï sent el text més fort de la fitxa.
+   *   (c) `--ink-faint`: el primer punt que arriba al terra de 4,55:1 (4,59:1).
+   *   (d) `--ink-soft`: el primer punt que arriba a la mitjana geomètrica entre
+   *       `--ink-dim` i el terra (5,24:1; queda a 5,28:1), perquè la jerarquia
+   *       entre els grisos sobrevisqui.
+   *
+   * Fins al 21/10/2026 aquests sis hex eren escrits a `Cases.astro` i les
+   * regles només hi eren en prosa. No es recalculen sols: si canvia un color de
+   * dalt, `npm run verify` diu quin `-dim` ha quedat enrere i quin hex li toca.
+   */
+
   /* El negre és exactament el de l'hero (`--hero-bg`), no un negre qualsevol:
      l'hero i la secció que ve just a sota han de fer un pla continu. */
   --paper: #0a0a0a;
   --paper-sunk: #17181a;
+  --paper-sunk-dim: #111213; /* (a) */
 
   --ink: #fafafa;
+  --ink-dim: #8e8e8e; /* (a) */
   --ink-soft: #c8cad0;
+  --ink-soft-dim: #828487; /* (d) */
   --ink-faint: #9ca1aa;
+  --ink-faint-dim: #767a80; /* (c) */
 
   /* Prou visible per separar blocs sobre negre sense fer de reixa. */
   --rule: #2c2e33;
+  --rule-dim: #1d1e21; /* (a) */
 
   /* El groc de l'hero passa a ser l'accent de tot el lloc, en lloc del blau
      pissarra. És l'únic color d'interacció; l'altre color, `--vermell`,
      només senyala estats (vegeu més avall). */
   --accent: #eab308;
+  --accent-dim: #b28809; /* (b) */
   --accent-soft: #2a2410;
 
   /* El vermell de la senyera aclarit el mínim (decisió de Miquel,
