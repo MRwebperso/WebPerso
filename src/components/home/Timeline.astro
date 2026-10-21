@@ -275,7 +275,15 @@ const steps = milestones.map((milestone) => {
    */
   import { decodeCameras, decodeLangs, hatchTransform, stateAt } from '../../data/timeline-instrument';
 
+  // L'observador de la portada anterior es desconnecta en tornar a lligar:
+  // abans es quedava viu sobre els passos d'una portada que ja no era al
+  // document, un per visita (21/10/2026).
+  let previous: IntersectionObserver | null = null;
+
   const bindTimeline = () => {
+    previous?.disconnect();
+    previous = null;
+
     const root = document.querySelector<HTMLElement>('[data-timeline]');
     const figure = root?.querySelector<HTMLElement>('[data-timeline-figure]');
     const steps = Array.from(root?.querySelectorAll<HTMLElement>('[data-timeline-step]') ?? []);
@@ -361,6 +369,7 @@ const steps = milestones.map((milestone) => {
       },
       { rootMargin: '-40% 0px -40% 0px', threshold: 0 },
     );
+    previous = observer;
 
     for (const step of steps) observer.observe(step);
     // La primera activació és la fita que ja es veu en carregar, no sempre la

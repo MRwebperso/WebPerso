@@ -93,7 +93,13 @@ const canonical = new URL(alternates[lang], Astro.site);
       // Revelació en scroll. Es reactiva a cada transició de pàgina.
       // No n'hi ha cap crida directa: `astro:page-load` arriba també a la
       // primera càrrega, i la crida directa duplicava l'observador (9/10/2026).
+      // L'observador de la pàgina anterior es desconnecta en arribar a la nova:
+      // abans es quedava viu sobre elements que ja no eren al document
+      // (21/10/2026).
+      let previous: IntersectionObserver | null = null;
       const bind = () => {
+        previous?.disconnect();
+        previous = null;
         document.documentElement.classList.add('js');
         const targets = document.querySelectorAll<HTMLElement>('.reveal');
         if (!targets.length) return;
@@ -118,6 +124,7 @@ const canonical = new URL(alternates[lang], Astro.site);
           },
           { rootMargin: '0px 0px -12% 0px', threshold: 0.1 },
         );
+        previous = io;
         targets.forEach((el) => io.observe(el));
       };
       document.addEventListener('astro:page-load', bind);
