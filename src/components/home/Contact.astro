@@ -116,7 +116,11 @@ const f = c.form;
 </Section>
 
 <script>
-  const bind = () => {
+  import { onEveryPage } from '../../scripts/page-binding';
+
+  // A cada pàgina (vegeu `page-binding.ts`). No hi ha res a desfer: tots els
+  // oients són del formulari, i se'n van amb ell.
+  onEveryPage(() => {
     const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
     if (!form) return;
 
@@ -186,11 +190,7 @@ const f = c.form;
         button.textContent = button.dataset.submitLabel!;
       }
     });
-  };
-
-  // `astro:page-load` arriba també a la primera càrrega; amb una crida
-  // directa, els oients es duplicaven.
-  document.addEventListener('astro:page-load', bind);
+  });
 </script>
 
 <style>

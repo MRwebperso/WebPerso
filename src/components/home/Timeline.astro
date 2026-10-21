@@ -274,8 +274,9 @@ const steps = milestones.map((milestone) => {
    * en l'índex de la fita.
    */
   import { decodeCameras, decodeLangs, hatchTransform, stateAt } from '../../data/timeline-instrument';
+  import { onEveryPage, type Binding } from '../../scripts/page-binding';
 
-  const bindTimeline = () => {
+  const bindTimeline = ({ cleanup }: Binding) => {
     const root = document.querySelector<HTMLElement>('[data-timeline]');
     const figure = root?.querySelector<HTMLElement>('[data-timeline-figure]');
     const steps = Array.from(root?.querySelectorAll<HTMLElement>('[data-timeline-step]') ?? []);
@@ -361,6 +362,7 @@ const steps = milestones.map((milestone) => {
       },
       { rootMargin: '-40% 0px -40% 0px', threshold: 0 },
     );
+    cleanup(() => observer.disconnect());
 
     for (const step of steps) observer.observe(step);
     // La primera activació és la fita que ja es veu en carregar, no sempre la
@@ -374,8 +376,8 @@ const steps = milestones.map((milestone) => {
     figure.classList.remove('is-priming');
   };
 
-  // Es lliga només a `astro:page-load`, que arriba també a la primera càrrega:
-  // una crida directa creava dos observadors sobre els mateixos passos
-  // (9/10/2026).
-  document.addEventListener('astro:page-load', bindTimeline);
+  // A cada pàgina, i l'observador de la pàgina anterior es desconnecta: abans
+  // es quedava viu sobre els passos d'una portada que ja no hi era (vegeu
+  // `page-binding.ts`).
+  onEveryPage(bindTimeline);
 </script>

@@ -142,35 +142,26 @@ const cases = await getCasesByRecency();
    * o amb la roda, i les fitxes s'obren igual.
    */
   /*
-   * Es torna a lligar a cada navegació de client (28/08/2026): amb el
-   * `ClientRouter`, el commutador de llengua canvia el cos del document i un
-   * guió de mòdul no es torna a executar. Sense això les fletxes quedaven
-   * mortes a la segona llengua visitada —el carril continuava desplaçant-se amb
-   * el dit, que és justament el que ho feia difícil de veure. L'oient de
-   * `resize` va amb senyal perquè no s'acumuli sobre una pista fora del
-   * document.
-   *
-   * No hi ha cap crida directa a `bindCases()`: `astro:page-load` també arriba
-   * a la primera càrrega, i la crida directa duplicava la lligada (en moviment
-   * reduït, una fletxa saltava dues fitxes; constatat el 9/10/2026).
+   * Es torna a lligar a cada navegació de client (28/08/2026; el com és a
+   * `page-binding.ts`). Sense això les fletxes quedaven mortes a la segona
+   * llengua visitada —el carril continuava desplaçant-se amb el dit, que és
+   * justament el que ho feia difícil de veure—, i amb una crida directa a més
+   * de l'esdeveniment, en moviment reduït una fletxa saltava dues fitxes
+   * (9/10/2026). L'oient de `resize` va amb el senyal de la lligada perquè no
+   * s'acumuli sobre una pista fora del document.
    */
   import { homeSections } from '../../i18n/utils';
+  import { onEveryPage, type Binding } from '../../scripts/page-binding';
 
   // L'àncora de la secció, de `homeSections`: escrita a mà, si canviava les
   // fletxes quedaven mortes sense cap avís.
   const scope = `#${homeSections.cases.id}`;
-  let ditch: AbortController | null = null;
 
-  function bindCases() {
-    ditch?.abort();
-    ditch = null;
-
+  function bindCases({ signal }: Binding) {
     const pista = document.querySelector<HTMLElement>(`${scope} .pista`);
     const rems = [...document.querySelectorAll<HTMLButtonElement>(`${scope} .rem`)];
     if (!pista || rems.length === 0) return;
 
-    ditch = new AbortController();
-    const { signal } = ditch;
     const suau = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const estat = () => {
@@ -210,7 +201,7 @@ const cases = await getCasesByRecency();
     }
   }
 
-  document.addEventListener('astro:page-load', bindCases);
+  onEveryPage(bindCases);
 </script>
 
 <style>

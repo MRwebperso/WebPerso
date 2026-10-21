@@ -561,35 +561,23 @@ const SUN = { cx: 470, cy: 86, r: 36 };
    * aquí només hi ha el punter i el DOM.
    */
   import { EPSILON, REST, aimAt, ariaValue, damp, keyTarget } from '../../data/offer-handle';
+  import { onEveryPage, type Binding } from '../../scripts/page-binding';
 
   /*
-   * Per què cal tornar a lligar-ho a `astro:page-load` (28/08/2026): amb el
-   * `ClientRouter` engegat, el commutador de llengua no recarrega la pàgina
-   * —canvia el cos del document— i un guió de mòdul no es torna a executar mai.
-   * La costura funcionava a la primera pàgina carregada i quedava morta a
-   * l'altra: no era cap diferència entre el català i el francès, sinó la
-   * primera visita contra la segona. Els oients de finestra i de consulta de
-   * mitjans es tanquen amb un `AbortController` a cada nova lligada, perquè si
-   * no s'acumularien apuntant a un panell que ja no és al document.
-   *
-   * No hi ha cap crida directa a `bindOffer()`: `astro:page-load` també arriba
-   * a la primera càrrega, i la crida directa duplicava la lligada: els oients
-   * de punter i de teclat del panell s'hi posaven dues vegades (constatat el
-   * 9/10/2026).
+   * Es torna a lligar a cada pàgina (28/08/2026; el com és a
+   * `page-binding.ts`): la costura funcionava a la primera pàgina carregada i
+   * quedava morta a l'altra, i amb una crida directa a més de l'esdeveniment els
+   * oients de punter i de teclat s'hi posaven dues vegades (9/10/2026). Els
+   * oients de finestra i de consulta de mitjans van amb el senyal de la lligada,
+   * perquè no s'acumulin apuntant a un panell que ja no és al document, i el
+   * fotograma pendent es cancel·la en canviar de pàgina.
    */
-  let ditch: AbortController | null = null;
-
-  function bindOffer() {
-    ditch?.abort();
-    ditch = null;
-
+  function bindOffer({ signal, cleanup }: Binding) {
     const stage = document.querySelector<HTMLElement>('[data-offer-split]');
     const pin = stage?.querySelector<HTMLElement>('[data-pin]');
     const handle = stage?.querySelector<HTMLElement>('[data-handle]');
     if (!stage || !pin || !handle) return;
 
-    ditch = new AbortController();
-    const { signal } = ditch;
     // Llindar de component (48rem): vegeu l'escala a `tokens.css`.
     const narrow = matchMedia('(max-width: 48rem)');
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
@@ -598,6 +586,8 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     let current = REST;
     let painted = -1;
     let running = false;
+    let frame = 0;
+    cleanup(() => cancelAnimationFrame(frame));
     let last = 0;
     let dragging = false;
     /* Amb el teclat o amb el dit, la costura es queda on l'han deixat. Només el
@@ -617,14 +607,14 @@ const SUN = { cx: 470, cy: 86, r: 36 };
       last = now;
       paint(current);
       running = current !== target;
-      if (running) requestAnimationFrame(step);
+      if (running) frame = requestAnimationFrame(step);
     }
 
     function kick() {
       if (running) return;
       running = true;
       last = performance.now();
-      requestAnimationFrame(step);
+      frame = requestAnimationFrame(step);
     }
 
     function aim(v: number, byUser = true) {
@@ -713,5 +703,5 @@ const SUN = { cx: 470, cy: 86, r: 36 };
     addEventListener('load', sync, { signal });
   }
 
-  document.addEventListener('astro:page-load', bindOffer);
+  onEveryPage(bindOffer);
 </script>
