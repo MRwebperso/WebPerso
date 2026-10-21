@@ -13,7 +13,9 @@
 import Section from '../Section.astro';
 import TimelineFigure from './TimelineFigure.astro';
 import { home } from '../../data/home';
-import { langAttr, langKeys, milestones, timeline } from '../../data/timeline';
+import { langKeys } from '../../data/lang-keys';
+import { milestones, timeline } from '../../data/timeline';
+import { encodeLangs } from '../../data/timeline-instrument';
 import type { Lang } from '../../i18n/utils';
 
 interface Props {
@@ -24,8 +26,8 @@ const { lang } = Astro.props;
 const intro = home[lang].timeline;
 const c = timeline[lang];
 
-const steps = milestones.map((milestone, i) => {
-  const copy = c.milestones[i];
+const steps = milestones.map((milestone) => {
+  const copy = c.milestones[milestone.id];
   return {
     milestone,
     copy,
@@ -59,7 +61,7 @@ const steps = milestones.map((milestone, i) => {
             data-year={String(milestone.year)}
             data-year-suffix={copy.yearSuffix ?? ''}
             data-zone-label={copy.zoneLabel}
-            data-langs={langAttr(milestone.langs)}
+            data-langs={encodeLangs(milestone.langs)}
           >
             <p class="step__year nums">
               {milestone.year}
@@ -268,8 +270,13 @@ const steps = milestones.map((milestone, i) => {
    * `isIntersecting` depèn del motor. Així no cal escoltar cap `scroll`.
    *
    * Les dades viuen als atributs dels passos, no en un JSON a part: una sola
-   * font de veritat, la de `src/data/timeline.ts`.
+   * font de veritat, la de `src/data/timeline.ts`. El format dels atributs i la
+   * regla de quina fita es dibuixa són de `timeline-instrument.ts`, que els
+   * escriu en compilar i els llegeix aquí: aquest guió només tradueix el scroll
+   * en l'índex de la fita.
    */
+  import { decodeCameras, decodeLangs, hatchTransform, stateAt } from '../../data/timeline-instrument';
+
   const bindTimeline = () => {
     const root = document.querySelector<HTMLElement>('[data-timeline]');
     const figure = root?.querySelector<HTMLElement>('[data-timeline-figure]');
@@ -279,7 +286,7 @@ const steps = milestones.map((milestone, i) => {
     const svg = figure.querySelector<SVGSVGElement>('[data-timeline-svg]');
     const hatch = figure.querySelector<SVGPatternElement>('[data-timeline-hatch]');
     const nodes = Array.from(figure.querySelectorAll<SVGElement>('[data-node]'));
-    const camera = (svg?.dataset.camera ?? '').split(',').map((entry) => entry.split(':').map(Number));
+    const cameras = decodeCameras(svg?.dataset.camera ?? '');
 
     const pips = new Map<string, HTMLElement>();
     for (const pip of figure.querySelectorAll<HTMLElement>('[data-lang]')) {
@@ -309,31 +316,19 @@ const steps = milestones.map((milestone, i) => {
       if (suffixEl) suffixEl.textContent = step.dataset.yearSuffix ?? '';
       if (zoneEl) zoneEl.textContent = step.dataset.zoneLabel ?? '';
 
-      // Eix territori. Quatre estats i no tres: el mapa ha de poder distingir
-      // la fita d'on es ve («prev») de les que ja han quedat més enrere
-      // («past»), perquè només les dues últimes es dibuixen. Amb un sol «past»
-      // el recorregut s'anava acumulant i al final hi havia sis punts alhora.
-      for (const node of nodes) {
-        const at = Number(node.dataset.node);
-        node.dataset.state =
-          at === index ? 'current' : at === index - 1 ? 'prev' : at < index ? 'past' : 'future';
-      }
-      const [scale, camX, camY] = camera[index] ?? [1, 0, 0];
+      // Eix territori: l'estat de cada punt, tram i ram (`stateAt`), la càmera
+      // de la fita i la trama compensada per l'escala inversa.
+      for (const node of nodes) node.dataset.state = stateAt(Number(node.dataset.node), index);
+      const { scale, tx, ty } = cameras[index] ?? { scale: 1, tx: 0, ty: 0 };
       svg?.style.setProperty('--cam-scale', String(scale));
-      svg?.style.setProperty('--cam-x', String(camX));
-      svg?.style.setProperty('--cam-y', String(camY));
-      // La trama del territori es mesura en unitats del mapa i la càmera
-      // l'amplia igual que tot: a les fites de zoom fort quedaven quatre
-      // ratlles escampades. Compensada per l'escala inversa, el pas que es veu
-      // és el mateix a totes les fites. `patternTransform` no és una propietat
-      // CSS animable, així que es reescriu aquí i prou.
-      hatch?.setAttribute('patternTransform', `rotate(38) scale(${(1 / scale).toFixed(4)})`);
+      svg?.style.setProperty('--cam-x', String(tx));
+      svg?.style.setProperty('--cam-y', String(ty));
+      hatch?.setAttribute('patternTransform', hatchTransform(scale));
 
       // Eix llengua.
-      for (const pair of (step.dataset.langs ?? '').split(',')) {
-        const [key, state] = pair.split(':');
+      for (const { key, state } of decodeLangs(step.dataset.langs ?? '')) {
         const pip = pips.get(key);
-        if (pip && state) pip.dataset.state = state;
+        if (pip) pip.dataset.state = String(state);
       }
 
       steps.forEach((el, at) => el.classList.toggle('is-current', at === index));

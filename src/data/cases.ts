@@ -4,7 +4,7 @@ import { type CaseKind } from './case-kinds';
 import { type SkillUse } from './case-skills';
 import type { Lang } from '../i18n/utils';
 import { ui } from '../i18n/ui';
-import type { LangKey } from './timeline';
+import { langKeys, type LangKey } from './lang-keys';
 
 /**
  * Portfolio — accés als casos i etiquetes de la fitxa.
@@ -98,7 +98,9 @@ export async function getCases(): Promise<CaseRecord[]> {
       kind: entry.data.kind,
       category: entry.data.category,
       year: entry.data.year,
-      langs: entry.data.langs,
+      // En l'ordre del registre i no en el del fitxer: la fitxa del cas les
+      // llegeix així, igual que la columna de la cronologia.
+      langs: langKeys.filter((key) => entry.data.langs.includes(key)),
       skills: entry.data.skills,
       orgs: entry.data.orgs,
       copy: { ca: entry.data.ca, fr: entry.data.fr },

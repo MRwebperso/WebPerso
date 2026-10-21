@@ -1,26 +1,24 @@
 import type { Lang } from '../i18n/utils';
 import { ui } from '../i18n/ui';
+import type { LangKey, LangState } from './lang-keys';
 
 /**
  * Cronologia — dades i contingut.
  *
  * Els fets de cada fita (any, zones ocupades, estat de cada llengua) són únics
- * i no es tradueixen (el dibuix viu a `TimelineFigure.astro`): el diagrama es
- * dibuixa dels mateixos números en les dues llengües.
+ * i no es tradueixen (la geometria del dibuix viu a `timeline-instrument.ts`):
+ * el diagrama es dibuixa dels mateixos números en les dues llengües.
  * Només els textos van per llengua, i la paritat la imposen els tipus: sis
- * fites en tupla i les sis llengües en `Record`. Afegir una fita o una llengua
- * en una llengua i no en l'altra no compila.
+ * fites en tupla, el text de cada fita en `Record` per `id` i les sis llengües
+ * en `Record`. Afegir una fita o una llengua en una llengua i no en l'altra no
+ * compila.
+ *
+ * El vocabulari de l'eix llengua (`langKeys`, `LangKey`, `LangState`) és a
+ * `lang-keys.ts`: qui el necessita no ha d'arrossegar el text d'aquest fitxer.
  */
 
 export const zoneKeys = ['europa', 'nord', 'sud'] as const;
 export type Zone = (typeof zoneKeys)[number];
-
-/** Ordre d'entrada a la trajectòria: és l'ordre en què es llegeix la columna. */
-export const langKeys = ['fr', 'pt', 'ca', 'es', 'en', 'de'] as const;
-export type LangKey = (typeof langKeys)[number];
-
-/** 0 absent · 1 adquirida · 2 llengua de treball. */
-export type LangState = 0 | 1 | 2;
 
 export type Six<T> = readonly [T, T, T, T, T, T];
 
@@ -29,9 +27,11 @@ export type Six<T> = readonly [T, T, T, T, T, T];
 export type MilestoneId = 'cevenes' | 'portugal' | 'barcelona' | 'europa' | 'pandemia' | 'vallespir';
 
 export interface Milestone {
-  /** Identificador estable: no es tradueix ni surt a la interfície. Serveix
-   * també de clau a la geometria de `TimelineFigure` (`COORDS`, els punts
-   * nomenats i `data-node`), de manera que un `id` que falti no compila. */
+  /** Identificador estable: no es tradueix ni surt a la interfície. És la clau
+   * del text de cada fita (`TimelineContent.milestones`) i de la geometria de
+   * `timeline-instrument.ts` (llocs, càmera, rams), de manera que un `id` que
+   * falti no compila. La posició a `milestones` només dona l'ordre de lectura
+   * i el `data-node` del diagrama. */
   id: MilestoneId;
   year: number;
   /**
@@ -103,7 +103,12 @@ export interface TimelineContent {
   stateLabels: { learning: string; acquired: string };
   axisLabels: { zone: string; acquired: string; learning: string };
   figureNote: string;
-  milestones: Six<MilestoneCopy>;
+  /**
+   * Per `id` i no per posició (21/10/2026): és la mateixa clau que fa servir la
+   * geometria, i ja no hi ha tres adreçaments per a una fita. `Record` imposa
+   * el mateix que imposava la tupla: una fita que falti o que sobri no compila.
+   */
+  milestones: Record<MilestoneId, MilestoneCopy>;
 }
 
 const ca: TimelineContent = {
@@ -121,33 +126,33 @@ const ca: TimelineContent = {
   axisLabels: { zone: 'Territori', acquired: 'Adquirides', learning: 'En aprenentatge' },
   figureNote:
     'El mapa mostra la fita que s’està llegint i d’on es venia; la columna de la dreta, en quines llengües. La línia de punts és la frontera.',
-  milestones: [
-    {
+  milestones: {
+    cevenes: {
       title: 'Les Cevenes',
       zoneLabel: 'Cevenes, França',
       body: 'Creixo en un poble de mitja muntanya, al peu de les Cevenes, amb el francès com a primera llengua i una comuna petita com a món sencer. Els territoris on treballo avui s’assemblen a aquest poble.',
     },
-    {
+    portugal: {
       title: 'Évora i Lisboa',
       zoneLabel: 'Évora i Lisboa, Portugal',
       body: 'L’adolescència a Évora i després la llicenciatura d’Economia a l’ISEG, a Lisboa. El portuguès passa a ser la llengua de casa, de classe i del carrer alhora: primer canvi de país, primer bilingüisme complet. De l’Economia me n’he quedat el costum de mirar primer els números d’un territori.',
     },
-    {
+    barcelona: {
       title: 'Barcelona',
       zoneLabel: 'Barcelona, Espanya',
       body: 'M’instal·lo a Barcelona: dos màsters i un doctorat en comunicació, amb l’anglès com a llengua de treball. La tesi analitza com s’havia explicat la crisi de l’euro en diverses llengües alhora, i obtinc cum laude i menció de doctorat internacional, amb una estada a la Universitat d’Aarhus. El català i el castellà passen a ser les llengües de cada dia.',
     },
-    {
+    europa: {
       title: 'Projectes europeus',
       zoneLabel: 'Barcelona, amb viatges arreu d’Europa',
       body: 'Entro als projectes europeus: partenariats, seguiment de subvencions, organització de trobades. Coordino socis de diversos països al projecte MOVOKEUR i organitzo el taller internacional Antipode del 2015. Aprenc a llegir una convocatòria pels criteris d’avaluació abans que per la descripció.',
     },
-    {
+    pandemia: {
       title: 'Suïssa, Alemanya, Vallespir',
       zoneLabel: 'Suïssa, Alemanya i Vallespir',
       body: 'Deixo la ciutat. Passo la pandèmia entre Suïssa, Alemanya i el Vallespir. Al Valais faig la verema com a temporer i, alhora, l’etnografia dels temporers per a la Universitat de Barcelona: el terreny i la feina són el mateix lloc. En surto parlant alemany.',
     },
-    {
+    vallespir: {
       yearSuffix: '→ avui',
       title: 'Alt Vallespir',
       zoneLabel: 'Prats de Molló, França',
@@ -157,7 +162,7 @@ const ca: TimelineContent = {
         body: 'Presideixo CLM, l’associació que duu TVallespir. Hi provo formats, eines i maneres de treballar abans de fer-los servir per encàrrec. Les feines fetes des d’allà surten al portfolio etiquetades, perquè no són facturades.',
       },
     },
-  ],
+  },
 };
 
 const fr: TimelineContent = {
@@ -175,33 +180,33 @@ const fr: TimelineContent = {
   axisLabels: { zone: 'Territoire', acquired: 'Acquises', learning: 'En apprentissage' },
   figureNote:
     'La carte montre l’étape en cours de lecture et celle d’où l’on vient ; la colonne de droite, dans quelles langues. La ligne pointillée est la frontière.',
-  milestones: [
-    {
+  milestones: {
+    cevenes: {
       title: 'Les Cévennes',
       zoneLabel: 'Cévennes, France',
       body: 'Je grandis dans un village de moyenne montagne, au pied des Cévennes, avec le français pour première langue et une petite commune pour tout horizon. Les territoires où je travaille aujourd’hui ressemblent à ce village.',
     },
-    {
+    portugal: {
       title: 'Évora et Lisbonne',
       zoneLabel: 'Évora et Lisbonne, Portugal',
       body: 'L’adolescence à Évora, puis une licence d’économie à l’ISEG, à Lisbonne. Le portugais devient la langue de la maison, des cours et de la rue en même temps : premier changement de pays, premier bilinguisme complet. De l’économie, j’ai gardé l’habitude de regarder d’abord les chiffres d’un territoire.',
     },
-    {
+    barcelona: {
       title: 'Barcelone',
       zoneLabel: 'Barcelone, Espagne',
       body: 'Je m’installe à Barcelone : deux masters et un doctorat en communication, l’anglais comme langue de travail. La thèse analyse la manière dont la crise de l’euro s’est racontée dans plusieurs langues à la fois ; j’obtiens la mention cum laude et la mention de doctorat international, avec un séjour à l’université d’Aarhus. Le catalan et le castillan deviennent les langues du quotidien.',
     },
-    {
+    europa: {
       title: 'Projets européens',
       zoneLabel: 'Barcelone, avec des déplacements à travers l’Europe',
       body: 'J’entre dans les projets européens : partenariats, suivi de subventions, organisation de rencontres. Je coordonne des partenaires de plusieurs pays sur le projet MOVOKEUR et j’organise l’atelier international Antipode de 2015. J’apprends à lire un appel à projets par ses critères d’évaluation avant sa description.',
     },
-    {
+    pandemia: {
       title: 'Suisse, Allemagne, Vallespir',
       zoneLabel: 'Suisse, Allemagne et Vallespir',
       body: 'Je quitte la ville. Je passe la pandémie entre la Suisse, l’Allemagne et le Vallespir. En Valais, je fais les vendanges comme saisonnier et, dans le même temps, l’ethnographie des saisonniers pour l’Université de Barcelone : le terrain et le travail sont au même endroit. J’en ressors germanophone.',
     },
-    {
+    vallespir: {
       yearSuffix: '→ aujourd’hui',
       title: 'Haut-Vallespir',
       zoneLabel: 'Prats-de-Mollo, France',
@@ -211,12 +216,7 @@ const fr: TimelineContent = {
         body: 'Je préside CLM, l’association qui porte TVallespir. J’y essaie des formats, des outils et des façons de travailler avant de les employer sur commande. Les travaux réalisés depuis l’association figurent au portfolio avec leur étiquette, car ils ne sont pas facturés.',
       },
     },
-  ],
+  },
 };
 
 export const timeline: Record<Lang, TimelineContent> = { ca, fr };
-
-/** Serialització de l'eix llengua per al client, un sol atribut per pas. */
-export function langAttr(langs: Record<LangKey, LangState>): string {
-  return langKeys.map((key) => `${key}:${langs[key]}`).join(',');
-}

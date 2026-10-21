@@ -8,12 +8,13 @@ npm install && npm run dev
 
 `npm run build` genera `.vercel/output/`, no `dist/`: hi ha un adaptador de Vercel, i el motiu és a «Contingut editable i CMS». Totes les pàgines continuen pregenerades.
 
-Les dues ordres que validen no cobreixen el mateix, i val la pena saber-ho:
+Les tres ordres que validen no cobreixen el mateix, i val la pena saber-ho:
 
 | Ordre | Què atrapa |
 |---|---|
 | `npm run check` | Tipus, i els esquemes de les col·leccions de contingut: paritat de lliurables, camps buits, valors de `kind` fora de la llista |
 | `npm run build` | Els mateixos esquemes de col·lecció que `check`, però no els tipus, i a més les comprovacions que travessen fitxers: `order` duplicat entre casos, carpeta de casos buida |
+| `npm run verify` | Els contractes que no són ni tipus ni esquema, comprovats en Node pla ([scripts/verify/](scripts/verify/)): la geometria de la cronologia (quatre trams, què es veu a cada pas, l'enquadrament final, la frontera comuna) i els dos formats d'atribut que van de l'HTML al guió. No és un marc de proves: no compila el lloc ni obre cap navegador, o sigui que no veu l'HTML, el CSS ni el comportament, i no substitueix cap de les dues ordres de sobre |
 
 ## Canvi de domini
 
@@ -66,6 +67,7 @@ src/pages/{ca,fr}/       rutes mirall (embolcalls fins)
 src/pages/api/           autenticació del CMS: les úniques rutes a petició
 src/pages/admin/         pantalla del CMS (config a public/admin/config.yml)
 src/styles/              fonts.css + tokens.css + base.css
+scripts/verify/          comprovacions de `npm run verify`, en Node pla
 ```
 
 ## Cronologia
@@ -74,7 +76,7 @@ L'única peça amb scrollytelling del lloc ([Timeline.astro](src/components/home
 
 - **Els passos porten el contingut.** Cada fita té any, títol, territori i estat de cada llengua en text. Funcionen sols: sense JS, amb lector de pantalla i en pantalla estreta, on el diagrama no es mostra.
 - **L'instrument és decoratiu** (`aria-hidden`), perquè no hi diu res que no sigui ja al text. Sense JS es queda en l'estat d'avui —trajectòria sencera, sis llengües de treball—, que és una lectura vàlida; la classe `is-live` és el que cedeix el control als passos.
-- Els fets de cada fita (any, zones, estat de les llengües) viuen a [src/data/timeline.ts](src/data/timeline.ts) i la geometria del dibuix (projecció, contorns, coordenades, càmera) a [TimelineFigure.astro](src/components/home/TimelineFigure.astro); cap dels dos no es tradueix: el diagrama surt dels mateixos números en les dues llengües. Cada tram del traç surt amb `pathLength="1"`: la longitud la mesura el navegador, i el dibuix progressiu s'atura al node exacte de cada pas sigui quin sigui el zoom.
+- Els fets de cada fita (any, zones, estat de les llengües) viuen a [src/data/timeline.ts](src/data/timeline.ts) i la geometria del dibuix (projecció, contorns, coordenades, càmera) a [src/data/timeline-instrument.ts](src/data/timeline-instrument.ts), que també fixa quina fita es dibuixa a cada pas i el format dels atributs que el guió llegeix; [TimelineFigure.astro](src/components/home/TimelineFigure.astro) només dibuixa el que en surt. Cap dels dos no es tradueix: el diagrama surt dels mateixos números en les dues llengües. Cada tram del traç surt amb `pathLength="1"`: la longitud la mesura el navegador, i el dibuix progressiu s'atura al node exacte de cada pas sigui quin sigui el zoom.
 - El pas actiu es marca **només** amb el filet d'accent, i als altres passos no s'hi posa `opacity`. En el tema fosc, que és el que serveix el lloc, `--ink-faint` a 0,8 ja dona 5,19:1 sobre `--paper`, però el 4,5:1 es perd per sota de 0,732 sobre `--paper` i de 0,762 sobre `--paper-sunk`: el marge és massa estret per sobreviure a un ajust de paleta, i per això la regla és no posar-n'hi gens en lloc d'un llindar. El 3,4:1 que s'havia escrit era del tema clar, que el lloc ja no serveix.
 
 ## Casos
@@ -91,7 +93,7 @@ Sis casos, sense filtres, amb una sola plantilla ([CaseContent.astro](src/compon
 - **La gradació de les competències mesura l'ús dins d'aquell encàrrec, no el domini** ([case-skills.ts](src/data/case-skills.ts)). Per això són tres graons i cinc osques i no un percentatge: una barra plena al 60 % es llegeix com «l'hi falta un 40 %», que és el contrari del que ha de dir un portfolio. La paraula del nivell no es dibuixa; se serveix per `aria-label`.
 - **`category` no és `kind`** ([case-categories.ts](src/data/case-categories.ts)). `kind` diu en quin règim es va fer la feina i és el mecanisme de la frontera 2.2; `category` diu de quina feina es tracta i és el text del botó. Tres valors i no cinc: al prototip es van provar «marca» i «territori» i cadascuna cobria un sol cas.
 - El carril fa servir el vermell de la senyera aclarit a `#ec443a` (5,14:1 sobre `--paper`, 4,61:1 sobre `--paper-sunk`) per a l'osca i el període de la fitxa activa. És l'única excepció a la paleta d'un sol accent: no toca cap enllaç ni cap superfície, i el groc continua sent l'únic color d'interacció, també a les fletxes del carril, que es fan grogues en passar-hi per sobre. El mateix vermell, `--vermell` de `theme-dark.css`, marca també els errors del formulari de contacte.
-- L'eix llengua de cada cas surt del mateix registre que la cronologia (`langKeys` de `timeline.ts`), i per això es llegeix sempre en el mateix ordre.
+- L'eix llengua de cada cas surt del mateix registre que la cronologia (`langKeys` de [lang-keys.ts](src/data/lang-keys.ts)), i per això es llegeix sempre en el mateix ordre.
 
 ## Contacte
 

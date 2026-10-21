@@ -16,7 +16,8 @@
 import '../styles/base.css';
 import { getCases } from '../data/cases';
 import { stagesFor, stageForYear } from '../data/ruta';
-import { langKeys, timeline } from '../data/timeline';
+import { langKeys } from '../data/lang-keys';
+import { timeline } from '../data/timeline';
 import TravessaList from '../components/travessa/TravessaList.astro';
 import CaseInset from '../components/travessa/CaseInset.astro';
 
@@ -158,7 +159,8 @@ const deskCases = stages.map((s) =>
     <CaseInset cases={cases} />
 
     <script>
-      import { langKeys, milestones, timeline, type LangKey, type LangState } from '../data/timeline';
+      import { langKeys, type LangKey, type LangState } from '../data/lang-keys';
+      import { milestones, timeline } from '../data/timeline';
       import { ROAD_LEN, stagesFor, type Sign, type Stage } from '../data/ruta';
 
       const stages = stagesFor('ca');

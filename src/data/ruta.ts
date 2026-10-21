@@ -1,4 +1,5 @@
-import { langKeys, milestones, timeline, type LangKey, type LangState } from './timeline';
+import { langKeys, type LangKey, type LangState } from './lang-keys';
+import { milestones, timeline } from './timeline';
 import type { Lang } from '../i18n/utils';
 
 /**
@@ -132,7 +133,7 @@ function signsFor(i: number): Sign[] {
 export function stagesFor(lang: Lang): Stage[] {
   const copy = timeline[lang];
   return milestones.map((m, i) => {
-    const mc = copy.milestones[i];
+    const mc = copy.milestones[m.id];
     return {
       id: m.id,
       index: i,

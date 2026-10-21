@@ -93,7 +93,8 @@ const placements = placeCases(
     <CaseInset cases={cases} />
 
     <script>
-      import { langKeys, milestones, timeline } from '../data/timeline';
+      import { langKeys } from '../data/lang-keys';
+      import { milestones, timeline } from '../data/timeline';
       import {
         ANCHOR,
         LAYERS,
@@ -247,7 +248,7 @@ const placements = placeCases(
         const inDesk = handoff > 0.5;
         const deskState = deskStateAt(deskAtProgress(p));
         const shown = inDesk ? milestones[deskEras[deskState.index].index] : milestones[idx];
-        const shownCopy = c.milestones[inDesk ? deskEras[deskState.index].index : idx];
+        const shownCopy = c.milestones[shown.id];
 
         if (yearEl) yearEl.textContent = String(inDesk ? deskEras[deskState.index].year : Math.round(year));
         if (zoneEl) {

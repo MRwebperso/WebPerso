@@ -4,6 +4,12 @@
  * llengua) llegibles d'un cop d'ull i sincronitzats amb el pas que s'està
  * llegint.
  *
+ * Aquest fitxer només dibuixa. La projecció, els contorns, el punt, la càmera,
+ * el tram i el ram de cada fita, la regla de quina fita es veu en cada pas i el
+ * format dels atributs que llegeix el guió són a
+ * `src/data/timeline-instrument.ts` (des del 21/10/2026; abans eren aquí, en
+ * un frontmatter que res no podia importar).
+ *
  * El territori és un mapa —els països d'Europa occidental, un contorn tancat
  * cadascun, projectats a mà des de longitud/latitud reals— amb un punt que
  * viatja d'una fita a la següent. Cada tram del viatge és el seu propi traç (`figure__route-segment`,
@@ -13,11 +19,11 @@
  * i tornada Suïssa–Vallespir–Alemanya / ciutats d'ambdós costats de la
  * frontera) que pengen del mateix `[data-node]` que la fita
  * corresponent, així que `activate(index)` a `Timeline.astro` els sincronitza
- * sense saber que hi són. La «càmera» (`--cam-scale/x/y`, calculada aquí i
- * aplicada per `activate()`) comença de prop a les Cevenes —un únic punt, no
- * un territori—, s'allunya per fer lloc a Portugal i Barcelona, torna a
- * allunyar-se a «Projectes europeus» perquè s'hi vegin els països veïns, i
- * s'acosta de nou a Catalunya a la fita final.
+ * sense saber que hi són. La «càmera» (`--cam-scale/x/y`, calculada a
+ * l'instrument i aplicada per `activate()`) comença de prop a les Cevenes —un
+ * únic punt, no un territori—, s'allunya per fer lloc a Portugal i Barcelona,
+ * torna a allunyar-se a «Projectes europeus» perquè s'hi vegin els països
+ * veïns, i s'acosta de nou a Catalunya a la fita final.
  *
  * El mapa no acumula el recorregut: en tot moment hi ha, com a molt, el punt
  * d'ara («current»), el d'on es venia («prev») i el traç que els uneix. Ni les
@@ -37,8 +43,9 @@
  * existeix en text a cada pas. Així la peça pot ser ambiciosa sense que
  * l'accessibilitat depengui de saber llegir un diagrama.
  */
-import { langKeys, milestones, timeline } from '../../data/timeline';
-import type { MilestoneId, Six } from '../../data/timeline';
+import { langKeys } from '../../data/lang-keys';
+import { milestones, timeline } from '../../data/timeline';
+import { VIEW, buildInstrument, encodeCameras, hatchTransform } from '../../data/timeline-instrument';
 import type { Lang } from '../../i18n/utils';
 
 interface Props {
@@ -48,638 +55,14 @@ interface Props {
 const { lang } = Astro.props;
 const c = timeline[lang];
 
-// ── Projecció: longitud/latitud reals → unitats de viewBox ──
-// Equirectangular amb compressió de longitud (cos de la latitud mitjana): prou
-// per a una il·lustració petita i esquemàtica, no una carta de navegació.
-const VIEW = { w: 220, h: 200 };
-const MARGIN = 14;
-const LON_MIN = -10.5;
-const LON_MAX = 17.5;
-const LAT_MIN = 37.5;
-const LAT_MAX = 55;
-const LON_COMPRESS = Math.cos((46.5 * Math.PI) / 180);
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-function project(lon: number, lat: number): Point {
-  const xNorm = (lon - LON_MIN) * LON_COMPRESS;
-  const xSpan = (LON_MAX - LON_MIN) * LON_COMPRESS;
-  const yNorm = LAT_MAX - lat;
-  const ySpan = LAT_MAX - LAT_MIN;
-  return {
-    x: MARGIN + (xNorm / xSpan) * (VIEW.w - MARGIN * 2),
-    y: MARGIN + (yNorm / ySpan) * (VIEW.h - MARGIN * 2),
-  };
-}
-
-/**
- * La frontera d'estat pels Pirineus. Ja no és una ratlla recta de banda a
- * banda: a la fita final la càmera hi és a sobre i una recta no hi passaria
- * per on hi passa de veres. Els anells d'Espanya i de França llegeixen aquest
- * mateix array com a aresta comuna —per això es declara abans de `COUNTRIES`—,
- * així la ratlla de punts cau exactament sobre la vora dels dos països i no
- * uns quants quilòmetres al costat, i corregir la frontera és tocar un sol lloc.
- *
- * El tram que compta és `[2.42, 42.36]`, el coll d'Ares: passa just al sud de
- * Prats de Molló, que és on para el punt de la darrera fita.
- */
-const FRONTIER_LONLAT: [number, number][] = [
-  [-1.79, 43.35],
-  [-0.7, 42.85],
-  [0.65, 42.7],
-  [1.15, 42.72],
-  [1.42, 42.65],
-  [1.72, 42.5],
-  [2.05, 42.35],
-  [2.42, 42.36],
-  [2.65, 42.42],
-  [3.05, 42.43],
-];
-// Tot menys el primer punt, d'est a oest: l'anell francès ja comença a
-// `FRONTIER_LONLAT[0]`. `reverse()` capgira l'array sobre si mateix: el
-// `slice()` d'abans fa que capgiri una còpia i l'original quedi intacte.
-const FRONTIER_EAST_TO_WEST = FRONTIER_LONLAT.slice(1).reverse();
-
-/**
- * Els països, un contorn tancat cadascun.
- *
- * Abans hi havia una sola silueta que ajuntava França i la península en un
- * únic polígon. Tenia dos problemes: els costats que no són costa —el tall
- * pels Pirineus, el que travessava el golf de Biscaia— quedaven dibuixats
- * igual que la costa, i a prop (la càmera arriba a 2,4×) allò ja no es llegia
- * com un mapa sinó com ratlles escampades. Amb un anell per país, cada traç
- * que es veu és una frontera o una costa de veres, i quan la càmera s'allunya
- * hi apareixen els veïns en lloc de blanc.
- *
- * Continuen sent contorns simplificats —de 5 a 45 punts per país, no cartografia—,
- * però les fronteres compartides van amb les mateixes coordenades als dos
- * anells perquè no s'obrin escletxes entre països.
- */
-const COUNTRIES: [number, number][][] = [
-  // Portugal
-  [
-    [-8.87, 41.88],
-    [-8.2, 42.15],
-    [-7.0, 41.95],
-    [-6.2, 41.58],
-    [-6.85, 41.0],
-    [-6.95, 40.35],
-    [-7.0, 39.68],
-    [-7.55, 39.68],
-    [-7.05, 38.9],
-    [-7.35, 38.4],
-    [-7.1, 38.05],
-    [-7.45, 37.55],
-    [-7.4, 37.18],
-    [-8.6, 37.1],
-    [-8.95, 37.02],
-    [-8.8, 38.45],
-    [-9.5, 38.78],
-    [-9.35, 39.35],
-    [-8.85, 40.15],
-    [-8.7, 41.0],
-  ],
-  // Espanya
-  [
-    [-8.87, 41.88],
-    [-8.85, 42.6],
-    [-9.3, 43.05],
-    [-8.9, 43.4],
-    [-7.0, 43.55],
-    [-5.0, 43.55],
-    [-3.0, 43.42],
-    // Pirineu: el mateix array `FRONTIER_LONLAT` que llegeix l'anell francès
-    // (allà, el primer punt i la resta a l'inrevés), perquè la ratlla de la
-    // frontera hi caigui exactament al damunt.
-    ...FRONTIER_LONLAT,
-    [3.32, 42.32],
-    [3.18, 42.26],
-    [3.13, 41.85],
-    [2.85, 41.7],
-    [2.17, 41.39],
-    [1.25, 41.1],
-    [0.87, 40.72],
-    [0.0, 40.0],
-    [-0.33, 39.45],
-    [-0.5, 38.35],
-    [-0.98, 37.6],
-    [-2.45, 36.83],
-    [-4.42, 36.72],
-    [-5.6, 36.02],
-    [-6.3, 36.53],
-    [-6.95, 37.2],
-    [-7.4, 37.18],
-    [-7.45, 37.55],
-    [-7.1, 38.05],
-    [-7.35, 38.4],
-    [-7.05, 38.9],
-    [-7.55, 39.68],
-    [-7.0, 39.68],
-    [-6.95, 40.35],
-    [-6.85, 41.0],
-    [-6.2, 41.58],
-    [-7.0, 41.95],
-    [-8.2, 42.15],
-  ],
-  // França
-  [
-    FRONTIER_LONLAT[0],
-    [-1.25, 44.6],
-    [-1.15, 45.6],
-    [-1.05, 46.0],
-    [-2.15, 47.0],
-    [-4.78, 48.05],
-    [-3.0, 48.85],
-    [-1.6, 49.7],
-    [0.2, 49.7],
-    [1.6, 50.95],
-    [2.55, 51.05],
-    [3.6, 50.5],
-    [4.2, 49.95],
-    [5.8, 49.55],
-    [6.35, 49.47],
-    [8.23, 48.97],
-    [7.6, 47.58],
-    [6.87, 47.5],
-    [6.1, 46.55],
-    [6.15, 46.15],
-    [7.05, 45.92],
-    [6.63, 45.1],
-    [7.0, 44.25],
-    [7.5, 43.77],
-    [5.35, 43.32],
-    [4.85, 43.35],
-    [3.05, 43.02],
-    [3.03, 42.92],
-    [3.05, 42.72],
-    [3.16, 42.44],
-    // Pirineu, d'est a oest: el mateix array `FRONTIER_LONLAT` que llegeix
-    // l'anell espanyol (el primer punt és ja a l'inici de l'anell, la resta va
-    // a l'inrevés), perquè la ratlla de la frontera hi caigui exactament al damunt.
-    ...FRONTIER_EAST_TO_WEST,
-  ],
-  // Gran Bretanya
-  [
-    [-5.7, 50.07],
-    [-3.0, 50.7],
-    [0.9, 50.95],
-    [1.75, 52.48],
-    [0.0, 53.6],
-    [-1.4, 54.6],
-    [-2.0, 55.4],
-    [-3.3, 55.0],
-    [-3.1, 54.1],
-    [-3.3, 53.4],
-    [-4.7, 53.4],
-    [-4.1, 52.4],
-    [-5.3, 51.7],
-    [-3.3, 51.4],
-    [-4.2, 51.2],
-  ],
-  // Irlanda
-  [
-    [-6.03, 54.1],
-    [-6.2, 53.35],
-    [-6.05, 52.2],
-    [-7.0, 51.95],
-    [-8.5, 51.55],
-    [-9.9, 51.45],
-    [-10.2, 52.1],
-    [-9.3, 53.25],
-    [-9.9, 54.25],
-    [-8.3, 54.6],
-    [-7.2, 55.4],
-    [-5.9, 54.6],
-  ],
-  // Bèlgica
-  [
-    [2.55, 51.05],
-    [3.35, 51.38],
-    [4.2, 51.35],
-    [5.05, 51.47],
-    [5.8, 51.1],
-    [6.0, 50.75],
-    [6.4, 50.32],
-    [6.13, 50.18],
-    [5.75, 49.9],
-    [5.8, 49.55],
-    [4.2, 49.95],
-    [3.6, 50.5],
-  ],
-  // Països Baixos
-  [
-    [3.35, 51.38],
-    [4.05, 51.98],
-    [4.55, 52.45],
-    [4.75, 52.95],
-    [5.4, 53.45],
-    [6.7, 53.4],
-    [7.0, 52.64],
-    [6.7, 52.4],
-    [6.17, 51.9],
-    [5.8, 51.1],
-    [5.05, 51.47],
-    [4.2, 51.35],
-  ],
-  // Luxemburg
-  [
-    [5.75, 49.9],
-    [5.8, 49.55],
-    [6.35, 49.47],
-    [6.5, 49.8],
-    [6.13, 50.18],
-  ],
-  // Alemanya
-  [
-    [7.6, 47.58],
-    [8.6, 47.8],
-    [9.55, 47.55],
-    [10.17, 47.27],
-    [12.9, 47.72],
-    [13.8, 48.58],
-    [12.4, 49.8],
-    [12.1, 50.3],
-    [13.4, 50.7],
-    [14.8, 50.87],
-    [14.7, 52.1],
-    [14.4, 53.3],
-    [13.0, 54.4],
-    [11.0, 54.4],
-    [10.0, 54.5],
-    [9.0, 54.85],
-    [8.65, 55.4],
-    [8.5, 53.9],
-    [7.2, 53.68],
-    [6.7, 53.4],
-    [7.0, 52.64],
-    [6.7, 52.4],
-    [6.17, 51.9],
-    [5.8, 51.1],
-    [6.0, 50.75],
-    [6.4, 50.32],
-    [6.13, 50.18],
-    [6.5, 49.8],
-    [6.35, 49.47],
-    [8.23, 48.97],
-  ],
-  // Suïssa
-  [
-    [6.15, 46.15],
-    [7.05, 45.92],
-    [8.0, 46.0],
-    [9.0, 46.0],
-    [10.45, 46.87],
-    [9.6, 47.06],
-    [9.55, 47.55],
-    [8.6, 47.8],
-    [7.6, 47.58],
-    [6.87, 47.5],
-    [6.1, 46.55],
-  ],
-  // Àustria
-  [
-    [9.55, 47.55],
-    [9.6, 47.06],
-    [10.45, 46.87],
-    [11.0, 46.9],
-    [12.4, 46.7],
-    [13.6, 46.5],
-    [14.6, 46.45],
-    [16.0, 46.87],
-    [16.5, 47.0],
-    [16.9, 47.7],
-    [17.16, 48.0],
-    [16.0, 48.78],
-    [15.0, 48.98],
-    [13.8, 48.58],
-    [12.9, 47.72],
-    [10.17, 47.27],
-  ],
-  // Itàlia
-  [
-    [7.5, 43.77],
-    [8.9, 44.4],
-    [10.0, 44.0],
-    [10.3, 43.0],
-    [11.1, 42.4],
-    [12.2, 41.7],
-    [13.5, 41.2],
-    [14.2, 40.8],
-    [15.3, 40.0],
-    [16.1, 38.9],
-    [15.65, 38.0],
-    [17.2, 38.9],
-    [17.5, 40.5],
-    [16.2, 41.75],
-    [15.0, 42.1],
-    [14.0, 42.6],
-    [13.5, 43.6],
-    [12.5, 44.4],
-    [12.3, 45.4],
-    [13.6, 45.8],
-    [13.6, 46.5],
-    [12.4, 46.7],
-    [11.0, 46.9],
-    [10.45, 46.87],
-    [9.0, 46.0],
-    [8.0, 46.0],
-    [7.05, 45.92],
-    [6.63, 45.1],
-    [7.0, 44.25],
-  ],
-  // Eslovènia i el seu entorn immediat
-  [
-    [13.6, 45.8],
-    [13.6, 46.5],
-    [14.6, 46.45],
-    [16.0, 46.87],
-    [16.6, 46.48],
-    [15.6, 45.8],
-  ],
-  // Txèquia
-  [
-    [12.1, 50.3],
-    [13.4, 50.7],
-    [14.8, 50.87],
-    [15.3, 51.0],
-    [16.6, 50.2],
-    [17.5, 50.3],
-    [17.5, 49.0],
-    [16.9, 48.6],
-    [16.0, 48.78],
-    [15.0, 48.98],
-    [13.8, 48.58],
-    [12.4, 49.8],
-  ],
-  // Polònia occidental (l'est queda fora del quadre)
-  [
-    [14.7, 52.1],
-    [14.4, 53.3],
-    [14.2, 53.9],
-    [16.5, 54.55],
-    [17.5, 54.75],
-    [17.5, 50.3],
-    [16.6, 50.2],
-    [15.3, 51.0],
-    [14.8, 50.87],
-  ],
-  // Còrsega
-  [
-    [8.55, 42.98],
-    [9.45, 42.72],
-    [9.55, 42.1],
-    [9.35, 41.38],
-    [8.8, 41.55],
-    [8.55, 42.35],
-  ],
-  // Sardenya
-  [
-    [8.2, 41.15],
-    [9.3, 41.2],
-    [9.55, 40.5],
-    [9.7, 39.2],
-    [9.1, 39.1],
-    [8.4, 38.9],
-    [8.4, 40.0],
-    [8.15, 40.6],
-  ],
-  // Sicília
-  [
-    [12.45, 37.8],
-    [15.1, 38.25],
-    [15.65, 38.0],
-    [15.1, 36.65],
-    [12.65, 37.55],
-  ],
-];
-
-function ringD(ring: [number, number][]): string {
-  const pts = ring.map(([lon, lat]) => project(lon, lat));
-  return `${pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
-}
-const countryPaths = COUNTRIES.map(ringD);
-
-/**
- * Catalunya sencera, Nord i Sud com una sola massa: de Salses als Ports, de
- * la Ribagorça al cap de Creus. La frontera d'estat hi passa pel mig —és
- * `frontierD` qui la dibuixa, i és tot el sentit de la fita final: el contorn
- * no s'atura on s'atura l'estat.
- *
- * A la darrera fita la càmera hi entra a fons i aquest contorn passa a ser el
- * mapa; per això té més punts que gairebé tots els anells de país, i per això
- * el traç és més marcat que el d'ells.
- */
-const CATALONIA_LONLAT: [number, number][] = [
-  [3.03, 42.92], // Salses, límit nord de la Catalunya del Nord
-  [3.05, 42.72], // Canet
-  [3.03, 42.55], // Argelers
-  [3.16, 42.44], // Cervera de la Marenda
-  [3.32, 42.32], // cap de Creus
-  [3.18, 42.26], // Roses
-  [3.13, 41.85], // Palamós
-  [2.85, 41.7], // Lloret
-  [2.17, 41.39], // Barcelona
-  [1.62, 41.2], // el Garraf
-  [1.25, 41.1], // Tarragona
-  [1.06, 41.06], // Cambrils
-  [0.87, 40.72], // delta de l'Ebre
-  [0.72, 40.55],
-  [0.28, 40.52], // els Ports
-  [0.2, 40.8], // el Matarranya
-  [0.33, 41.3],
-  [0.3, 41.6], // la Llitera
-  [0.45, 41.9],
-  [0.72, 42.3], // la Ribagorça
-  [0.65, 42.68], // la Val d'Aran
-  [0.8, 42.83],
-  [1.15, 42.72],
-  [1.42, 42.65], // Andorra
-  [1.72, 42.5], // la Cerdanya
-  [1.98, 42.62], // el Capcir
-  [2.12, 42.87], // el Donasà
-  [2.55, 42.92], // les Corberes
-];
-const catalanCoastPoints = CATALONIA_LONLAT.map(([lon, lat]) => project(lon, lat));
-const catalanCoastD = `${catalanCoastPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} Z`;
-
-const frontierD = FRONTIER_LONLAT.map(([lon, lat]) => project(lon, lat))
-  .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
-  .join(' ');
-
-/** Els llocs reals de cada fita. «Projectes europeus» comparteix coordenades
- * amb Barcelona a propòsit: no hi va haver trasllat, és la mateixa base amb
- * els viatges europeus a sobre. La clau és l'`id` de la fita (no la posició),
- * i el tipus `Record<MilestoneId, …>` fa que un `id` que falti no compili. */
-const COORDS: Record<MilestoneId, [number, number]> = {
-  cevenes: [3.9, 44.2],
-  portugal: [-9.15, 38.72],
-  barcelona: [2.17, 41.39],
-  europa: [2.17, 41.39],
-  pandemia: [6.63, 46.52], // Lausanne: Suïssa occidental, dins del territori suís
-  vallespir: [2.47, 42.4],
-};
-const GERMANY: [number, number] = [9.73, 52.37]; // Hannover, no Hamburg
-
-const anchors: Point[] = milestones.map((m) => project(...COORDS[m.id]));
-
-/** Índex d'una fita per `id` (és el `data-node` i l'índex d'`anchors`). Si
- * l'`id` no hi és, el build s'atura: millor això que emetre un `-1`. */
-function nodeOf(id: MilestoneId): number {
-  const i = milestones.findIndex((m) => m.id === id);
-  if (i < 0) throw new Error(`TimelineFigure: fita desconeguda «${id}»`);
-  return i;
-}
-
-// Els punts nomenats es llegeixen d'`anchors` per `id`, no es tornen a
-// projectar ni se cerquen per posició. Alemanya no és una fita: es projecta.
-const cevenesPoint = anchors[nodeOf('cevenes')];
-const portugalPoint = anchors[nodeOf('portugal')];
-const barcelonaPoint = anchors[nodeOf('barcelona')];
-const chPoint = anchors[nodeOf('pandemia')];
-const dePoint = project(...GERMANY);
-const vaPoint = anchors[nodeOf('vallespir')];
-
-function controlFor(a: Point, b: Point, bow: number): Point {
-  const mx = (a.x + b.x) / 2;
-  const my = (a.y + b.y) / 2;
-  const len = Math.hypot(b.x - a.x, b.y - a.y);
-  return { x: mx, y: my - len * bow };
-}
-
-function arcD(a: Point, b: Point, bow: number): string {
-  const ctrl = controlFor(a, b, bow);
-  return `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
-}
-
-/** El viatge de veres: un tram per parella de fites consecutives, saltant les
- * que no es van moure. Cada tram porta el seu propi `data-node` (l'índex
- * d'arribada), perquè `activate()` el pugui il·luminar sol —només el tram que
- * s'acaba de recórrer es dibuixa— sense saber res de mapes.
- *
- * La longitud no es calcula aquí: cada tram surt amb `pathLength="1"` i el
- * dibuix s'anima de `stroke-dashoffset: 1` a `0`. Abans se n'aproximava la
- * llargada per corda (dotze mostres) i es passava a `stroke-dasharray`; qualsevol
- * diferència entre l'aproximació i la corba real deixava el tram sense arribar
- * al punt de destinació. Amb `pathLength` la mesura la fa el navegador i el
- * traç acaba exactament al punt, sigui quin sigui el zoom de la càmera. */
-interface RouteSegment {
-  d: string;
-  nodeIndex: number;
-}
-function buildSegments(points: Point[], bow: number): RouteSegment[] {
-  const segments: RouteSegment[] = [];
-  for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1];
-    const b = points[i];
-    if (a.x === b.x && a.y === b.y) continue;
-    segments.push({ d: arcD(a, b, bow), nodeIndex: i });
-  }
-  return segments;
-}
-
-const segments = buildSegments(anchors, 0.09);
-
-// ── «Projectes europeus» (fita 3): el ram de destinacions, decoratiu i
-// genèric. ──
-const FAN_DESTS: [number, number][] = [
-  [2.35, 48.86], // París
-  [12.5, 41.9], // Roma
-  [16.37, 48.2], // Viena
-  [13.4, 52.52], // Berlín
-  [4.9, 52.37], // Amsterdam
-  [-0.12, 51.5], // Londres
-];
-const fanArcs = FAN_DESTS.map(([lon, lat]) => {
-  const dest = project(lon, lat);
-  return { d: arcD(barcelonaPoint, dest, 0.18), dest };
-});
-
-// ── Pandèmia (fita 4): Suïssa → Vallespir → Alemanya → Suïssa. L'ordre és el
-// de l'espec, no alfabètic ni geogràfic. El tram cap a Barcelona ja no hi és
-// perquè quedava tapat pel traç del recorregut i no es veia (decisió de
-// Miquel, 9/10/2026). ──
-const oscillationArcs = [
-  { d: arcD(chPoint, vaPoint, 0.16) },
-  { d: arcD(vaPoint, dePoint, 0.16) },
-  { d: arcD(dePoint, chPoint, 0.16) },
-];
-
-/**
- * Fita final: el ram de la feina d'ara. Surt de Prats de Molló cap a les
- * ciutats on hi ha els encàrrecs i els interlocutors, als dos costats de la
- * frontera —el mateix vocabulari que «Projectes europeus», però a l'escala de
- * casa: allà eren capitals europees, aquí són cinc ciutats a dues hores.
- */
-const CATALAN_DESTS: [number, number][] = [
-  [2.895, 42.698], // Perpinyà
-  [2.422, 42.617], // Prada
-  [2.824, 41.983], // Girona
-  [2.174, 41.387], // Barcelona
-  [0.626, 41.617], // Lleida
-];
-const catalanArcs = CATALAN_DESTS.map(([lon, lat]) => {
-  const dest = project(lon, lat);
-  return { d: arcD(vaPoint, dest, 0.16), dest };
-});
-
-/** La «càmera»: mateix punt de vista per a les fites 0–2, s'allunya a
- * «Projectes europeus» (es vegin els països veïns), es desplaça cap al nord a
- * la Pandèmia, s'acosta a Catalunya al final. Un sol transform per fita —
- * `activate()` només el llegeix. */
-function cameraFor(focus: Point, scale: number) {
-  return { scale, tx: VIEW.w / 2 - scale * focus.x, ty: VIEW.h / 2 - scale * focus.y };
-}
-const westFocus: Point = {
-  x: (cevenesPoint.x + portugalPoint.x + barcelonaPoint.x) / 3,
-  y: (cevenesPoint.y + portugalPoint.y + barcelonaPoint.y) / 3,
-};
-const europeFocus = project((LON_MIN + LON_MAX) / 2, (LAT_MIN + LAT_MAX) / 2);
-// Nomes Suïssa i Alemanya: Vallespir hi entraria massa al sud i tornaria a
-// abaixar la càmera just quan cal pujar-la.
-const oscillationFocus: Point = { x: (chPoint.x + dePoint.x) / 2, y: (chPoint.y + dePoint.y) / 2 };
-
-/**
- * A la fita final el quadre és Catalunya sencera i prou: l'enquadrament surt
- * del contorn mateix, no d'un nombre triat a ull, així que si un dia el
- * contorn canvia la càmera l'hi segueix. Abans hi havia el punt mitjà entre
- * Barcelona i el Vallespir a 2,4×, i el país no hi cabia ni s'hi reconeixia.
- */
-const catBox = catalanCoastPoints.reduce(
-  (box, p) => ({
-    minX: Math.min(box.minX, p.x),
-    maxX: Math.max(box.maxX, p.x),
-    minY: Math.min(box.minY, p.y),
-    maxY: Math.max(box.maxY, p.y),
-  }),
-  { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
-);
-const CAT_PAD = 26;
-const catalanFocus: Point = { x: (catBox.minX + catBox.maxX) / 2, y: (catBox.minY + catBox.maxY) / 2 };
-const catalanScale = Math.min(
-  (VIEW.w - CAT_PAD * 2) / (catBox.maxX - catBox.minX),
-  (VIEW.h - CAT_PAD * 2) / (catBox.maxY - catBox.minY),
-);
-
-// La primera fita és un únic punt fosc, no un territori: la càmera hi entra
-// de prop, com a la fita final, i s'allunya a «Évora i Lisboa» per fer lloc a
-// la segona. Una entrada per fita, en l'ordre de `milestones` (la posició és
-// l'índex de la fita, el mateix que dona `nodeOf(id)`); `Six` impedeix que
-// en falti o en sobri cap.
-const CAMERA: Six<ReturnType<typeof cameraFor>> = [
-  cameraFor(cevenesPoint, 2.4),
-  cameraFor(westFocus, 1.3),
-  cameraFor(westFocus, 1.3),
-  cameraFor(europeFocus, 0.75),
-  cameraFor(oscillationFocus, 0.85),
-  cameraFor(catalanFocus, catalanScale),
-];
-const cameraAttr = CAMERA.map((cam) => `${cam.scale}:${cam.tx.toFixed(1)}:${cam.ty.toFixed(1)}`).join(',');
+// La geometria no depèn de la llengua: les dues portades dibuixen els mateixos
+// números, i els atributs que llegeix el guió surten dels codificadors de
+// l'instrument, el mateix mòdul que en té els descodificadors.
+const { countries, frontier, fites, rams } = buildInstrument(milestones);
+const cameraAttr = encodeCameras(fites.map((fita) => fita.camera));
 
 const last = milestones[milestones.length - 1];
-const lastCopy = c.milestones[c.milestones.length - 1];
+const lastCopy = c.milestones[last.id];
 ---
 
 <figure class="figure" data-timeline-figure aria-hidden="true">
@@ -706,7 +89,7 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           width="6"
           height="6"
           patternUnits="userSpaceOnUse"
-          patternTransform="rotate(38)"
+          patternTransform={hatchTransform()}
           data-timeline-hatch
         >
           <line x1="0" y1="0" x2="0" y2="6" class="figure__hatch-line" />
@@ -715,22 +98,22 @@ const lastCopy = c.milestones[c.milestones.length - 1];
 
       <g class="figure__world">
         <g>
-          {countryPaths.map((d) => <path class="figure__land" d={d} fill="url(#timeline-hatch)" />)}
+          {countries.map((d) => <path class="figure__land" d={d} fill="url(#timeline-hatch)" />)}
           {
-            countryPaths.map((d) => (
+            countries.map((d) => (
               <path class="figure__land-outline" d={d} vector-effect="non-scaling-stroke" />
             ))
           }
         </g>
 
-        <path class="figure__frontier" d={frontierD} />
+        <path class="figure__frontier" d={frontier} />
 
-        <g class="figure__oscillation" data-node={nodeOf('pandemia')}>
+        <g class="figure__oscillation" data-node={rams.oscillation.node}>
           {
-            oscillationArcs.map((arc, i) => (
+            rams.oscillation.arcs.map((d, i) => (
               <path
                 class="figure__oscillation-arc"
-                d={arc.d}
+                d={d}
                 style={`--reveal-delay:${(i * 0.35).toFixed(2)}s`}
                 vector-effect="non-scaling-stroke"
               />
@@ -738,17 +121,17 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           }
           <circle
             class="figure__oscillation-dot"
-            cx={dePoint.x}
-            cy={dePoint.y}
+            cx={rams.oscillation.dot.x}
+            cy={rams.oscillation.dot.y}
             r="3"
             style="--reveal-delay:0.35s"
             vector-effect="non-scaling-stroke"
           />
         </g>
 
-        <g class="figure__fan" data-node={nodeOf('europa')}>
+        <g class="figure__fan" data-node={rams.fan.node}>
           {
-            fanArcs.map((arc, i) => (
+            rams.fan.arcs.map((arc, i) => (
               <>
                 <path
                   class="figure__fan-arc"
@@ -769,16 +152,16 @@ const lastCopy = c.milestones[c.milestones.length - 1];
           }
         </g>
 
-        <g class="figure__catalonia" data-node={nodeOf('vallespir')}>
+        <g class="figure__catalonia" data-node={rams.catalonia.node}>
           <path
             class="figure__catalonia-land"
-            d={catalanCoastD}
+            d={rams.catalonia.land}
             fill="url(#timeline-hatch)"
             style="--reveal-delay:0s"
           />
-          <path class="figure__catalonia-land-outline" d={catalanCoastD} style="--reveal-delay:0s" vector-effect="non-scaling-stroke" />
+          <path class="figure__catalonia-land-outline" d={rams.catalonia.land} style="--reveal-delay:0s" vector-effect="non-scaling-stroke" />
           {
-            catalanArcs.map((arc, i) => (
+            rams.catalonia.arcs.map((arc, i) => (
               <>
                 <path
                   class="figure__catalonia-arc"
@@ -800,23 +183,25 @@ const lastCopy = c.milestones[c.milestones.length - 1];
         </g>
 
         {
-          segments.map((seg) => (
-            <path
-              class="figure__route-segment"
-              data-node={seg.nodeIndex}
-              d={seg.d}
-              pathLength="1"
-            />
-          ))
+          fites
+            .filter((fita) => fita.segment !== null)
+            .map((fita) => (
+              <path
+                class="figure__route-segment"
+                data-node={fita.index}
+                d={fita.segment}
+                pathLength="1"
+              />
+            ))
         }
 
         {
-          milestones.map((_, i) => (
+          fites.map((fita) => (
             <circle
               class="figure__node"
-              data-node={i}
-              cx={anchors[i].x}
-              cy={anchors[i].y}
+              data-node={fita.index}
+              cx={fita.anchor.x}
+              cy={fita.anchor.y}
               r="4.2"
               vector-effect="non-scaling-stroke"
             />

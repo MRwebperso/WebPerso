@@ -6,7 +6,8 @@
  * cau el seu any. L'ordre dels casos dins d'un tram és `order`, no l'any: és
  * el mateix «keep both» que la carena.
  */
-import { langKeys, milestones, timeline } from '../../data/timeline';
+import { langKeys } from '../../data/lang-keys';
+import { milestones, timeline } from '../../data/timeline';
 import { milestoneIndexForYear } from '../../data/travessa';
 import type { CaseRecord } from '../../data/cases';
 
@@ -19,7 +20,7 @@ const c = timeline.ca;
 
 const eras = milestones.map((milestone, i) => ({
   milestone,
-  copy: c.milestones[i],
+  copy: c.milestones[milestone.id],
   working: langKeys.filter((key) => milestone.langs[key] === 2).map((key) => c.langNames[key]),
   acquired: langKeys.filter((key) => milestone.langs[key] === 1).map((key) => c.langNames[key]),
   // `cases` ja ve ordenat per `order` des de `getCases()`; el filtre no ho desfà.

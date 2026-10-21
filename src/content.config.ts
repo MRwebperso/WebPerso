@@ -3,7 +3,7 @@ import { glob } from 'astro/loaders';
 import { caseCategories } from './data/case-categories';
 import { caseKinds } from './data/case-kinds';
 import { skillUses } from './data/case-skills';
-import { langKeys } from './data/timeline';
+import { langKeys } from './data/lang-keys';
 
 /**
  * Col·lecció de contingut dels casos — bloc 9 de l'ordre de treball.
@@ -152,9 +152,9 @@ const cases = defineCollection({
        */
       year: z.number().int(),
       /**
-       * Llengües de treball del cas. Vocabulari del registre de la cronologia,
-       * i és d'allà que surt l'ordre en què es llegeixen: aquí l'ordre és
-       * indiferent.
+       * Llengües de treball del cas. Vocabulari del registre de la cronologia
+       * (`lang-keys.ts`), i és d'allà que surt l'ordre en què es llegeixen —el
+       * posa `getCases()`—: aquí l'ordre és indiferent.
        */
       langs: z.array(z.enum(langKeys)).min(1),
       ca: copy,
