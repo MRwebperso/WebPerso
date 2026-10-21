@@ -580,21 +580,18 @@ function bounds(points: readonly Point[]) {
 
 // ── Rams decoratius ──
 
-/** Quin ram penja de quina fita. El ram es lliga al `data-node` de la seva
- * fita, i per això `activate()` el sincronitza sense saber que hi és. */
-export const RAM_OF = {
-  europa: 'fan',
-  pandemia: 'oscillation',
-  vallespir: 'catalonia',
-} as const satisfies Partial<Record<MilestoneId, string>>;
-
-export type RamKind = (typeof RAM_OF)[keyof typeof RAM_OF];
-
 interface Arc {
   d: string;
   dest: Point;
 }
 
+/**
+ * Cada ram es lliga al `data-node` de la seva fita, i per això `activate()` el
+ * sincronitza sense saber que hi és. La fita de cada ram la diu `node` i prou:
+ * fins al 21/10/2026 també la deien una taula `RAM_OF` i un camp `Fita.ram`
+ * que res no llegia, i que haurien pogut dir una altra cosa sense que ningú
+ * se n'adonés.
+ */
 export interface Rams {
   /** «Projectes europeus»: Barcelona cap a sis capitals. */
   fan: { node: number; arcs: Arc[] };
@@ -615,7 +612,6 @@ export interface Fita {
   /** El tram que hi arriba des de la fita anterior; `null` a la primera i
    * quan no hi ha trasllat (Barcelona → «Projectes europeus»). */
   segment: string | null;
-  ram: RamKind | null;
 }
 
 export interface Instrument {
@@ -710,8 +706,7 @@ export function buildInstrument(order: readonly { id: MilestoneId }[]): Instrume
     const anchor = at(id);
     const from = index > 0 ? at(order[index - 1].id) : null;
     const moved = from !== null && !(from.x === anchor.x && from.y === anchor.y);
-    const ram = (RAM_OF as Partial<Record<MilestoneId, RamKind>>)[id] ?? null;
-    return { id, index, anchor, camera: camera[id], segment: moved ? arcD(from, anchor, ROUTE_BOW) : null, ram };
+    return { id, index, anchor, camera: camera[id], segment: moved ? arcD(from, anchor, ROUTE_BOW) : null };
   });
 
   const rams: Rams = {
@@ -758,18 +753,13 @@ export function stateAt(node: number, index: number): NodeState {
   return node === index ? 'current' : node === index - 1 ? 'prev' : node < index ? 'past' : 'future';
 }
 
-/**
- * Quins estats es veuen, per tipus d'element: és el que diuen les regles
- * `.figure.is-live …[data-state]` de `TimelineFigure.astro`, escrit aquí perquè
- * `scripts/verify/` en pugui comptar el resultat. El punt d'ara i el d'on es
- * venia; del recorregut, només el tram que s'acaba de fer; dels rams, només
- * el de la fita que es llegeix.
+/*
+ * Quins estats es veuen no es diu aquí: ho diuen les regles
+ * `.figure.is-live …[data-state]` de `TimelineFigure.astro`, i
+ * `scripts/verify/timeline.mjs` les llegeix d'allà. Fins al 21/10/2026 n'hi
+ * havia una còpia escrita a mà (`SHOWN`) que només feia servir la comprovació:
+ * si el CSS canviava, la còpia no, i la comprovació continuava en verd.
  */
-export const SHOWN: Record<'node' | 'segment' | 'ram', readonly NodeState[]> = {
-  node: ['current', 'prev'],
-  segment: ['current'],
-  ram: ['current'],
-};
 
 // ── Els dos formats d'atribut, de l'HTML al guió ──
 
