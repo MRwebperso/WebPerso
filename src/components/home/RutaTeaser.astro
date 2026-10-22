@@ -1,0 +1,223 @@
+---
+/**
+ * Entrada a La Ruta des de la trajectòria (Miquel, 22/10/2026: la frase amb
+ * l'enllaç de text, del 20/10, era massa discreta). Una bandera, no un botó: la
+ * peça de sempre —el cotxe que surt de les Cevenes, la casa d'Évora que s'obre—
+ * en sis segons, perquè qui passa de llarg vegi que allò es mou i vulgui fer-hi
+ * clic.
+ *
+ * El clip surt de la pàgina real, no d'una maqueta: `tools/teaser` del
+ * repositori de `la-ruta` obre la peça amb el rellotge simulat, en fa una
+ * captura per pas i les recompon. Si La Ruta canvia, es torna a generar.
+ * 640×360, 24 fps, ~350 kB, sense so: no es baixa fins que la banda entra a la
+ * pantalla (`preload="none"`).
+ *
+ * Es manté on diu la decisió del 20/10: al cap de la secció de trajectòria, abans
+ * dels passos; ni a l'heroi ni al menú. Només creix.
+ *
+ * Degradació, de menys a més:
+ *  - Sense JS: una `<img>` amb el pòster (el primer fotograma, perquè
+ *    l'engegada no faci cap salt). El `<video>` s'amaga fins que arriba `.js`:
+ *    un vídeo sense `controls` en un navegador sense script en dibuixa de propis,
+ *    i el clic al botó de reproduir no seria un clic a l'enllaç.
+ *  - Amb moviment reduït o amb l'estalvi de dades: el `<video>` és al seu lloc,
+ *    aturat al pòster, i no es descarrega res.
+ *  - Amb JS: l'observador l'engega quan es veu per meitat i l'atura quan en
+ *    surt. La resta del temps no gasta ni xarxa ni CPU.
+ *
+ * El vídeo és decoratiu (`aria-hidden`): tot el que diu ja és al text de
+ * l'enllaç. El fons és el paper de La Ruta, clar a posta com la peça mateixa
+ * (vegeu CLAUDE.md, «Prototips llençables»): sobre el negre del lloc és el que
+ * fa que la banda es vegi.
+ *
+ * L'atribució d'OpenStreetMap hi és com a text, fora de l'enllaç (no es poden
+ * niar): el cartell que porta el fotograma fa 5 px un cop reduït.
+ */
+interface Props {
+  text: string;
+  label: string;
+  /** «Mapa: © col·laboradors d'OpenStreetMap» (o el seu equivalent en francès). */
+  credit: string;
+}
+
+const { text, label, credit } = Astro.props;
+---
+
+<div class="ruta-teaser">
+  <a class="ruta-teaser__link" href="/ruta/" hreflang="ca" data-ruta-teaser>
+    <span class="ruta-teaser__film" aria-hidden="true">
+      <img class="ruta-teaser__poster" src="/media/ruta-teaser-poster.jpg" width="640" height="360" alt="" loading="lazy" decoding="async" />
+      <video
+        class="ruta-teaser__video"
+        width="640"
+        height="360"
+        poster="/media/ruta-teaser-poster.jpg"
+        preload="none"
+        muted
+        loop
+        playsinline
+        disablepictureinpicture
+        disableRemotePlayback
+        tabindex="-1"
+      >
+        <source src="/media/ruta-teaser.mp4" type="video/mp4" />
+      </video>
+    </span>
+    <span class="ruta-teaser__copy">
+      <span class="ruta-teaser__text">{text}</span>
+      {/* La fletxa, amb espai insecable, no baixa mai sola de línia. */}
+      <span class="ruta-teaser__label">{label}<span class="ruta-teaser__arrow" aria-hidden="true">{' →'}</span></span>
+    </span>
+  </a>
+  <p class="ruta-teaser__credit ui">
+    <a href="https://www.openstreetmap.org/copyright" rel="noopener">{credit}</a>
+  </p>
+</div>
+
+<style>
+  .ruta-teaser {
+    max-width: 46rem;
+  }
+
+  .ruta-teaser__link {
+    display: grid;
+    gap: var(--space-4);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* El paper de La Ruta (`--paper` de la peça), no el del lloc: a `theme-dark.css`
+     aquest nom és negre. Rere el pòster i les cantonades del clip. */
+  .ruta-teaser__film {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #faf8f4;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+    transition: border-color var(--dur-base) var(--ease-out);
+  }
+
+  .ruta-teaser__poster,
+  .ruta-teaser__video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* El clip cobreix el pòster de dalt a baix, i només hi és amb JS (vegeu la
+     nota de dalt). Té el mateix `poster`, de manera que la fusió és invisible. */
+  .ruta-teaser__video {
+    display: none;
+    position: absolute;
+    inset: 0;
+  }
+
+  :global(.js) .ruta-teaser__video {
+    display: block;
+  }
+
+  .ruta-teaser__copy {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .ruta-teaser__text {
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+
+  /* L'etiqueta, que és el que es clica, passa de ser la cua d'una frase a ser el
+     títol de la banda. Subratllat a l'accent perquè es llegeixi com a enllaç
+     sense dependre del color de la fletxa. */
+  .ruta-teaser__label {
+    font-size: var(--step-3);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-display);
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+    transition: text-decoration-thickness var(--dur-fast) var(--ease-out);
+  }
+
+  .ruta-teaser__arrow {
+    display: inline-block;
+    color: var(--accent);
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  .ruta-teaser__link:hover .ruta-teaser__film,
+  .ruta-teaser__link:focus-visible .ruta-teaser__film {
+    border-color: var(--accent);
+  }
+
+  .ruta-teaser__link:hover .ruta-teaser__label {
+    text-decoration-thickness: 3px;
+  }
+
+  .ruta-teaser__link:hover .ruta-teaser__arrow,
+  .ruta-teaser__link:focus-visible .ruta-teaser__arrow {
+    transform: translateX(0.18em);
+  }
+
+  /* Mesura mínima de l'atribució: 11,5 px, --ink-faint (7,63:1 sobre --paper). */
+  .ruta-teaser__credit {
+    margin-top: var(--space-2);
+    font-size: var(--size-label-sm);
+    color: var(--ink-faint);
+  }
+
+  /* Llindar de component (40rem): la banda passa de pila a dues columnes quan
+     el clip (20rem) hi cap sense deixar el text a una paraula per línia. A 62rem
+     la secció estrena raïl i la columna de contingut s'estreny de cop (672 px
+     al llindar): el text hi queda a 320 px, en dues línies, i encara cap.
+     Vegeu l'escala de llindars a `tokens.css`. */
+  @media (min-width: 40rem) {
+    .ruta-teaser__link {
+      grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--space-8);
+    }
+  }
+</style>
+
+<script>
+  /*
+   * Engega el clip quan és a la pantalla i l'atura quan en surt. Cap dels tres
+   * casos que el mantenen quiet (moviment reduït, estalvi de dades, navegador
+   * sense `IntersectionObserver`) no és un error: el pòster ja diu el que cal.
+   *
+   * Es lliga a `astro:page-load`, com la cronologia, i desconnecta l'observador
+   * de la portada anterior: amb el router d'Astro la funció torna a córrer a
+   * cada navegació i, sense això, en quedaria un de viu per visita.
+   */
+  let seen: IntersectionObserver | null = null;
+
+  const bindTeaser = () => {
+    seen?.disconnect();
+    seen = null;
+
+    const video = document.querySelector<HTMLVideoElement>('[data-ruta-teaser] video');
+    if (!video) return;
+
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || saveData || !('IntersectionObserver' in window)) return;
+
+    seen = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) void video.play().catch(() => undefined);
+          else video.pause();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    seen.observe(video);
+  };
+
+  document.addEventListener('astro:page-load', bindTeaser);
+</script>

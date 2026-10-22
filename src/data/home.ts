@@ -117,10 +117,12 @@ export interface HomeContent {
    * passar al primer de la presentació, i el seu lloc l'ocupa l'enllaç a La
    * Ruta, el CV dinàmic (Miquel, 20/10/2026, variant A en les dues llengües).
    * `text` és la frase i `label` el text de l'enllaç; la fletxa la posa el
-   * component. El francès diu que la peça és en català: Miquel no la tradueix,
-   * perquè el que vol és que el català hi sigui pertinent.
+   * component. `credit` és l'atribució d'OpenStreetMap que va sota el clip
+   * (22/10/2026), amb la forma que el projecte dona a cada llengua. El
+   * francès diu que la peça és en català: Miquel no la tradueix, perquè el
+   * que vol és que el català hi sigui pertinent.
    */
-  timeline: Omit<SectionIntro, 'lead'> & { ruta: { text: string; label: string } };
+  timeline: Omit<SectionIntro, 'lead'> & { ruta: { text: string; label: string; credit: string } };
   cases: SectionIntro;
   contact: SectionIntro & { emailLabel: string; form: ContactForm };
 }
@@ -166,7 +168,7 @@ const ca: HomeContent = {
   timeline: {
     eyebrow: 'Trajectòria',
     title: 'Una trajectòria en tres eixos',
-    ruta: { text: 'La mateixa trajectòria, en moviment:', label: 'La Ruta' },
+    ruta: { text: 'La mateixa trajectòria, en moviment:', label: 'La Ruta', credit: 'Mapa: © col·laboradors d’OpenStreetMap' },
   },
 
   cases: {
@@ -246,7 +248,7 @@ const fr: HomeContent = {
   timeline: {
     eyebrow: 'Parcours',
     title: 'Un parcours en trois axes',
-    ruta: { text: 'Le même parcours, en mouvement et en catalan :', label: 'La Ruta' },
+    ruta: { text: 'Le même parcours, en mouvement et en catalan :', label: 'La Ruta', credit: 'Carte : © les contributeurs d’OpenStreetMap' },
   },
 
   cases: {

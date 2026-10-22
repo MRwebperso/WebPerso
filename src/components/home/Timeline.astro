@@ -11,6 +11,7 @@
  * sempre subordinada a l'activitat pròpia, que és la que tanca la sèrie.
  */
 import Section from '../Section.astro';
+import RutaTeaser from './RutaTeaser.astro';
 import TimelineFigure from './TimelineFigure.astro';
 import { home } from '../../data/home';
 import { langKeys, langNames } from '../../data/lang-keys';
@@ -41,12 +42,11 @@ const steps = milestones.map((milestone) => {
   {/* La Ruta no és una pàgina d'aquest projecte: `vercel.json` reescriu /ruta/
        cap al projecte de Vercel de la-ruta, i a `astro dev` l'enllaç dona 404.
        Fora del registre de rutes de `utils.ts` a posta: és en català a les dues
-       llengües (Miquel, 20/10/2026), d'aquí el `hreflang`. La fletxa, amb espai
-       insecable, no baixa mai sola de línia. */}
-  <Fragment slot="lead">
-    {intro.ruta.text}{' '}
-    <a href="/ruta/" hreflang="ca">{intro.ruta.label}<span aria-hidden="true">{' →'}</span></a>
-  </Fragment>
+       llengües (Miquel, 20/10/2026), d'aquí el `hreflang` que porta el component.
+       Fins al 22/10/2026 era una frase amb l'enllaç al `lead`; ara és una banda
+       amb un clip de la peça, al cos de la secció i no al `lead`, que és un
+       paràgraf i no pot portar blocs. */}
+  <RutaTeaser text={intro.ruta.text} label={intro.ruta.label} credit={intro.ruta.credit} />
   <div class="scrolly" slot="wide" data-timeline>
     <div class="scrolly__figure">
       <TimelineFigure lang={lang} />
