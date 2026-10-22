@@ -176,6 +176,14 @@ export function createHandle() {
       held = true;
       return aim(v);
     },
+    /**
+     * Un moviment de demostració (21/10/2026): el fa la pàgina i no qui llegeix,
+     * de manera que no marca «tocat» i cedeix al primer gest de debò —un cop
+     * algú ha tocat la maneta, retorna `null` i la demostració s'atura.
+     */
+    nudge(v: number) {
+      return touched ? null : aim(v, false);
+    },
     narrow(isNarrow: boolean) {
       if (isNarrow) {
         target = current = REST;

@@ -229,6 +229,16 @@ export default async function maneta(t) {
     h.narrow(true);
     t.equal(h.leave(), { x: 0.5, aria: '50', moving: false, touched: true }, 'passar a estret desfà el «fixat» del teclat: el ratolí que marxa respon (i ja és al mig)');
   }
+
+  // La demostració de la costura a estret (`nudge`): la fa la pàgina, i cedeix al primer gest de qui llegeix.
+  {
+    const h = createHandle();
+    t.equal(h.nudge(0.7), { x: 0.5, aria: '70', moving: true, touched: false }, 'una passada de demostració porta la destinació al 0,7 i no marca «tocat»');
+    t.equal(h.nudge(2)?.aria, '95', 'la demostració també queda retallada: 95');
+    h.down('touch', 0.2);
+    t.equal(h.nudge(0.7), null, 'un cop algú ha tocat la maneta, la demostració ja no hi mou res');
+    t.equal(peek(h).aria, '20', 'i la destinació continua sent la del gest');
+  }
   {
     const h = createHandle();
     h.down('mouse', 0.8);

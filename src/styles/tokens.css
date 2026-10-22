@@ -97,9 +97,11 @@
  * Dues famílies, cadascuna amb un paper:
  *  - 62rem, llindar de pàgina: capçaleres de secció en dues columnes i raïl
  *    adherent (base.css, Section.astro), carril de casos en acordió (Cases.astro)
- *    i cronologia amb mapa (Timeline.astro).
- *  - 48rem, llindar de component: el panell partit de l'oferta (OfferReveal.astro,
- *    `matchMedia`) i l'heroi (MinimalistHero.astro). Depenen de la seva pròpia
+ *    i cronologia en dues columnes amb la figura adherent al costat
+ *    (Timeline.astro; per sota, la figura és una barra compacta adherent a dalt).
+ *  - 48rem, llindar de component: l'eix del panell partit de l'oferta
+ *    (OfferReveal.astro, `matchMedia`: vertical a partir d'aquí, horitzontal per
+ *    sota) i l'heroi (MinimalistHero.astro). Depenen de la seva pròpia
  *    amplada: l'oferta ocupa tota l'amplada en les dues maquetacions.
  * No són tokens: les propietats personalitzades no funcionen dins `@media`, i
  * `@custom-media` demanaria un preprocessador (el projecte no en té i no se

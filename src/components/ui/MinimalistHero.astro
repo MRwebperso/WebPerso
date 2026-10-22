@@ -104,6 +104,9 @@ const hasFooter = socialLinks.length > 0 || Boolean(locationText);
 
 const vars = [
   portraitRatio !== undefined ? `--portrait-ratio: ${portraitRatio}` : null,
+  /* Proporció alçada/amplada del fitxer: al mòbil la caixa de la figura es
+     dimensiona a partir de l'alçada real del retrat escalat. */
+  `--portrait-aspect: ${(imageHeight / imageWidth).toFixed(4)}`,
   minHeight ? `--hero-min-height: ${minHeight}` : null,
 ]
   .filter(Boolean)
@@ -215,8 +218,16 @@ const vars = [
        `--portrait-ratio`, de manera que la proporció entre els dos es manté
        igual als tres talls sense repetir cap amplada. A la referència el retrat
        feia 256px contra un cercle de 400 → 0,64. */
-    --circle-size: min(300px, 78vw);
+    /* Al mòbil el conjunt ha de cabre d'una pantalla: el cercle és el 82 % de
+       l'amplada, i en una pantalla baixa cedeix a l'alçada que queda un cop
+       descomptats el nom, el text i la capçalera (24rem, mesurats). El retrat
+       s'escala 1,15 i no 1,5 (decisió de Miquel, 21/10/2026): amb 1,5 sortia de
+       la seva caixa 88 px per amunt, i l'`overflow: hidden` del bloc li tallava
+       el cap. Amb 1,15 el cap només passa del cercle un 11 % del diàmetre. */
+    --circle-size: min(82vw, calc(100svh - 24rem));
     --portrait-ratio: 0.64;
+    --portrait-aspect: 1.4142;
+    --portrait-scale: 1.15;
 
     position: relative;
     display: flex;
@@ -227,7 +238,7 @@ const vars = [
     min-height: var(--hero-min-height, 100vh);
     min-height: var(--hero-min-height, 100svh);
     overflow: hidden;
-    padding: var(--space-8, 2rem);
+    padding: var(--space-6, 1.5rem) var(--space-6, 1.5rem) var(--space-8, 2rem);
     background: var(--hero-bg);
     color: var(--hero-fg);
     font-family: var(--family-sans, 'IBM Plex Sans Variable', system-ui, sans-serif);
@@ -240,6 +251,7 @@ const vars = [
     .hero {
       padding: var(--space-12, 3rem);
       --circle-size: 400px;
+      --portrait-scale: 1.5;
     }
   }
 
@@ -325,27 +337,33 @@ const vars = [
     flex: 1;
     grid-template-columns: 1fr;
     align-items: center;
-    gap: var(--space-8, 2rem);
+    /* Al mòbil les files fan la seva alçada i el conjunt es centra: amb les
+       files estirades, el nom se separava del retrat on munta a sobre. */
+    align-content: center;
+    gap: var(--space-4, 1rem);
   }
 
   @media (min-width: 48rem) {
     .hero__main {
       grid-template-columns: repeat(3, 1fr);
+      align-content: normal;
       gap: 0;
     }
   }
 
+  /* Al mòbil l'ordre visual és retrat → nom → text: el nom munta sobre la
+     vora baixa del retrat, com a l'escriptori. */
   .hero__intro {
     z-index: 20;
-    order: 2;
+    order: 3;
     text-align: center;
   }
 
   .hero__intro p {
-    max-width: 22ch;
+    max-width: 24ch;
     margin: 0 auto;
     color: color-mix(in srgb, var(--hero-fg) 80%, transparent);
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     line-height: 1.7;
   }
 
@@ -366,7 +384,9 @@ const vars = [
       text-align: left;
     }
     .hero__intro p {
+      max-width: 22ch;
       margin-inline: 0;
+      font-size: 0.875rem;
     }
   }
 
@@ -381,12 +401,15 @@ const vars = [
   .hero__figure {
     position: relative;
     order: 1;
-    min-height: var(--circle-size);
+    /* Al mòbil la figura fa l'alçada del retrat escalat, i no la del cercle:
+       el que desbordi aquí no tindria on anar. */
+    min-height: calc(var(--circle-size) * var(--portrait-ratio) * var(--portrait-aspect) * var(--portrait-scale));
   }
 
   @media (min-width: 48rem) {
     .hero__figure {
       order: 2;
+      min-height: var(--circle-size);
     }
   }
 
@@ -414,18 +437,33 @@ const vars = [
        ordre, així que el centrat es manté després d'escalar. */
     translate: -50% -50%;
     /* L'`scale-150` de l'original desborda el cercle per amunt i per avall:
-       és el que fa que el retrat sembli retallat pel marc, no encabit. */
-    scale: 1.5;
+       és el que fa que el retrat sembli retallat pel marc, no encabit. Al
+       mòbil és `--portrait-scale` (1,15), vegeu a dalt. */
+    scale: var(--portrait-scale);
+    /* El fitxer acaba en sec a la cintura. Al mòbil la vora baixa es dilueix
+       en el fons negre i el nom hi munta a sobre; a l'escriptori no cal, el
+       nom ja és a l'altra banda del retrat. El fondut comença al 90 %, que és
+       on acaba el cercle (mesurat: 90,9 %): més amunt, el jaç groc es veuria
+       a través del jersei i hi faria una taca. */
+    mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
     animation: hero-rise 1s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+  }
+
+  @media (min-width: 48rem) {
+    .hero__portrait {
+      mask-image: none;
+    }
   }
 
   /* ── Tipografia gran ── */
   .hero__display {
     z-index: 20;
-    order: 3;
+    order: 2;
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Munta sobre la vora diluïda del retrat: un terç del cercle. */
+    margin-top: calc(var(--circle-size) * -0.3);
   }
 
   .hero__display h1 {
@@ -434,16 +472,26 @@ const vars = [
     /* Aquest titular no és del sistema: la referència demana sans-serif de pes
        màxim, no el Newsreader que `base.css` posa a tots els h1. */
     font-family: var(--family-sans, 'IBM Plex Sans Variable', system-ui, sans-serif);
-    font-size: clamp(3.5rem, 11vw, 8rem);
+    /* «Rodrigues» a 18,5vw fa ~4,4 cossos: cap als 390 px d'amplada ocupa 318
+       dels 342 que deixa el farciment. */
+    font-size: clamp(3.25rem, 18.5vw, 4.75rem);
     font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 0.95;
+    text-align: center;
     text-wrap: nowrap;
   }
 
   @media (min-width: 48rem) {
     .hero__display {
+      order: 3;
       justify-content: flex-start;
+      margin-top: 0;
+    }
+
+    .hero__display h1 {
+      font-size: clamp(3.5rem, 11vw, 8rem);
+      text-align: left;
     }
   }
 
@@ -532,12 +580,12 @@ const vars = [
     from {
       opacity: 0;
       translate: -50% calc(-50% + 50px);
-      scale: 1.5;
+      scale: var(--portrait-scale);
     }
     to {
       opacity: 1;
       translate: -50% -50%;
-      scale: 1.5;
+      scale: var(--portrait-scale);
     }
   }
 

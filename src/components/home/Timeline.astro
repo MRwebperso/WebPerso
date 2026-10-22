@@ -107,8 +107,38 @@ const steps = milestones.map((milestone) => {
      mapa és la figura que més ho nota —el territori es dibuixa en 74rem en
      lloc de 59. */
 
+  /*
+   * Per sota de 62rem l'instrument no desapareix (decisió de Miquel,
+   * 21/10/2026, després de veure el telèfon sense ell): es compacta i queda
+   * enganxat a dalt, i els passos desfilen a sota. És el mateix guió i el
+   * mateix marcatge que a l'escriptori —l'observador vigila el centre de la
+   * pantalla, que a sota de la barra és on es llegeix el pas actiu—, només
+   * canvia on s'adhereix. A 46rem i més la capçalera és adherent i la barra
+   * s'enganxa sota seu; per sota, la capçalera ja no ho és.
+   */
   .scrolly__figure {
-    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    margin-inline: calc(-1 * var(--gutter));
+    padding: var(--space-3) var(--gutter);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  @media (min-width: 46rem) {
+    .scrolly__figure {
+      top: var(--header-height);
+    }
+  }
+
+  /* Un telèfon en horitzontal té 360–430 px d'alçada: una barra enganxada
+     s'hi menjaria la meitat de la pantalla, i hi passa a ser la figura en
+     flux, davant dels passos. */
+  @media (max-height: 30rem) {
+    .scrolly__figure {
+      position: static;
+    }
   }
 
   .steps {
@@ -121,6 +151,20 @@ const steps = milestones.map((milestone) => {
     position: relative;
     border-top: 1px solid var(--rule);
     padding-block: var(--space-8);
+    padding-inline-start: var(--space-4);
+  }
+
+  /* El filet d'accent marca el pas actiu a totes les amplades. */
+  .step::before {
+    content: '';
+    position: absolute;
+    inset-block: var(--space-8);
+    inset-inline-start: 0;
+    width: 2px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform var(--dur-slow) var(--ease-out);
   }
 
   .step__year {
@@ -212,9 +256,14 @@ const steps = milestones.map((milestone) => {
 
     /* La columna s'estira tota l'alçada de la peça a propòsit: és el recorregut
        que necessita l'instrument per quedar adherit mentre es llegeixen els
-       passos. Amb `align-items: start` no en tindria cap. */
+       passos (aquí és la figura mateixa, i no la barra, la que s'enganxa).
+       Amb `align-items: start` no en tindria cap. */
     .scrolly__figure {
-      display: block;
+      position: static;
+      margin-inline: 0;
+      padding: 0;
+      background: none;
+      border-bottom: 0;
     }
 
     /* Prou alçada perquè cada pas domini la pantalla i la sincronització amb
@@ -226,34 +275,22 @@ const steps = milestones.map((milestone) => {
       justify-content: center;
       padding-inline-start: var(--space-6);
     }
+  }
 
-    .step::before {
-      content: '';
-      position: absolute;
-      inset-block: var(--space-8);
-      inset-inline-start: 0;
-      width: 2px;
-      background: var(--accent);
-      transform: scaleY(0);
-      transform-origin: top;
-      transition: transform var(--dur-slow) var(--ease-out);
-    }
-
-    /*
-     * El pas actiu es marca amb el filet d'accent i prou: als altres passos no
-     * s'hi posa `opacity`. Enfosquir-los seria l'efecte esperat, i en el tema
-     * fosc, que és el que serveix el lloc, `--ink-faint` a 0,8 encara dona
-     * 5,19:1 sobre `--paper` (4,83:1 sobre `--paper-sunk`); però el 4,5:1 es
-     * perd per sota de 0,732 sobre `--paper` i de 0,762 sobre `--paper-sunk`.
-     * El marge és massa estret per sobreviure a un ajust de paleta, i per això
-     * la regla és no posar-n'hi gens en lloc de fixar un llindar; davant de
-     * client públic això no es negocia. El 3,4:1 que hi havia escrit aquí era
-     * del tema clar (`#666a72` a 0,8 sobre `#faf8f4`: 3,42:1), que el lloc ja
-     * no serveix.
-     */
-    .step.is-current::before {
-      transform: scaleY(1);
-    }
+  /*
+   * El pas actiu es marca amb el filet d'accent i prou: als altres passos no
+   * s'hi posa `opacity`. Enfosquir-los seria l'efecte esperat, i en el tema
+   * fosc, que és el que serveix el lloc, `--ink-faint` a 0,8 encara dona
+   * 5,19:1 sobre `--paper` (4,83:1 sobre `--paper-sunk`); però el 4,5:1 es
+   * perd per sota de 0,732 sobre `--paper` i de 0,762 sobre `--paper-sunk`.
+   * El marge és massa estret per sobreviure a un ajust de paleta, i per això
+   * la regla és no posar-n'hi gens en lloc de fixar un llindar; davant de
+   * client públic això no es negocia. El 3,4:1 que hi havia escrit aquí era
+   * del tema clar (`#666a72` a 0,8 sobre `#faf8f4`: 3,42:1), que el lloc ja
+   * no serveix.
+   */
+  .step.is-current::before {
+    transform: scaleY(1);
   }
 </style>
 

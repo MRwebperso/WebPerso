@@ -233,33 +233,40 @@ const lastCopy = c.milestones[last.id];
 </figure>
 
 <style>
+  /*
+   * Compacte per omissió (per sota de 62rem la barra de la cronologia queda
+   * enganxada a dalt, vegeu `Timeline.astro`): l'any i el territori en una
+   * sola línia, el mapa i les llengües al costat, sense la nota. A partir de
+   * 62rem tornen la forma d'escriptori, en columna i amb la figura adherent.
+   */
   .figure {
     margin: 0;
-    position: sticky;
-    top: calc(var(--header-height) + var(--space-6));
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: var(--space-3);
   }
 
   .figure__year {
-    font-size: var(--step-4);
+    font-size: var(--step-3);
     line-height: 1;
     font-weight: var(--w-light);
     color: var(--ink);
   }
 
   .figure__suffix {
-    font-size: var(--step-0);
+    font-size: var(--step--1);
     color: var(--ink-faint);
     white-space: nowrap;
   }
 
   .figure__zone {
-    margin-top: var(--space-2);
     color: var(--ink-soft);
-    min-height: 2.4em;
   }
 
   .figure__body {
-    margin-top: var(--space-6);
+    grid-column: 1 / -1;
+    margin-top: var(--space-3);
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 7.5rem);
     gap: var(--space-4);
@@ -267,6 +274,7 @@ const lastCopy = c.milestones[last.id];
   }
 
   .figure__note {
+    display: none;
     margin-top: var(--space-6);
     padding-top: var(--space-3);
     border-top: 1px solid var(--rule);
@@ -275,12 +283,51 @@ const lastCopy = c.milestones[last.id];
     text-wrap: pretty;
   }
 
+  /* Llindar de pàgina (62rem): vegeu l'escala a `tokens.css`. */
+  @media (min-width: 62rem) {
+    .figure {
+      display: block;
+      position: sticky;
+      top: calc(var(--header-height) + var(--space-6));
+    }
+
+    .figure__year {
+      font-size: var(--step-4);
+    }
+
+    .figure__suffix {
+      font-size: var(--step-0);
+    }
+
+    .figure__zone {
+      margin-top: var(--space-2);
+      min-height: 2.4em;
+    }
+
+    .figure__body {
+      margin-top: var(--space-6);
+    }
+
+    .figure__note {
+      display: block;
+    }
+  }
+
   /* ── Eix territori: el mapa. `overflow: hidden` a propòsit —la càmera
      retalla a la vora del quadre, no vessa per la pàgina. ── */
   .figure__map {
     width: 100%;
     overflow: hidden;
     font-family: var(--font-ui);
+    /* La barra compacta no pot menjar-se la pantalla: en un telèfon baix, el
+       mapa encongeix (el dibuix queda centrat dins del quadre). */
+    max-height: 24svh;
+  }
+
+  @media (min-width: 62rem) {
+    .figure__map {
+      max-height: none;
+    }
   }
 
   .figure__hatch-line {
@@ -598,7 +645,13 @@ const lastCopy = c.milestones[last.id];
     margin: 0;
     padding: 0;
     display: grid;
-    gap: var(--space-2);
+    gap: var(--space-1);
+  }
+
+  @media (min-width: 62rem) {
+    .langs__list {
+      gap: var(--space-2);
+    }
   }
 
   .lang {
@@ -649,8 +702,8 @@ const lastCopy = c.milestones[last.id];
   }
 
   .langs__key {
-    margin-top: var(--space-4);
-    padding-top: var(--space-3);
+    margin-top: var(--space-3);
+    padding-top: var(--space-2);
     border-top: 1px solid var(--rule);
     display: grid;
     gap: var(--space-1);
@@ -662,5 +715,12 @@ const lastCopy = c.milestones[last.id];
     display: flex;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  @media (min-width: 62rem) {
+    .langs__key {
+      margin-top: var(--space-4);
+      padding-top: var(--space-3);
+    }
   }
 </style>
