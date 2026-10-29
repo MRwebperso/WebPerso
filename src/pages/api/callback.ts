@@ -6,7 +6,7 @@ import {
   missingEnv,
   plainText,
   readEnv,
-  STATE_COOKIE,
+  stateCookie,
 } from './_oauth';
 
 /**
@@ -29,32 +29,53 @@ interface TokenResponse {
   error_description?: string;
 }
 
+/**
+ * Els refusos que GitHub documenta al primer tram, amb el text que en veu qui
+ * edita. El `error_description` de l'adreça no surt mai a la pàgina: l'escriu
+ * qui vulgui, i la pàgina és del nostre domini, de manera que un enllaç
+ * `/api/callback/?error=x&error_description=…` hi posaria davant d'una persona
+ * que edita la frase que li convingués (revisió de seguretat del 29/10/2026).
+ */
+const REFUSALS = new Map([
+  ['access_denied', "Has refusat l'accés a GitHub."],
+  ['application_suspended', "GitHub ha suspès l'aplicació OAuth del lloc."],
+  [
+    'redirect_uri_mismatch',
+    "L'adreça de retorn no coincideix amb la de l'aplicació OAuth de GitHub: ha de ser exactament <domini>/api/callback/.",
+  ],
+]);
+
 export const GET: APIRoute = async ({ cookies, site, url }) => {
   // Es llegeix abans d'esborrar-la: la galeta d'estat és d'un sol ús, i tant hi
   // val si el que ve després acaba bé o mal.
-  const expected = cookies.get(STATE_COOKIE)?.value;
-  cookies.delete(STATE_COOKIE, { path: '/' });
+  const { name, secure } = stateCookie(url);
+  const expected = cookies.get(name)?.value;
+  cookies.delete(name, { path: '/', secure });
 
-  const refusal = url.searchParams.get('error_description') ?? url.searchParams.get('error');
-  if (refusal) return authError(refusal);
+  // Abans de la primera sortida per `authError`: la pàgina de tancament ha de
+  // saber a quin origen pot lliurar el resultat, i sense domini no en té cap.
+  if (!site) return plainText('Configuració incompleta: el lloc no té domini.', 500);
+
+  const refusal = url.searchParams.get('error');
+  if (refusal !== null) return authError(REFUSALS.get(refusal) ?? "GitHub ha refusat l'autenticació.", site);
 
   const code = url.searchParams.get('code');
-  if (!code) return authError('GitHub no ha tornat cap codi.');
+  if (!code) return authError('GitHub no ha tornat cap codi.', site);
 
   if (!expected) {
     return authError(
       "L'estat de la sessió no ha tornat. Cal obrir l'administració des del domini canònic del lloc, que és el que rep el retorn de GitHub.",
+      site,
     );
   }
   if (url.searchParams.get('state') !== expected) {
-    return authError("L'estat no coincideix: aquesta autenticació no ha començat aquí.");
+    return authError("L'estat no coincideix: aquesta autenticació no ha començat aquí.", site);
   }
 
   const clientId = readEnv('GITHUB_OAUTH_ID');
   if (!clientId) return missingEnv('GITHUB_OAUTH_ID');
   const clientSecret = readEnv('GITHUB_OAUTH_SECRET');
   if (!clientSecret) return missingEnv('GITHUB_OAUTH_SECRET');
-  if (!site) return plainText('Configuració incompleta: el lloc no té domini.', 500);
 
   let payload: TokenResponse;
   let status = 0;
@@ -73,7 +94,7 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
     status = response.status;
     payload = (await response.json()) as TokenResponse;
   } catch {
-    return authError("No s'ha pogut parlar amb GitHub per bescanviar el codi.", 502);
+    return authError("No s'ha pogut parlar amb GitHub per bescanviar el codi.", site, 502);
   }
 
   if (!payload.access_token) {
@@ -84,9 +105,10 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
       payload.error_description ??
         payload.error ??
         `GitHub no ha tornat cap testimoni (resposta ${status}).`,
+      site,
       502,
     );
   }
 
-  return authSuccess(payload.access_token);
+  return authSuccess(payload.access_token, site);
 };

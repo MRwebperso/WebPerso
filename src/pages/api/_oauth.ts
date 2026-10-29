@@ -17,8 +17,22 @@
 /** Nom del proveïdor, tal com l'espera el protocol de Decap. */
 export const PROVIDER = 'github';
 
-/** Galeta d'estat: viu deu minuts i només serveix per a la comprovació CSRF. */
-export const STATE_COOKIE = 'decap-oauth-state';
+/**
+ * Galeta d'estat: viu deu minuts i només serveix per a la comprovació CSRF.
+ *
+ * Sobre https porta el prefix `__Host-`, que el navegador només accepta si la
+ * galeta és `Secure`, de camí `/` i sense `Domain`. És el que impedeix que un
+ * altre subdomini de `clm.cat` n'imposi una amb el mateix nom i fixi l'estat
+ * d'una entrada que no ha començat aquí (revisió de seguretat del 29/10/2026).
+ * Sobre http —el desenvolupament local— el prefix faria que el navegador la
+ * refusés, i per això el nom i `secure` surten de l'esquema de la petició, i les
+ * dues rutes han de preguntar-ho al mateix lloc. Amb el prefix, esborrar-la
+ * també demana `Secure`: un `Set-Cookie` sense ell es descarta.
+ */
+export function stateCookie(url: URL): { name: string; secure: boolean } {
+  const secure = url.protocol === 'https:';
+  return { name: secure ? '__Host-decap-oauth-state' : 'decap-oauth-state', secure };
+}
 
 /** Camí de retorn. Amb barra final, perquè `trailingSlash` del lloc és `always`. */
 export const CALLBACK_PATH = '/api/callback/';
@@ -95,11 +109,26 @@ const forHtml = (value: string): string =>
  * sap a quin origen pot parlar— i només llavors s'envia el resultat. Enviar el
  * testimoni abans de l'eco voldria dir enviar-lo a `*`.
  *
+ * L'eco, però, només val si ve de l'origen del lloc (`allowedOrigin`, que és
+ * `Astro.site.origin`). Decap ja comprova de la seva banda que qui avisa és el
+ * `base_url`; aquesta meitat de l'encaixada no comprovava res, i qualsevol
+ * pàgina que obrís `/api/auth/` amb `window.open` podia respondre l'eco i rebre
+ * el testimoni de qui editava, sempre que ja tingués GitHub obert i l'aplicació
+ * autoritzada (revisió de seguretat del 29/10/2026; reproduïda abans de tocar-ho).
+ * Preu assumit: l'administració només autentica des del domini canònic, que és
+ * on ja la dirigeix `base_url`. Des d'una previsualització de Vercel, el
+ * testimoni no arriba.
+ *
  * El testimoni s'escriu al document, de manera que va escapat contra qualsevol
  * seqüència que en pugui tancar l'etiqueta. També hi ha text visible: si algú
  * arriba aquí sense finestra obridora, ha de saber què ha passat.
  */
-function handshake(message: string, visible: string, status: number): Response {
+function handshake(
+  message: string,
+  visible: string,
+  status: number,
+  allowedOrigin: string,
+): Response {
   const body = `<!doctype html>
 <html lang="ca">
   <head>
@@ -117,6 +146,7 @@ function handshake(message: string, visible: string, status: number): Response {
         var message = ${forScript(message)};
         if (!window.opener) return;
         function receive(event) {
+          if (event.origin !== ${forScript(allowedOrigin)}) return;
           if (event.data !== 'authorizing:${PROVIDER}') return;
           window.removeEventListener('message', receive, false);
           window.opener.postMessage(message, event.origin);
@@ -138,24 +168,31 @@ function handshake(message: string, visible: string, status: number): Response {
   });
 }
 
-/** Autenticació resolta: el testimoni torna a Decap i la finestra es tanca. */
-export function authSuccess(token: string): Response {
+/**
+ * Autenticació resolta: el testimoni torna a Decap i la finestra es tanca.
+ * `site` és el domini del lloc (`Astro.site`): l'únic origen que pot rebre'l.
+ */
+export function authSuccess(token: string, site: URL): Response {
   const payload = JSON.stringify({ token, provider: PROVIDER });
   return handshake(
     `authorization:${PROVIDER}:success:${payload}`,
     'Autenticat. Ja pots tancar aquesta finestra.',
     200,
+    site.origin,
   );
 }
 
 /**
  * Autenticació fallida. El motiu torna a Decap perquè surti a la interfície del
  * CMS: sense això, un error aquí es veuria com una finestra que no fa res.
+ * Passa per la mateixa encaixada i el mateix origen que l'èxit: dues sortides
+ * d'un sol mòdul no han de tenir regles diferents.
  */
-export function authError(reason: string, status = 400): Response {
+export function authError(reason: string, site: URL, status = 400): Response {
   return handshake(
     `authorization:${PROVIDER}:error:${reason}`,
     `L'autenticació no s'ha completat: ${reason}`,
     status,
+    site.origin,
   );
 }
