@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { siteUrl } from './src/config/site.mjs';
@@ -24,6 +24,20 @@ export default defineConfig({
    * `dist` a mà, el desplegament quedaria buit i sense error visible.
    */
   adapter: vercel(),
+  /*
+   * Cap pàgina no passa per `astro:assets` (cap `<Image>`, cap `getImage`): les
+   * imatges són a `public/` i es serveixen tal com són. Amb el servei per
+   * omissió, l'adaptador però empaqueta `sharp` a la funció —un binari natiu de
+   * 21,8 MB amb els seus `@img/*`— i deixa `/_image/` a l'abast de tothom, i els
+   * avisos d'`npm audit` per `sharp` i per la ruta d'imatges (un d'ells crític)
+   * apunten justament aquí. Amb el servei de pas, `sharp` surt de la funció i
+   * l'endpoint no té res a processar (29/10/2026; compilació mesurada abans i
+   * després, el lloc surt idèntic: `verify` passa amb els 727 enllaços).
+   * Preu assumit: el dia que algú faci servir `<Image>`, les imatges sortiran
+   * sense optimitzar, sense cap error. Si cal, es treu aquesta línia i es torna
+   * a mirar l'estat de l'advisory de `sharp`.
+   */
+  image: { service: passthroughImageService() },
   trailingSlash: 'always',
   // Només afecta `astro dev`: permet obrir el servidor de desenvolupament en un
   // port lliure quan el 4321 ja està ocupat. No té cap efecte a la compilació.
