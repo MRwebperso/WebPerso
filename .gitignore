@@ -7,3 +7,6 @@ dist/
 npm-debug.log*
 .vercel
 .netlify
+# Les còpies de treball dels agents: cadascuna és un dipòsit niat i amb un
+# `git add -A` s'hi colaria sencer (revisió de seguretat del 29/10/2026).
+.claude/worktrees/

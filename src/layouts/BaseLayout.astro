@@ -148,8 +148,12 @@ const canonical = alternates ? new URL(alternates[lang], Astro.site) : null;
       // i deixa el desplaçament a zero. L'àncora és el que manté la posició.
       document.addEventListener('astro:after-swap', () => {
         if (!location.hash) return;
-        const target = document.querySelector(decodeURIComponent(location.hash));
-        target?.scrollIntoView({ behavior: 'instant', block: 'start' });
+        // `#%` o `#a[` fan llançar tant `decodeURIComponent` com `querySelector`,
+        // i l'adreça la pot escriure qualsevol: una àncora mal formada no ha de
+        // deixar un error sense capturar en cada canvi de llengua.
+        try {
+          document.querySelector(decodeURIComponent(location.hash))?.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } catch {}
       });
     </script>
   </body>

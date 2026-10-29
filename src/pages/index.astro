@@ -32,8 +32,11 @@ const routes = Object.fromEntries(
         try {
           saved = localStorage.getItem('lang');
         } catch {}
+        // `hasOwn` i no `routes[saved]`: el valor ve de `localStorage`, que també
+        // escriuen les altres pàgines de l'origen (La Ruta hi és), i amb un nom
+        // com `constructor` el cercaria a la cadena de prototips.
         const preferred =
-          (saved && routes[saved] && saved) ||
+          (saved && Object.hasOwn(routes, saved) && saved) ||
           (navigator.languages ?? [navigator.language ?? ''])
             .map((tag) => tag.slice(0, 2).toLowerCase())
             .find((code) => routes[code]) ||
