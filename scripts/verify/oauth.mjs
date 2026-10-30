@@ -196,6 +196,33 @@ async function routes(t) {
     t.ok((await none.text()).includes("L'estat de la sessió no ha tornat"), 'sense galeta no s\'accepta cap estat');
     t.equal(requests.length, 0, "cap dels dos casos no arriba a parlar amb GitHub");
 
+    // GitHub rebutja el codi, o no es pot arribar a GitHub: la pàgina d'error ha
+    // de sortir amb un estat que Cloudflare, davant del domini, no substitueixi.
+    // Amb un 502 o un 504 la finestra emergent rebia la pàgina de Cloudflare
+    // («error code: 502»), no executava l'encaixada i Decap no se n'assabentava
+    // (vist en viu el 29/10/2026).
+    const exchange = async (fetchImpl) => {
+      globalThis.fetch = fetchImpl;
+      const res = await callback.GET({
+        cookies: jar({ [set.name]: set.value }),
+        site: ROOT,
+        url: new URL(`/api/callback/?code=el-codi&state=${set.value}`, ROOT),
+      });
+      return { status: res.status, body: await res.text() };
+    };
+    const refused = await exchange(async () => ({
+      status: 200,
+      json: async () => ({ error: 'bad_verification_code', error_description: 'The code passed is incorrect or expired.' }),
+    }));
+    t.ok(refused.body.includes('The code passed is incorrect or expired.'), "el motiu de GitHub arriba a la pàgina d'error");
+    t.ok(![502, 504].includes(refused.status), `un codi rebutjat no surt amb ${refused.status}: Cloudflare el substituiria per la seva pàgina`);
+    t.ok(refused.status >= 400 && refused.status < 500, 'un codi rebutjat surt amb un 4xx, que Cloudflare no intercepta');
+    const unreachable = await exchange(async () => {
+      throw new Error('xarxa caiguda');
+    });
+    t.ok(unreachable.body.includes("No s'ha pogut parlar amb GitHub"), "si no s'arriba a GitHub, la pàgina ho diu");
+    t.ok(![502, 504].includes(unreachable.status), `GitHub inabastable no surt amb ${unreachable.status}: Cloudflare el substituiria`);
+
     // El text de l'adreça no surt a la pàgina: l'escriu qui vulgui.
     const phrase = 'Truqueu al 06 00 00 00 00 per recuperar el compte';
     const hostile = await callback.GET({

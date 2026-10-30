@@ -45,6 +45,19 @@ const REFUSALS = new Map([
   ],
 ]);
 
+/**
+ * Estat de les pàgines d'error quan GitHub no respon bé a l'intercanvi. No és el
+ * 502 que semblaria natural: davant de `miquel.clm.cat` hi ha Cloudflare, que
+ * substitueix per la seva pàgina qualsevol 502 o 504 de l'origen. La finestra
+ * emergent no rebia la nostra, no executava l'encaixada i Decap no sabia què
+ * havia passat, que és justament el que aquest fitxer vol evitar. Es va veure en
+ * viu el 29/10/2026 amb un codi fals i l'estat bo: la resposta tornava amb
+ * `Server: cloudflare`, sense `x-vercel-id` i amb el cos «error code: 502».
+ * Un 4xx no l'intercepta; el 424 (Failed Dependency) és el que més s'acosta al
+ * que ha passat.
+ */
+const UPSTREAM_FAILED = 424;
+
 export const GET: APIRoute = async ({ cookies, site, url }) => {
   // Es llegeix abans d'esborrar-la: la galeta d'estat és d'un sol ús, i tant hi
   // val si el que ve després acaba bé o mal.
@@ -94,7 +107,7 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
     status = response.status;
     payload = (await response.json()) as TokenResponse;
   } catch {
-    return authError("No s'ha pogut parlar amb GitHub per bescanviar el codi.", site, 502);
+    return authError("No s'ha pogut parlar amb GitHub per bescanviar el codi.", site, UPSTREAM_FAILED);
   }
 
   if (!payload.access_token) {
@@ -106,7 +119,7 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
         payload.error ??
         `GitHub no ha tornat cap testimoni (resposta ${status}).`,
       site,
-      502,
+      UPSTREAM_FAILED,
     );
   }
 
