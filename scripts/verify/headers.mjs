@@ -47,10 +47,9 @@ const nodeRequire = createRequire(import.meta.url);
 /** `getTransformedRoutes`, des de l'adaptador que n'és el propietari. */
 function routingUtils() {
   try {
-    const adapter = nodeRequire.resolve('@astrojs/vercel');
-    return createRequire(adapter)('@vercel/routing-utils');
+    return nodeRequire('@vercel/routing-utils');
   } catch (error) {
-    throw new Error(`no es troba \`@vercel/routing-utils\` des de \`@astrojs/vercel\`: sense ell no es pot saber què en farà Vercel, de vercel.json (${error.message})`);
+    throw new Error(`no es troba \`@vercel/routing-utils\` (devDependencies): sense ell no es pot saber què en farà Vercel, de vercel.json (${error.message})`);
   }
 }
 
@@ -165,6 +164,21 @@ export default async function run(t) {
 
   // Un sol origen des del 13/11/2026: cap condició d'amfitrió ni cap redirecció
   // cap a l'antic origen de l'administració.
+  // El que feia l'adaptador fins al 13/11/2026 i ara fa `vercel.json`: la barra
+  // final de `trailingSlash: 'always'` (sense ella, `/ca` donaria 404 o una
+  // pàgina sense barra i els enllaços relatius anirien a un altre lloc) i la
+  // memòria cau llarga dels actius amb empremta de `/_astro/`.
+  t.equal(config.trailingSlash, true, 'vercel.json porta trailingSlash: true, com astro.config.mjs (always)');
+  for (const [from, to] of [['/ca', '/ca/'], ['/ca/casos/banys-d-arles', '/ca/casos/banys-d-arles/'], ['/favicon.svg/', '/favicon.svg']]) {
+    const out = outcomeFor(routes, from);
+    t.ok(out.redirect === to && out.status === 308 && out.beforeFilesystem, `${from} es redirigeix amb un 308 a ${to} abans dels fitxers (${out.redirect} ${out.status})`);
+  }
+  for (const path of ['/', '/ca/', '/favicon.svg', '/_astro/x.js', '/ruta/']) {
+    t.ok(!outcomeFor(routes, path).redirect, `${path} no es redirigeix`);
+  }
+  t.equal(headersFor(routes, '/_astro/x.js')['cache-control'], 'public, max-age=31536000, immutable', '/_astro/ porta la memòria cau llarga dels actius amb empremta');
+  t.ok(!('cache-control' in headersFor(routes, '/ca/')), "les pàgines no porten la memòria cau llarga: un canvi de text ha d'arribar al següent desplegament");
+
   const conditional = [...(config.headers ?? []), ...(config.redirects ?? []), ...(config.rewrites ?? [])].filter((r) => r.has || r.missing);
   t.equal(conditional.length, 0, "vercel.json no porta cap regla condicionada (has/missing): el lloc té un sol origen");
   t.ok(!JSON.stringify(config).includes('cms.clm.cat'), "vercel.json no nomena cms.clm.cat: l'origen de l'administració ja no existeix");

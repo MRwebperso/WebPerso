@@ -13,13 +13,13 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.2.1",
-    "@astrojs/vercel": "^9.0.5",
     "@fontsource-variable/ibm-plex-sans": "^5.3.0",
     "@fontsource-variable/newsreader": "^5.3.0",
     "astro": "^5.2.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@vercel/routing-utils": "5.3.3",
     "esbuild": "^0.27.7",
     "typescript": "^5.9.3"
   }

@@ -109,7 +109,7 @@ export async function bundle(entry) {
 }
 
 /*
- * La sortida compilada (`.vercel/output/static`) que llegeixen `links.mjs` i
+ * La sortida compilada (`dist/`) que llegeixen `links.mjs` i
  * `build.mjs`. Fins al 21/10/2026 cada una ho resolia pel seu compte, i cap de
  * les dues no mirava si la sortida era de la mateixa feina que els fonts: amb un
  * `npm run build` oblidat, `verify` donava per bo un lloc que ja no existia. Ara
@@ -117,7 +117,7 @@ export async function bundle(entry) {
  * fitxer més nou de `src/`, `public/`, `astro.config.mjs` o `package.json`.
  *
  * L'edat de la sortida és la de la pàgina HTML més vella que la compilació
- * ha generat, i no la del directori ni la del fitxer més nou. L'adaptador
+ * ha generat, i no la del directori ni la del fitxer més nou. La compilació
  * copia `public/` conservant les dates (el `favicon.svg` de la sortida és de
  * juliol), de manera que qualsevol fitxer copiat faria semblar vella una
  * sortida acabada de fer: això val també per als `.html` de `public/` (un
@@ -182,8 +182,8 @@ let compiled = null;
 export function compiledSite(t) {
   if (compiled) return compiled;
 
-  const out = fromRoot('.vercel/output/static');
-  if (!t.ok(fs.existsSync(out), 'hi ha sortida compilada a .vercel/output/static: cal `npm run build`')) return null;
+  const out = fromRoot('dist');
+  if (!t.ok(fs.existsSync(out), 'hi ha sortida compilada a dist/: cal `npm run build`')) return null;
 
   const pages = htmlFiles(out);
   // Només les pàgines que ha generat la compilació: les de `public/` es copien amb la data d'origen.

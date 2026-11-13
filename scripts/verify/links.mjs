@@ -1,6 +1,6 @@
 /*
  * Enllaços i àncores, sobre la sortida de l'última compilació
- * (`.vercel/output/static`; cal `npm run build` abans, i `compiledSite` de
+ * (`dist/`; cal `npm run build` abans, i `compiledSite` de
  * `lib.mjs` ho exigeix: en vermell si la sortida és més vella que els fonts).
  *
  * - Cada camí intern (`href` i `src` que comencen per `/`) existeix.

@@ -1,38 +1,26 @@
 // @ts-check
 import { defineConfig, passthroughImageService } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
-import vercel from '@astrojs/vercel';
 import { siteUrl } from './src/config/site.mjs';
 
 export default defineConfig({
   // Únic punt del projecte que coneix el domini. Ve de src/config/site.mjs.
   site: siteUrl,
   /*
-   * `output: 'static'` (el valor per omissió) es manté: cada pàgina del lloc es
-   * pregenera igual que abans i la compilació no en fa cap a petició.
-   *
-   * L'adaptador, en canvi, és nou i canvia la naturalesa del desplegament: la
-   * compilació ja no deixa un `dist/` d'HTML pla sinó un `.vercel/output/` amb
-   * els actius estàtics i les funcions. Hi és per una sola raó, i és l'única
-   * part del lloc que no pot ser estàtica: les dues rutes d'`src/pages/api/`
-   * que autentiquen el CMS contra GitHub, que porten `prerender = false` i són
-   * les úniques que s'executen a petició. Si algun dia el CMS surt del projecte,
-   * treure l'adaptador i les dues rutes torna el lloc a estàtic pur.
-   *
-   * Conseqüència a vigilar a Vercel: el directori de sortida el detecta el
-   * preajust d'Astro. Si al projecte hi hagués un «Output Directory» fixat a
-   * `dist` a mà, el desplegament quedaria buit i sense error visible.
+   * Estàtic pur, sense adaptador, des del 13/11/2026. Entre el 05/08 i el
+   * 13/11/2026 hi va haver `@astrojs/vercel` per una sola raó: les dues rutes a
+   * petició que autenticaven el CMS contra GitHub. El CMS va sortir del
+   * projecte sense haver-se fet servir, i amb ell l'adaptador. La compilació
+   * torna a deixar un `dist/` d'HTML pla, i el que l'adaptador feia a
+   * l'encaminament (barra final, memòria cau de `/_astro/`) és ara a
+   * `vercel.json`, on `npm run verify` (`headers`) ho vigila.
    */
-  adapter: vercel(),
   /*
    * Cap pàgina no passa per `astro:assets` (cap `<Image>`, cap `getImage`): les
-   * imatges són a `public/` i es serveixen tal com són. Amb el servei per
-   * omissió, l'adaptador però empaqueta `sharp` a la funció —un binari natiu de
-   * 21,8 MB amb els seus `@img/*`— i deixa `/_image/` a l'abast de tothom, i els
-   * avisos d'`npm audit` per `sharp` i per la ruta d'imatges (un d'ells crític)
-   * apunten justament aquí. Amb el servei de pas, `sharp` surt de la funció i
-   * l'endpoint no té res a processar (29/10/2026; compilació mesurada abans i
-   * després, el lloc surt idèntic: `verify` passa amb els 727 enllaços).
+   * imatges són a `public/` i es serveixen tal com són. El servei de pas es va
+   * posar el 29/10/2026 per treure `sharp` de la funció de l'adaptador; sense
+   * adaptador ja no hi ha funció, i es manté perquè la compilació tampoc no
+   * necessiti `sharp`.
    * Preu assumit: el dia que algú faci servir `<Image>`, les imatges sortiran
    * sense optimitzar, sense cap error. Si cal, es treu aquesta línia i es torna
    * a mirar l'estat de l'advisory de `sharp`.

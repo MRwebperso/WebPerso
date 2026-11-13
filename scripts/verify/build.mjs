@@ -1,6 +1,6 @@
 /*
  * El JS de client, sobre la sortida de l'última compilació
- * (`.vercel/output/static`; cal `npm run build` abans, i `compiledSite` de
+ * (`dist/`; cal `npm run build` abans, i `compiledSite` de
  * `lib.mjs` ho exigeix: en vermell si la sortida és més vella que els fonts).
  * Tres invariants que fins al 21/10/2026 només guardava la convenció, i que cap
  * tipus ni cap esquema no veu:
