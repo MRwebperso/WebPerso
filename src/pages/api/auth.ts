@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { CALLBACK_PATH, missingEnv, plainText, readEnv, stateCookie } from './_oauth';
+import { CALLBACK_PATH, CMS, missingEnv, readEnv, stateCookie } from './_oauth';
 
 /**
  * Primer tram de l'autenticació del CMS: encamina cap a GitHub.
@@ -7,25 +7,20 @@ import { CALLBACK_PATH, missingEnv, plainText, readEnv, stateCookie } from './_o
  * Aquesta ruta i `callback.ts` són les dues úniques del lloc que s'executen a
  * petició. Tota la resta continua pregenerada.
  *
- * El `redirect_uri` es construeix damunt d'`Astro.site`, que ve de la línia
- * `siteUrl` de `src/config/site.mjs` —el punt únic que coneix el domini—, i no
- * damunt de l'amfitrió de la petició. Així el retorn i la galeta d'estat cauen
- * sempre al mateix origen, i la conseqüència, que és volguda, és que l'adreça de
- * retorn registrada a l'aplicació OAuth de GitHub ha de ser exactament
- * `<domini>/api/callback/`. Si es canvia de domini, es mouen les dues alhora.
+ * El `redirect_uri` es construeix damunt de `CMS`, l'origen de l'administració
+ * (`cmsUrl` de `src/config/site.mjs`), i no damunt de l'amfitrió de la petició
+ * ni del domini públic. Així el retorn i la galeta d'estat cauen sempre a
+ * l'origen de l'administració, i la conseqüència, que és volguda, és que
+ * l'adreça de retorn registrada a l'aplicació OAuth de GitHub ha de ser
+ * exactament `<cmsUrl>/api/callback/`. Si es canvia l'origen, es mouen les dues
+ * alhora. Aquesta ruta només es serveix a aquell origen: `vercel.json` redirigeix
+ * `/api/` del domini públic cap allà.
  */
 export const prerender = false;
 
-export const GET: APIRoute = ({ cookies, site, url }) => {
+export const GET: APIRoute = ({ cookies, url }) => {
   const clientId = readEnv('GITHUB_OAUTH_ID');
   if (!clientId) return missingEnv('GITHUB_OAUTH_ID');
-
-  if (!site) {
-    return plainText(
-      "Configuració incompleta: el lloc no té domini. Ve de `siteUrl` a src/config/site.mjs o de la variable d'entorn SITE_URL.",
-      500,
-    );
-  }
 
   // Estat d'un sol ús contra la falsificació de peticions: es desa en galeta i
   // el segon tram comprova que el que torna GitHub sigui el mateix. `lax` és el
@@ -44,7 +39,7 @@ export const GET: APIRoute = ({ cookies, site, url }) => {
 
   const authorize = new URL('https://github.com/login/oauth/authorize');
   authorize.searchParams.set('client_id', clientId);
-  authorize.searchParams.set('redirect_uri', new URL(CALLBACK_PATH, site).href);
+  authorize.searchParams.set('redirect_uri', new URL(CALLBACK_PATH, CMS).href);
   // `public_repo` és l'abast més estret amb què Decap pot escriure a un dipòsit
   // públic, i per això és el per omissió (revisió de seguretat del 29/10/2026).
   // Preu assumit: amb un dipòsit privat cal posar `repo` per variable, i sense

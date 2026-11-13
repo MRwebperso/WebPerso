@@ -17,7 +17,8 @@
  * l'encaixada ja prometia i que fins ara no vigilava ningú.
  */
 import vm from 'node:vm';
-import { bundle } from './lib.mjs';
+import { pathToFileURL } from 'node:url';
+import { bundle, fromRoot } from './lib.mjs';
 
 const SITE = new URL('https://site.example/admin/');
 const HOSTILE = 'https://evil.example';
@@ -114,6 +115,15 @@ export default async function (t) {
  */
 const ROOT = new URL('https://site.example/');
 
+/*
+ * F1 (13/11/2026): les rutes ja no fan servir `site` (el domini públic, on corre
+ * el JS de `/ruta/`) sinó `cmsUrl`. Les crides de sota continuen passant `site:
+ * ROOT`, que fa de domini públic, precisament per comprovar que no hi pinta res.
+ */
+const { cmsUrl } = await import(pathToFileURL(fromRoot('src/config/site.mjs')).href);
+const CMS = new URL(cmsUrl);
+const CMS_CALLBACK = new URL('/api/callback/', CMS).href;
+
 function jar(initial = {}) {
   const store = new Map(Object.entries(initial));
   const log = { set: [], deleted: [] };
@@ -148,7 +158,8 @@ async function routes(t) {
     const location = new URL(first.headers.get('Location'));
     t.equal(location.searchParams.get('scope'), 'public_repo', "l'abast per omissió és public_repo");
     t.equal(location.searchParams.get('state'), set?.value, "l'estat que va a GitHub és el de la galeta");
-    t.equal(location.searchParams.get('redirect_uri'), 'https://site.example/api/callback/', "el retorn és el del lloc");
+    t.equal(location.searchParams.get('redirect_uri'), CMS_CALLBACK, "el retorn és el de l'administració (cmsUrl), no el del domini públic");
+    t.ok(CMS.origin !== ROOT.origin, "a la prova, el domini públic i l'administració són orígens diferents");
 
     process.env.GITHUB_OAUTH_SCOPE = 'repo';
     const custom = await auth.GET({ cookies: jar(), site: ROOT, url: new URL('/api/auth/', ROOT) });
@@ -176,8 +187,18 @@ async function routes(t) {
       site: ROOT,
       url: new URL(`/api/callback/?code=el-codi&state=${set.value}`, ROOT),
     });
-    t.ok((await done.text()).includes('gho_ANADA_I_TORNADA'), "l'anada i tornada sencera acaba amb el testimoni a la pàgina de tancament");
-    t.equal(requests[0]?.body?.redirect_uri, 'https://site.example/api/callback/', "l'intercanvi porta el mateix redirect_uri que el primer tram");
+    const doneHtml = await done.text();
+    t.ok(doneHtml.includes('gho_ANADA_I_TORNADA'), "l'anada i tornada sencera acaba amb el testimoni a la pàgina de tancament");
+    t.equal(requests[0]?.body?.redirect_uri, CMS_CALLBACK, "l'intercanvi porta el mateix redirect_uri que el primer tram");
+    // El testimoni de la ruta real només va a l'origen de l'administració: l'eco
+    // del domini públic (on corre `/ruta/`) no el rep.
+    const helloFrom = (origin) => ({ origin, data: HELLO });
+    t.equal(payloads(run(doneHtml, [helloFrom(ROOT.origin)])), [], "l'eco del domini públic no rep el testimoni");
+    t.equal(
+      payloads(run(doneHtml, [helloFrom(ROOT.origin), helloFrom(CMS.origin)])).map((m) => m.target),
+      [CMS.origin],
+      "el testimoni de la ruta arriba a l'origen de l'administració, i només a ell",
+    );
     t.equal(
       back.log.deleted.map((d) => [d.name, d.options?.secure, d.options?.path]),
       [['__Host-decap-oauth-state', true, '/']],

@@ -9,12 +9,18 @@
  *   `/admin/index.html`: `/admin/` hi dona 404. Com que l'edició en local amb
  *   `npx decap-server` passa justament pel servidor de desenvolupament, la
  *   forma que hi falla és la forma equivocada.
- * - El `base_url` que Decap necessita ha de ser el domini que rep el retorn
- *   d'OAuth, i d'aquí surt d'`Astro.site` —el punt únic que coneix el domini—,
- *   no de l'origen de la finestra. La diferència compta en un desplegament de
+ * - El `base_url` que Decap necessita ha de ser l'origen que rep el retorn
+ *   d'OAuth, que és el de l'administració (`cmsUrl` de `src/config/site.mjs`),
+ *   no l'origen de la finestra. La diferència compta en un desplegament de
  *   previsualització: amb l'origen de la finestra, la galeta d'estat cauria al
- *   domini de la previsualització i el retorn al canònic, i l'autenticació
- *   moriria amb un «l'estat de la sessió no ha tornat».
+ *   domini de la previsualització i el retorn al de l'administració, i
+ *   l'autenticació moriria amb un «l'estat de la sessió no ha tornat».
+ * - Aquesta pàgina només es serveix a `cmsUrl`, i el lloc públic, només al seu
+ *   domini (revisió de seguretat del 13/11/2026, F1): el JS de `/ruta/`, d'un
+ *   altre projecte, corre a l'origen públic, i el testimoni de GitHub que Decap
+ *   desa al `localStorage` no hi ha de viure. `vercel.json` redirigeix
+ *   `/admin/` del domini públic cap aquí. El `site_url` de Decap (l'enllaç «al
+ *   lloc» de la interfície) continua essent el domini públic, d'`Astro.site`.
  *
  * No passa per `BaseLayout` i no té ruta mirall: no és una pàgina del lloc i no
  * entra al contracte lingüístic. Els seus textos són en català i prou. Queda
@@ -24,7 +30,10 @@
  * La resta de la configuració —col·lecció, camps, etiquetes— és a
  * `public/admin/config.yml`, que Decap va a buscar tot sol a `/admin/config.yml`.
  */
-const baseUrl = Astro.site?.origin;
+import { cmsUrl } from '../../config/site.mjs';
+
+const baseUrl = new URL(cmsUrl).origin;
+const siteUrl = Astro.site?.origin;
 ---
 
 <!doctype html>
@@ -54,9 +63,9 @@ const baseUrl = Astro.site?.origin;
     </div>
 
     {/*
-      Arrencada manual perquè el `base_url` no es pot escriure a `config.yml`:
-      allà seria el domini repetit en un segon lloc del projecte. El que es
-      passa aquí es fusiona damunt del que ve del fitxer.
+      Arrencada manual perquè `base_url` i `site_url` no es poden escriure a
+      `config.yml`: allà serien els dos orígens repetits en un segon lloc del
+      projecte. El que es passa aquí es fusiona damunt del que ve del fitxer.
     */}
     <script is:inline>
       window.CMS_MANUAL_INIT = true;
@@ -79,15 +88,18 @@ const baseUrl = Astro.site?.origin;
     <script is:inline src="https://unpkg.com/decap-cms@3.16.3/dist/decap-cms.js"
       integrity="sha384-A/Gdn928CNLufmnGWGs9RM4Q9o8bSNLeJERqBFrBjwzL7FRpoLT3MPF8Tl0+Wd2p"
       crossorigin="anonymous"></script>
-    <script is:inline define:vars={{ baseUrl }}>
+    <script is:inline define:vars={{ baseUrl, siteUrl }}>
       if (window.CMS) {
         // El text d'espera diu «no s'ha pogut baixar el paquet», i aquest camí
         // és justament el que demostra que sí que s'ha baixat: si es quedés a la
         // pàgina, quedaria per damunt de l'administració contradient-la.
         document.querySelector('.fallback')?.remove();
-        // Sense domini configurat, val més deixar que Decap llegeixi el fitxer
-        // tal com és que passar-li un `base_url` buit.
-        window.CMS.init(baseUrl ? { config: { backend: { base_url: baseUrl } } } : undefined);
+        // `site_url` només si el lloc té domini: buit, Decap enllaçaria a res.
+        window.CMS.init({
+          config: siteUrl
+            ? { backend: { base_url: baseUrl }, site_url: siteUrl, display_url: siteUrl }
+            : { backend: { base_url: baseUrl } },
+        });
       }
     </script>
   </body>

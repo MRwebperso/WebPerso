@@ -14,8 +14,19 @@
  * tota sola, no tenen ruta mirall ni entren al contracte lingüístic.
  */
 
+import { cmsUrl } from '../../config/site.mjs';
+
 /** Nom del proveïdor, tal com l'espera el protocol de Decap. */
 export const PROVIDER = 'github';
+
+/**
+ * Origen de l'administració (`cmsUrl` de `src/config/site.mjs`). Hi cau el
+ * retorn de GitHub, hi viu la galeta d'estat i és l'únic origen que rep el
+ * testimoni. No és `Astro.site`, que és el domini públic: allà corre el JS de
+ * `/ruta/`, d'un altre projecte, i el testimoni no hi ha d'arribar (revisió de
+ * seguretat del 13/11/2026, F1).
+ */
+export const CMS = new URL(cmsUrl);
 
 /**
  * Galeta d'estat: viu deu minuts i només serveix per a la comprovació CSRF.
@@ -109,15 +120,15 @@ const forHtml = (value: string): string =>
  * sap a quin origen pot parlar— i només llavors s'envia el resultat. Enviar el
  * testimoni abans de l'eco voldria dir enviar-lo a `*`.
  *
- * L'eco, però, només val si ve de l'origen del lloc (`allowedOrigin`, que és
- * `Astro.site.origin`). Decap ja comprova de la seva banda que qui avisa és el
+ * L'eco, però, només val si ve de l'origen de l'administració (`allowedOrigin`,
+ * que és `CMS.origin`). Decap ja comprova de la seva banda que qui avisa és el
  * `base_url`; aquesta meitat de l'encaixada no comprovava res, i qualsevol
  * pàgina que obrís `/api/auth/` amb `window.open` podia respondre l'eco i rebre
  * el testimoni de qui editava, sempre que ja tingués GitHub obert i l'aplicació
  * autoritzada (revisió de seguretat del 29/10/2026; reproduïda abans de tocar-ho).
- * Preu assumit: l'administració només autentica des del domini canònic, que és
- * on ja la dirigeix `base_url`. Des d'una previsualització de Vercel, el
- * testimoni no arriba.
+ * Preu assumit: l'administració només autentica des del seu origen, que és on
+ * ja la dirigeix `base_url`. Des d'una previsualització de Vercel o des del
+ * domini públic, el testimoni no arriba.
  *
  * El testimoni s'escriu al document, de manera que va escapat contra qualsevol
  * seqüència que en pugui tancar l'etiqueta. També hi ha text visible: si algú
@@ -170,15 +181,16 @@ function handshake(
 
 /**
  * Autenticació resolta: el testimoni torna a Decap i la finestra es tanca.
- * `site` és el domini del lloc (`Astro.site`): l'únic origen que pot rebre'l.
+ * `origin` és el de l'administració (les rutes hi passen `CMS`): l'únic que
+ * pot rebre'l.
  */
-export function authSuccess(token: string, site: URL): Response {
+export function authSuccess(token: string, origin: URL): Response {
   const payload = JSON.stringify({ token, provider: PROVIDER });
   return handshake(
     `authorization:${PROVIDER}:success:${payload}`,
     'Autenticat. Ja pots tancar aquesta finestra.',
     200,
-    site.origin,
+    origin.origin,
   );
 }
 
@@ -188,11 +200,11 @@ export function authSuccess(token: string, site: URL): Response {
  * Passa per la mateixa encaixada i el mateix origen que l'èxit: dues sortides
  * d'un sol mòdul no han de tenir regles diferents.
  */
-export function authError(reason: string, site: URL, status = 400): Response {
+export function authError(reason: string, origin: URL, status = 400): Response {
   return handshake(
     `authorization:${PROVIDER}:error:${reason}`,
     `L'autenticació no s'ha completat: ${reason}`,
     status,
-    site.origin,
+    origin.origin,
   );
 }

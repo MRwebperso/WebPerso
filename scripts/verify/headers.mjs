@@ -45,6 +45,7 @@
  */
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 import { fromRoot } from './lib.mjs';
 
 const nodeRequire = createRequire(import.meta.url);
@@ -59,16 +60,57 @@ function routingUtils() {
   }
 }
 
+/*
+ * Dos amfitrions des del 13/11/2026 (F1): l'administració (`cmsUrl` de
+ * `src/config/site.mjs`) i el lloc públic, que és qualsevol altre —el domini de
+ * `SITE_URL`, les adreces `.vercel.app`—. Les condicions `has`/`missing` de
+ * `vercel.json` es comparen com fa Vercel, amb el valor com a expressió
+ * ancorada, sense distingir majúscules.
+ */
+const PUBLIC_HOSTS = ['miquel.clm.cat', 'web-perso-md-e-ro.vercel.app'];
+
+function conditionsHold(route, host) {
+  const hostMatches = (c) => c.type === 'host' && new RegExp(`^(?:${c.value})$`, 'i').test(host);
+  for (const c of route.has ?? []) if (c.type !== 'host' || !hostMatches(c)) return false;
+  for (const c of route.missing ?? []) if (c.type === 'host' && hostMatches(c)) return false;
+  return true;
+}
+
 /** Les capçaleres que Vercel afegiria a un camí, amb la clau en minúscula. */
-function headersFor(routes, pathname) {
+function headersFor(routes, pathname, host = PUBLIC_HOSTS[0]) {
   const found = {};
   for (const route of routes) {
-    if (!route.headers || !route.src) continue;
-    if (new RegExp(route.src).test(pathname)) {
+    if (!route.headers || !route.src || !route.continue) continue;
+    if (new RegExp(route.src).test(pathname) && conditionsHold(route, host)) {
       for (const [key, value] of Object.entries(route.headers)) found[key.toLowerCase()] = value;
     }
   }
   return found;
+}
+
+/**
+ * Què fa Vercel amb un camí, a part de les capçaleres: la primera ruta que no
+ * continua decideix. `{ redirect }` amb el destí, `{ rewrite }` amb el destí, o
+ * `{ filesystem: true }` si el camí arriba als fitxers (i, d'allà, a les
+ * funcions o al 404 de l'adaptador). `beforeFilesystem` diu si la decisió es
+ * pren abans de mirar els fitxers: `/admin/` és un fitxer, i una regla que
+ * arribés després no el taparia mai.
+ */
+function outcomeFor(routes, pathname, host) {
+  let beforeFilesystem = true;
+  for (const route of routes) {
+    if (route.handle === 'filesystem') {
+      beforeFilesystem = false;
+      continue;
+    }
+    if (!route.src || route.continue) continue;
+    const m = new RegExp(route.src).exec(pathname);
+    if (!m || !conditionsHold(route, host)) continue;
+    const fill = (v) => v.replace(/\$(\d+)/g, (_, i) => m[Number(i)] ?? '');
+    if (route.status >= 300 && route.status < 400) return { redirect: fill(route.headers.Location), status: route.status, beforeFilesystem };
+    if (route.dest) return { rewrite: fill(route.dest), beforeFilesystem };
+  }
+  return { filesystem: true };
 }
 
 /** Els camins de mostra on les capçaleres han de ser: pàgines, API, actius i La Ruta. */
@@ -76,6 +118,12 @@ const COVERED = [
   '/', '/ca/', '/fr/', '/ca/casos/', '/admin/', '/api/auth/', '/api/callback/', '/_astro/x.js', '/404.html',
   '/ruta/', '/ruta/_astro/x.js',
 ];
+/** Els de l'administració: només a `cmsUrl`, i les seves capçaleres es miren a `hosts`. */
+const CMS_PATHS = ['/admin', '/admin/', '/admin/config.yml', '/api/auth/', '/api/callback/'];
+/** La resta: només al lloc públic. */
+const SITE_PATHS = COVERED.filter((p) => !CMS_PATHS.includes(p));
+/** S'assemblen als de l'administració i no en són. */
+const LOOKALIKES = ['/administracio/', '/apis/', '/ca/admin/'];
 
 const REQUIRED = {
   'x-content-type-options': 'nosniff',
@@ -116,12 +164,12 @@ function directivesOf(got) {
 export default async function run(t) {
   const config = JSON.parse(fs.readFileSync(fromRoot('vercel.json'), 'utf8'));
   const { getTransformedRoutes } = routingUtils();
-  const { routes, error } = getTransformedRoutes({ headers: config.headers, rewrites: config.rewrites });
+  const { routes, error } = getTransformedRoutes({ headers: config.headers, redirects: config.redirects, rewrites: config.rewrites });
 
   if (!t.ok(!error, `Vercel rebutjaria vercel.json: ${error?.message ?? error}`)) return;
   t.ok(Array.isArray(routes) && routes.length > 0, 'vercel.json no genera cap ruta');
 
-  for (const pathname of COVERED) {
+  for (const pathname of SITE_PATHS) {
     const got = headersFor(routes, pathname);
     for (const [key, value] of Object.entries(REQUIRED)) {
       t.equal(got[key], value, `${pathname}: la capçalera ${key} no és la d'ara`);
@@ -140,7 +188,7 @@ export default async function run(t) {
   );
 
   // El lloc: la CSP de tres directives, sense res que carregui contingut.
-  for (const pathname of COVERED.filter((p) => !RUTA.includes(p))) {
+  for (const pathname of SITE_PATHS.filter((p) => !RUTA.includes(p))) {
     const names = [...directivesOf(headersFor(routes, pathname)).keys()];
     for (const directive of CSP_FORBIDDEN) {
       t.ok(
@@ -153,6 +201,8 @@ export default async function run(t) {
     t.equal(directivesOf(headersFor(routes, pathname)).has('default-src'), false, `${pathname}: no és de La Ruta i no n'ha de portar la CSP estreta`);
   }
 
+  await hosts(t, config, routes);
+
   // La Ruta: la CSP estreta, sencera i sense escapatòries.
   for (const pathname of RUTA) {
     const csp = directivesOf(headersFor(routes, pathname));
@@ -162,5 +212,79 @@ export default async function run(t) {
     const everything = [...csp.values()].join(' ');
     t.ok(!/'unsafe-eval'|'wasm-unsafe-eval'|\*|https?:/.test(everything), `${pathname}: la CSP de La Ruta deixa passar \`eval\`, un comodí o un origen de fora: això és el que no ha de poder fer`);
     t.ok(!(csp.get('script-src') ?? '').includes("'unsafe-inline'"), `${pathname}: script-src de La Ruta no pot portar 'unsafe-inline'`);
+  }
+}
+
+/*
+ * F1 (13/11/2026): `/admin/` i `/api/` només a l'origen de l'administració, la
+ * resta del lloc només al públic. El que es vigila és que el testimoni de GitHub
+ * i el JS de `/ruta/` (un altre projecte) no comparteixin mai origen.
+ *
+ * - Al domini públic, l'administració no es serveix: una redirecció temporal,
+ *   presa ABANS de mirar els fitxers, la porta a `cmsUrl` amb el mateix camí. No
+ *   és un 404 perquè `/admin/` és un fitxer estàtic, i a `vercel.json` (sense
+ *   `routes`, l'esquema antic que no admet `headers` ni `rewrites`) només les
+ *   capçaleres i les redireccions passen abans dels fitxers.
+ * - A l'origen de l'administració, `/ruta/` no es reescriu cap a la-ruta: hi
+ *   cau al 404 de l'adaptador.
+ * - A l'origen de l'administració, la resta del lloc es serveix (els fitxers
+ *   estàtics no saben d'amfitrions), però inert: CSP `sandbox` sense
+ *   `allow-scripts` (origen opac, cap script, cap formulari) i `noindex`.
+ * - L'amfitrió escrit a `vercel.json` és el de `cmsUrl`: si un canviés i l'altre
+ *   no, l'entrada al CMS es trencaria sense cap error visible.
+ */
+async function hosts(t, config, routes) {
+  const { cmsUrl } = await import(pathToFileURL(fromRoot('src/config/site.mjs')).href);
+  const cms = new URL(cmsUrl);
+  const CMS_HOST = cms.host;
+
+  const written = [...(config.headers ?? []), ...(config.redirects ?? []), ...(config.rewrites ?? [])]
+    .flatMap((r) => [...(r.has ?? []), ...(r.missing ?? [])])
+    .filter((c) => c.type === 'host')
+    .map((c) => c.value);
+  t.ok(written.length > 0, "vercel.json no porta cap condició d'amfitrió: l'administració i el lloc compartirien origen");
+  t.equal([...new Set(written)], [CMS_HOST], `les condicions d'amfitrió de vercel.json han de nomenar ${CMS_HOST}, el de cmsUrl`);
+  t.ok(!PUBLIC_HOSTS.includes(CMS_HOST), "l'amfitrió de l'administració no pot ser el del lloc");
+
+  for (const host of PUBLIC_HOSTS) {
+    for (const pathname of CMS_PATHS) {
+      const out = outcomeFor(routes, pathname, host);
+      const wanted = new URL(pathname.endsWith('/') || pathname.includes('.') ? pathname : `${pathname}/`, cms).href;
+      t.equal(out.redirect, wanted, `${host}${pathname}: l'administració no es serveix al lloc públic, es redirigeix a ${wanted}`);
+      t.ok(out.beforeFilesystem === true, `${host}${pathname}: la redirecció ha de passar abans dels fitxers, o /admin/ se serviria igualment`);
+      t.ok(out.status === 307 || out.status === 302, `${host}${pathname}: redirecció temporal, no ${out.status}: una de permanent quedaria a la memòria del navegador`);
+    }
+    for (const pathname of [...SITE_PATHS, ...LOOKALIKES]) {
+      const out = outcomeFor(routes, pathname, host);
+      t.ok(!out.redirect, `${host}${pathname}: el lloc públic no es redirigeix (${out.redirect})`);
+      t.ok(!('x-robots-tag' in headersFor(routes, pathname, host)), `${host}${pathname}: el lloc públic no porta noindex`);
+    }
+    t.equal(outcomeFor(routes, '/ruta/', host).rewrite, 'https://la-ruta-psi.vercel.app/ruta/', `${host}/ruta/: La Ruta es continua servint al lloc públic`);
+  }
+
+  for (const pathname of CMS_PATHS) {
+    const out = outcomeFor(routes, pathname, CMS_HOST);
+    t.ok(out.filesystem === true, `${CMS_HOST}${pathname}: l'administració es serveix, sense redirecció ni rewrite`);
+    const got = headersFor(routes, pathname, CMS_HOST);
+    for (const [key, value] of Object.entries(REQUIRED)) t.equal(got[key], value, `${CMS_HOST}${pathname}: la capçalera ${key} no és la d'ara`);
+    const csp = directivesOf(got);
+    t.ok(!csp.has('sandbox'), `${CMS_HOST}${pathname}: l'administració no pot anar en sandbox, Decap no correria`);
+    t.equal(csp.get('frame-ancestors'), "'none'", `${CMS_HOST}${pathname}: frame-ancestors 'none'`);
+    t.equal(csp.get('object-src'), "'none'", `${CMS_HOST}${pathname}: object-src 'none'`);
+  }
+
+  for (const pathname of ['/ruta', '/ruta/', '/ruta/_astro/x.js', '/ruta/a/b/']) {
+    const out = outcomeFor(routes, pathname, CMS_HOST);
+    t.ok(!out.rewrite && !out.redirect, `${CMS_HOST}${pathname}: La Ruta no es reescriu a l'origen de l'administració (${out.rewrite ?? out.redirect})`);
+  }
+
+  for (const pathname of [...SITE_PATHS, ...LOOKALIKES]) {
+    const got = headersFor(routes, pathname, CMS_HOST);
+    const csp = directivesOf(got);
+    t.ok(csp.has('sandbox') && csp.get('sandbox') === '', `${CMS_HOST}${pathname}: la CSP ha de portar \`sandbox\` sense excepcions (cap allow-scripts)`);
+    t.ok(!csp.has('script-src') && csp.get('default-src') === "'none'", `${CMS_HOST}${pathname}: cap script fora de l'administració`);
+    t.equal(csp.get('frame-ancestors'), "'none'", `${CMS_HOST}${pathname}: frame-ancestors 'none'`);
+    t.equal(got['x-robots-tag'], 'noindex, nofollow', `${CMS_HOST}${pathname}: fora dels cercadors`);
+    for (const [key, value] of Object.entries(REQUIRED)) t.equal(got[key], value, `${CMS_HOST}${pathname}: la capçalera ${key} no és la d'ara`);
   }
 }

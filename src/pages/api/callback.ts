@@ -3,8 +3,8 @@ import {
   authError,
   authSuccess,
   CALLBACK_PATH,
+  CMS,
   missingEnv,
-  plainText,
   readEnv,
   stateCookie,
 } from './_oauth';
@@ -68,7 +68,7 @@ const UPSTREAM_FAILED = 424;
  */
 export const EXCHANGE_TIMEOUT_MS = 8000;
 
-export const GET: APIRoute = async ({ cookies, site, url }) => {
+export const GET: APIRoute = async ({ cookies, url }) => {
   // La galeta d'estat és d'un sol ús, però només la gasta qui la pot demostrar:
   // s'esborra quan l'`state` de l'adreça hi coincideix, i no abans. Abans
   // s'esborrava a cada visita, i n'hi havia prou amb un `<img>` aliè que
@@ -81,24 +81,20 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
   const matched = expected !== undefined && url.searchParams.get('state') === expected;
   if (matched) cookies.delete(name, { path: '/', secure });
 
-  // Abans de la primera sortida per `authError`: la pàgina de tancament ha de
-  // saber a quin origen pot lliurar el resultat, i sense domini no en té cap.
-  if (!site) return plainText('Configuració incompleta: el lloc no té domini.', 500);
-
   const refusal = url.searchParams.get('error');
-  if (refusal !== null) return authError(REFUSALS.get(refusal) ?? "GitHub ha refusat l'autenticació.", site);
+  if (refusal !== null) return authError(REFUSALS.get(refusal) ?? "GitHub ha refusat l'autenticació.", CMS);
 
   const code = url.searchParams.get('code');
-  if (!code) return authError('GitHub no ha tornat cap codi.', site);
+  if (!code) return authError('GitHub no ha tornat cap codi.', CMS);
 
   if (!expected) {
     return authError(
-      "L'estat de la sessió no ha tornat. Cal obrir l'administració des del domini canònic del lloc, que és el que rep el retorn de GitHub.",
-      site,
+      `L'estat de la sessió no ha tornat. Cal obrir l'administració des de ${CMS.origin}/admin/, que és l'origen que rep el retorn de GitHub.`,
+      CMS,
     );
   }
   if (!matched) {
-    return authError("L'estat no coincideix: aquesta autenticació no ha començat aquí.", site);
+    return authError("L'estat no coincideix: aquesta autenticació no ha començat aquí.", CMS);
   }
 
   const clientId = readEnv('GITHUB_OAUTH_ID');
@@ -117,7 +113,7 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
         client_secret: clientSecret,
         code,
         // El mateix valor que al primer tram: GitHub el compara.
-        redirect_uri: new URL(CALLBACK_PATH, site).href,
+        redirect_uri: new URL(CALLBACK_PATH, CMS).href,
       }),
       // El senyal cobreix també la lectura del cos: un GitHub que envia les
       // capçaleres i s'atura a mig cos queda tallat igual.
@@ -134,7 +130,7 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
       timedOut
         ? `GitHub no ha respost en ${EXCHANGE_TIMEOUT_MS / 1000} segons a l'intercanvi del codi.`
         : "No s'ha pogut parlar amb GitHub per bescanviar el codi.",
-      site,
+      CMS,
       UPSTREAM_FAILED,
     );
   }
@@ -147,10 +143,10 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
       payload.error_description ??
         payload.error ??
         `GitHub no ha tornat cap testimoni (resposta ${status}).`,
-      site,
+      CMS,
       UPSTREAM_FAILED,
     );
   }
 
-  return authSuccess(payload.access_token, site);
+  return authSuccess(payload.access_token, CMS);
 };

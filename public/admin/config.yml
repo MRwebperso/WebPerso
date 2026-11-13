@@ -13,9 +13,11 @@ backend:
   name: github
   repo: MRwebperso/WebPerso
   branch: main
-  # `base_url` no és aquí: el posa la pàgina a partir d'`Astro.site`, perquè el
-  # domini ha de sortir d'un sol lloc del projecte. És també el domini on cauen
-  # la galeta d'estat i el retorn de GitHub.
+  # `base_url` no és aquí: el posa la pàgina a partir de `cmsUrl`
+  # (`src/config/site.mjs`), l'origen de l'administració, que és on cauen la
+  # galeta d'estat i el retorn de GitHub. `site_url` tampoc: el posa la pàgina a
+  # partir d'`Astro.site`, el domini públic. Cap dels dos orígens no s'ha
+  # d'escriure en un segon lloc del projecte.
   auth_endpoint: api/auth
 
 # Edició en local sense OAuth: `npx decap-server` en un terminal, `npm run dev`
