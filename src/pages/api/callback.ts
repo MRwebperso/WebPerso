@@ -58,12 +58,28 @@ const REFUSALS = new Map([
  */
 const UPSTREAM_FAILED = 424;
 
+/**
+ * Temps màxim per a l'intercanvi del codi amb GitHub, lectura del cos inclosa.
+ * Sense límit, un GitHub que no respon deixava la funció penjada fins al tall de
+ * Vercel i la finestra emergent en blanc, sense encaixada (revisió de seguretat
+ * del 13/11/2026). Vuit segons sobren per a una crida que triga desenes de
+ * mil·lisegons, i deixen marge perquè la pàgina d'error surti abans que cap
+ * límit de la plataforma talli la resposta.
+ */
+export const EXCHANGE_TIMEOUT_MS = 8000;
+
 export const GET: APIRoute = async ({ cookies, site, url }) => {
-  // Es llegeix abans d'esborrar-la: la galeta d'estat és d'un sol ús, i tant hi
-  // val si el que ve després acaba bé o mal.
+  // La galeta d'estat és d'un sol ús, però només la gasta qui la pot demostrar:
+  // s'esborra quan l'`state` de l'adreça hi coincideix, i no abans. Abans
+  // s'esborrava a cada visita, i n'hi havia prou amb un `<img>` aliè que
+  // apuntés a `/api/callback/` per anul·lar l'entrada en curs de qui editava
+  // (revisió de seguretat del 13/11/2026). Un retorn que no la porta no ha
+  // començat aquí i no la toca; si GitHub torna un refús amb l'estat bo, sí que
+  // es gasta, perquè aquella entrada ja s'ha acabat.
   const { name, secure } = stateCookie(url);
   const expected = cookies.get(name)?.value;
-  cookies.delete(name, { path: '/', secure });
+  const matched = expected !== undefined && url.searchParams.get('state') === expected;
+  if (matched) cookies.delete(name, { path: '/', secure });
 
   // Abans de la primera sortida per `authError`: la pàgina de tancament ha de
   // saber a quin origen pot lliurar el resultat, i sense domini no en té cap.
@@ -81,7 +97,7 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
       site,
     );
   }
-  if (url.searchParams.get('state') !== expected) {
+  if (!matched) {
     return authError("L'estat no coincideix: aquesta autenticació no ha començat aquí.", site);
   }
 
@@ -103,11 +119,24 @@ export const GET: APIRoute = async ({ cookies, site, url }) => {
         // El mateix valor que al primer tram: GitHub el compara.
         redirect_uri: new URL(CALLBACK_PATH, site).href,
       }),
+      // El senyal cobreix també la lectura del cos: un GitHub que envia les
+      // capçaleres i s'atura a mig cos queda tallat igual.
+      signal: AbortSignal.timeout(EXCHANGE_TIMEOUT_MS),
     });
     status = response.status;
     payload = (await response.json()) as TokenResponse;
-  } catch {
-    return authError("No s'ha pogut parlar amb GitHub per bescanviar el codi.", site, UPSTREAM_FAILED);
+  } catch (error) {
+    // Mateix 424 que la resta d'errors de l'intercanvi, per la raó de
+    // `UPSTREAM_FAILED`; només canvia el text, perquè «no respon» i «no s'hi
+    // arriba» es diagnostiquen diferent.
+    const timedOut = error instanceof DOMException && error.name === 'TimeoutError';
+    return authError(
+      timedOut
+        ? `GitHub no ha respost en ${EXCHANGE_TIMEOUT_MS / 1000} segons a l'intercanvi del codi.`
+        : "No s'ha pogut parlar amb GitHub per bescanviar el codi.",
+      site,
+      UPSTREAM_FAILED,
+    );
   }
 
   if (!payload.access_token) {

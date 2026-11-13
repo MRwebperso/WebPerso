@@ -167,7 +167,7 @@ async function routes(t) {
     // Tornada: l'estat de la galeta, un codi, i el testimoni arriba a la pàgina.
     const requests = [];
     globalThis.fetch = async (url, init) => {
-      requests.push({ url, body: JSON.parse(init.body) });
+      requests.push({ url, body: JSON.parse(init.body), signal: init.signal });
       return { status: 200, json: async () => ({ access_token: 'gho_ANADA_I_TORNADA' }) };
     };
     const back = jar({ [set.name]: set.value });
@@ -183,6 +183,36 @@ async function routes(t) {
       [['__Host-decap-oauth-state', true, '/']],
       "la galeta s'esborra amb el seu nom, Secure i camí `/`: sense Secure el navegador descartaria l'esborrat",
     );
+
+    // L'intercanvi porta un senyal de temps màxim, encara viu quan surt.
+    t.ok(
+      requests[0]?.signal instanceof AbortSignal && requests[0].signal.aborted === false,
+      "l'intercanvi amb GitHub porta un AbortSignal de temps màxim",
+    );
+    t.ok(
+      callback.EXCHANGE_TIMEOUT_MS > 0 && callback.EXCHANGE_TIMEOUT_MS <= 10000,
+      `el temps màxim de l'intercanvi (${callback.EXCHANGE_TIMEOUT_MS} ms) és positiu i no passa de 10 s`,
+    );
+
+    // F7 (13/11/2026): la galeta només es gasta quan l'estat hi coincideix. Una
+    // petició que no la pot demostrar —un `<img>` aliè, un enllaç amb l'estat
+    // d'un altre— no anul·la l'entrada en curs.
+    const intruders = [
+      ['/api/callback/', 'sense paràmetres'],
+      ['/api/callback/?error=access_denied', 'un refús sense estat'],
+      ['/api/callback/?code=x', 'un codi sense estat'],
+      ['/api/callback/?code=x&state=un-altre', 'un estat diferent'],
+      [`/api/callback/?error=access_denied&state=${set.value}x`, 'un refús amb un estat que només s\'hi assembla'],
+    ];
+    for (const [path, label] of intruders) {
+      const kept = jar({ [set.name]: set.value });
+      await callback.GET({ cookies: kept, site: ROOT, url: new URL(path, ROOT) });
+      t.equal(kept.log.deleted, [], `${label}: la galeta d'estat no s'esborra`);
+      t.equal(kept.store.get(set.name), set.value, `${label}: l'entrada en curs encara es pot completar`);
+    }
+    const refusedOwn = jar({ [set.name]: set.value });
+    await callback.GET({ cookies: refusedOwn, site: ROOT, url: new URL(`/api/callback/?error=access_denied&state=${set.value}`, ROOT) });
+    t.equal(refusedOwn.log.deleted.map((d) => d.name), [set.name], "un refús de GitHub amb l'estat bo gasta la galeta: aquella entrada s'ha acabat");
 
     // Estat que no coincideix o que no ha tornat: no hi ha intercanvi.
     requests.length = 0;
@@ -222,6 +252,29 @@ async function routes(t) {
     });
     t.ok(unreachable.body.includes("No s'ha pogut parlar amb GitHub"), "si no s'arriba a GitHub, la pàgina ho diu");
     t.ok(![502, 504].includes(unreachable.status), `GitHub inabastable no surt amb ${unreachable.status}: Cloudflare el substituiria`);
+
+    // F6 (13/11/2026): un GitHub que no respon talla pel senyal i surt pel
+    // mateix camí que un GitHub inabastable, amb el seu propi text. El fetch
+    // simulat espera el senyal de debò. El temporitzador d'`AbortSignal.timeout`
+    // no reté el procés de Node (a Vercel el reté la petició oberta), i per això
+    // n'hi ha un de propi que el manté viu i que, si el senyal no arriba mai,
+    // fa caure la crida amb un error que no és el del temps màxim.
+    const started = Date.now();
+    const silent = await exchange(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          if (!init?.signal) return reject(new Error('cap senyal: la crida es penjaria'));
+          const guard = setTimeout(() => reject(new Error('el senyal no ha tallat mai')), callback.EXCHANGE_TIMEOUT_MS + 5000);
+          init.signal.addEventListener('abort', () => (clearTimeout(guard), reject(init.signal.reason)), { once: true });
+        }),
+    );
+    const waited = Date.now() - started;
+    t.equal(silent.status, 424, 'un GitHub que no respon surt amb el 424 de la resta d\'errors de l\'intercanvi');
+    t.ok(silent.body.includes('GitHub no ha respost'), 'un GitHub que no respon té el seu propi text');
+    t.ok(
+      waited >= callback.EXCHANGE_TIMEOUT_MS - 100 && waited < callback.EXCHANGE_TIMEOUT_MS + 2000,
+      `el tall arriba al temps màxim (${waited} ms per a ${callback.EXCHANGE_TIMEOUT_MS} ms)`,
+    );
 
     // El text de l'adreça no surt a la pàgina: l'escriu qui vulgui.
     const phrase = 'Truqueu al 06 00 00 00 00 per recuperar el compte';
