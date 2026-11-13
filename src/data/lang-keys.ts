@@ -13,8 +13,7 @@
  *
  * Els noms (`langNames`) hi van amb les claus, i no a `TimelineContent`, pel
  * mateix motiu (21/10/2026): les pàgines de cas en volien sis mots i
- * n'importaven la cronologia sencera, i el CMS en compara les etiquetes amb
- * un camp d'un contingut de portada. Preu assumit: aquest mòdul que el guió de
+ * n'importaven la cronologia sencera. Preu assumit: aquest mòdul que el guió de
  * client ja importa ara porta text. No n'hi arriba al client del lloc, perquè
  * els guions només llegeixen `langKeys` i l'empaquetador esborra la resta: cap
  * dels 64 guions en línia de la compilació no en porta cap nom. Ho vigila

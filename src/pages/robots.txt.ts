@@ -3,20 +3,14 @@ import type { APIRoute } from 'astro';
 /**
  * Generat, no escrit a mà: el sitemap ha de seguir el domini de la config.
  *
- * Les dues exclusions són del bloc 9. `/admin/` és la pantalla del CMS, una
- * pàgina d'Astro que no passa per `BaseLayout`, de manera que la propietat
- * `noindex` de la plantilla no l'abasta; i `/api/` són les rutes d'autenticació,
- * que no són pàgines. Cap de les dues no surt al sitemap —l'admin perquè un
- * filtre de la config l'en treu, l'api perquè no és pregenerada—, però una
- * pàgina generada es pot trobar per enllaç, i el que no s'ha d'indexar val
- * més dir-ho dues vegades.
+ * Fins al 13/11/2026 excloïa `/admin/` i `/api/`, la pantalla i les rutes
+ * d'autenticació del CMS. El CMS ja no existeix (vegeu el README, «Contingut
+ * dels casos»), i el lloc no té cap camí que calgui amagar.
  */
 export const GET: APIRoute = ({ site }) =>
   new Response(
     [
       'User-agent: *',
-      'Disallow: /admin/',
-      'Disallow: /api/',
       'Allow: /',
       '',
       `Sitemap: ${new URL('sitemap-index.xml', site)}`,

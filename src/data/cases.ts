@@ -11,8 +11,10 @@ import { langKeys } from './lang-keys';
  *
  * El text dels casos ja no viu aquí: viu a `src/content/cases/*.json`, un
  * fitxer per cas amb les dues llengües a dins, i el valida l'esquema de
- * `src/content.config.ts`. La raó del canvi és el CMS: Decap escriu fitxers de
- * dades al dipòsit i no sap editar TypeScript.
+ * `src/content.config.ts`. La raó del canvi va ser el CMS (Decap escriu fitxers
+ * de dades i no sap editar TypeScript); el CMS va sortir del projecte el
+ * 13/11/2026 sense haver-se fet servir mai, i els fitxers es queden, perquè
+ * l'esquema comprova coses que el tipus no comprovava.
  *
  * Aquí queden les dues coses que no s'han migrat, i no per comoditat:
  *
@@ -20,7 +22,7 @@ import { langKeys } from './lang-keys';
  *   de la secció 2.2 del brief, i `Record<CaseKind, string>` garanteix que cap
  *   dels cinc valors es quedi sense text en cap de les dues llengües. En un
  *   fitxer de dades això seria una comprovació més a escriure a mà; aquí és
- *   gratis. Al CMS, `kind` hi entra com a llista tancada i no com a text.
+ *   gratis.
  * - **Les etiquetes de la fitxa** (`factLabels`). Són interfície, no contingut:
  *   canvien quan canvia la plantilla, no quan es publica un cas.
  *
@@ -84,8 +86,8 @@ type CaseEntry = Pick<CollectionEntry<'cases'>, 'id' | 'data'>;
  * - **`order` no es pot repetir.** Amb dos casos al mateix número, l'ordre de
  *   lectura passaria a dependre de l'ordre en què el carregador llegeix la
  *   carpeta, i l'ordre és una decisió editorial, no un atzar del sistema de
- *   fitxers. Els buits, en canvi, es toleren: esborrar un cas des del CMS no ha
- *   de fer caure la compilació.
+ *   fitxers. Els buits, en canvi, es toleren: esborrar un cas no ha de fer caure
+ *   la compilació.
  *
  * És una funció pura, separada de `getCases()`, perquè es pugui provar sense
  * Astro (decisió de Miquel, 21/10/2026). Mentre les dues comprovacions i

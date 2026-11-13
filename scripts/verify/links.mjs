@@ -20,8 +20,7 @@
  *   404) queden fora de la reciprocitat: no són membres del parell.
  * - Les dues portades tenen les seccions de `homeSections` en aquest ordre.
  *
- * Queden fora `/ruta/`, que `vercel.json` reescriu cap a un altre projecte, i
- * `/api/`, que són rutes a petició i no fitxers.
+ * Queda fora `/ruta/`, que `vercel.json` reescriu cap a un altre projecte.
  */
 import fs from 'node:fs';
 import path from 'node:path';

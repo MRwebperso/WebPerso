@@ -30,8 +30,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { bundle, caseFiles, compiledSite, fromRoot } from './lib.mjs';
+import { bundle, caseFiles, compiledSite } from './lib.mjs';
 
 /** Els dos guions que Astro mateix serveix des de `/_astro/`, sense el hash. */
 const ASTRO_OWN = ['ClientRouter.astro_astro_type_script_index_0_lang', 'page'];
@@ -135,15 +134,5 @@ export default async function build(t) {
       const quoted = ['"', "'", '`'].map((q) => `${q}${name}${q}`);
       t.ok(!decoded.some((code) => quoted.some((q) => code.includes(q))), `${where} no és a cap guió de client`);
     }
-  }
-
-  // F5 (13/11/2026): la pàgina d'administració compilada no activa el rerefons
-  // local, que només ha d'existir a `astro dev`, i parla amb l'origen de
-  // l'administració, no amb el domini públic.
-  if (t.ok(site.pages.includes('admin/index.html'), 'la sortida porta admin/index.html')) {
-    const admin = site.read('admin/index.html');
-    t.ok(!admin.includes('data-local-backend'), "admin/index.html compilat no activa el rerefons local (data-local-backend)");
-    const { cmsUrl } = await import(pathToFileURL(fromRoot('src/config/site.mjs')).href);
-    t.ok(admin.includes(`data-base-url="${new URL(cmsUrl).origin}"`), `admin/index.html compilat dona a Decap base_url = ${new URL(cmsUrl).origin}`);
   }
 }

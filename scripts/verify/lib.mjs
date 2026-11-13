@@ -4,8 +4,9 @@
  * No és un marc de proves (decisió de Miquel, 21/10/2026): són comprovacions
  * de contractes que ni `astro check` ni `astro build` no veuen, escrites en
  * Node pla. Les úniques dependències són `esbuild` (per carregar els mòduls
- * TypeScript que Node no pot, vegeu `bundle`) i `js-yaml` (per llegir la
- * configuració del CMS), totes dues a `devDependencies` des del 21/10/2026.
+ * TypeScript que Node no pot, vegeu `bundle`), a `devDependencies` des del
+ * 21/10/2026, i `@vercel/routing-utils` (vegeu `headers.mjs`). `js-yaml`, que
+ * llegia la configuració del CMS, va sortir amb ell el 13/11/2026.
  * Cada fitxer de comprovació exporta
  * una funció que rep un `t` i hi apunta les afirmacions; `run.mjs` les passa
  * totes i surt amb codi 1 si en falla cap.

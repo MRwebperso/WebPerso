@@ -10,23 +10,6 @@
 export const siteUrl = process.env.SITE_URL ?? 'https://miquelrodrigues.example';
 
 /**
- * Origen de l'administració del CMS: `/admin/` i les dues rutes d'`api/` es
- * serveixen només aquí, i la resta del lloc, només al domini públic (decisió de
- * Miquel del 13/11/2026, D1 del pla de seguretat). El motiu és `/ruta/`: el
- * rewrite fa córrer el JS d'un altre projecte a l'origen públic, i el testimoni
- * de GitHub que Decap desa al `localStorage` no hi ha de viure.
- *
- * No surt de cap variable d'entorn, a diferència de `siteUrl`, perquè l'amfitrió
- * també és escrit a les condicions de `vercel.json`, que no en pot llegir cap:
- * una variable que canviés aquí i no allà trencaria l'entrada sense cap error
- * visible. La comprovació `headers` de `npm run verify` vigila que els dos llocs
- * diguin el mateix. Canviar-lo vol dir moure alhora aquesta línia,
- * `vercel.json`, el domini del projecte a Vercel, el registre DNS i l'adreça de
- * retorn de l'aplicació OAuth de GitHub (`<cmsUrl>/api/callback/`).
- */
-export const cmsUrl = 'https://cms.clm.cat';
-
-/**
  * Punt d'arribada del formulari de contacte: la URL que dona el servei de
  * formularis (Formspree, Web3Forms, Getform i companyia serveixen tots).
  *

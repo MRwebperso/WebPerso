@@ -16,7 +16,7 @@
  * presentar-la com a tal seria inflar-la.
  *
  * NO és text lliure: és el mecanisme de la frontera CLM/individual. A l'esquema
- * hi entra com a `z.enum` i al CMS com a llista tancada, mai com a camp obert.
+ * hi entra com a `z.enum`, mai com a camp obert.
  */
 export const caseKinds = [
   'position',

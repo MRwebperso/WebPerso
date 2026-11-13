@@ -46,7 +46,7 @@ import { langKeys } from './data/lang-keys';
  */
 
 /**
- * Text obligatori. `.trim()` no és cosmètic: un camp de CMS torna sovint amb un
+ * Text obligatori. `.trim()` no és cosmètic: un camp editat torna sovint amb un
  * salt de línia final, i sense retallar-lo `.min(1)` deixaria passar un camp
  * que a la pàgina es veu buit.
  */
