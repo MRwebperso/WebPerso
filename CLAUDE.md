@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-El [README.md](README.md) és la documentació de referència i és exhaustiu: contracte lingüístic, sistema de disseny, cronologia, casos, contacte i CMS, cadascun amb el perquè de les decisions. **Llegeix-lo abans de tocar qualsevol d'aquestes àrees.** Aquest fitxer no el repeteix: recull el que no es dedueix ni del codi ni del README.
+El [README.md](README.md) és la documentació de referència i és exhaustiu: contracte lingüístic, sistema de disseny, cronologia, casos, contacte i contingut dels casos, cadascun amb el perquè de les decisions. **Llegeix-lo abans de tocar qualsevol d'aquestes àrees.** Aquest fitxer no el repeteix: recull el que no es dedueix ni del codi ni del README.
 
 ## Textos públics
 
@@ -14,12 +14,12 @@ Abans d'escriure o reescriure cap text de `home.ts`, dels casos o de la cronolog
 npm run dev      # astro dev, port 4321 (o $PORT si està ocupat)
 npm run check    # tipus + esquemes de col·lecció
 npm run build    # esquemes + comprovacions que travessen fitxers, sense tipus
-npm run verify   # contractes en Node pla: cronologia, maneta, enllaços, paleta, CMS, sortida del build, casos, encaixada d'OAuth, capçaleres
+npm run verify   # contractes en Node pla: cronologia, maneta, enllaços, paleta, sortida del build, casos, capçaleres
 ```
 
-**No hi ha cap framework de proves ni cap linter.** No inventis `npm test`; la xarxa de seguretat són `check`, `build` i `verify`, i no cobreixen el mateix. `verify` no és un marc de proves: són scripts de Node pla a `scripts/verify/` que no compilen el lloc ni obren cap navegador. `links` llegeix la sortida de l'últim `npm run build`, que cal fer abans, i `links` i `build` es posen en vermell si aquesta sortida és més vella que `src/`, `public/`, `astro.config.mjs` o `package.json`; `palette` calcula les ràtios del tema fosc a partir de `theme-dark.css`; `decap` contrasta `public/admin/config.yml` amb l'esquema dels casos; `oauth` executa en una finestra simulada el `<script>` de la pàgina de tancament d'`_oauth.ts` i comprova que el testimoni només arriba a l'origen de l'administració (`cmsUrl`), i que `auth` i `callback` es posin d'acord en la galeta d'estat (`__Host-` sobre https); `headers` passa `vercel.json` pel transformador de rutes de l'adaptador i comprova que les capçaleres de seguretat arribin a tots els camins, `/ruta/` inclosa (que hi porta la seva CSP estreta), i que no hi hagi `Cross-Origin-Opener-Policy` (talla la finestra emergent d'OAuth); simula a més l'encaminament per amfitrió dels dos orígens (vegeu sota). `check` no atrapa l'`order` duplicat entre casos ni la carpeta de casos buida, perquè aquestes dues comprovacions viuen en temps d'execució a [resolveCases()](src/data/cases.ts); `verify cases` sí que les atrapa, sense compilar (sobre els fitxers de `src/content/cases/` i sobre fixtures), i `build` continua fent-les saltar. Si has tocat `src/content/cases/`, l'ordre que val és `build`.
+**No hi ha cap framework de proves ni cap linter.** No inventis `npm test`; la xarxa de seguretat són `check`, `build` i `verify`, i no cobreixen el mateix. `verify` no és un marc de proves: són scripts de Node pla a `scripts/verify/` que no compilen el lloc ni obren cap navegador. `links` llegeix la sortida de l'últim `npm run build`, que cal fer abans, i `links` i `build` es posen en vermell si aquesta sortida és més vella que `src/`, `public/`, `astro.config.mjs` o `package.json`; `palette` calcula les ràtios del tema fosc a partir de `theme-dark.css`; `headers` passa `vercel.json` pel transformador de rutes de Vercel (`@vercel/routing-utils`) i comprova que les capçaleres de seguretat arribin a tots els camins, `/ruta/` inclosa (que hi porta la seva CSP estreta), i que la barra final i la memòria cau de `/_astro/`, que abans feia l'adaptador, hi siguin. `check` no atrapa l'`order` duplicat entre casos ni la carpeta de casos buida, perquè aquestes dues comprovacions viuen en temps d'execució a [resolveCases()](src/data/cases.ts); `verify cases` sí que les atrapa, sense compilar (sobre els fitxers de `src/content/cases/` i sobre fixtures), i `build` continua fent-les saltar. Si has tocat `src/content/cases/`, l'ordre que val és `build`.
 
-El que es desplega és `.vercel/output/`. El `dist/` del disc el refà cada compilació: l'adaptador hi deixa el client i el sitemap abans de copiar-los a `.vercel/output/static/`. És un pas intermedi, ignorat per git; no el llegeixis com la sortida.
+El que es desplega és `dist/`: lloc estàtic pur, sense adaptador ni funcions des del 13/11/2026. Si trobes un `.vercel/output/` al disc, és d'abans i no compta.
 
 ## Paritat CA–FR: tres capes, tres fitxers
 
@@ -50,26 +50,15 @@ Afegir una tercera llengua al registre de `utils.ts` fa caure [src/data/cases.ts
 
 ## Variables d'entorn i degradació silenciosa
 
-Cap `.env` no alimenta res d'això: les rutes de l'API llegeixen `process.env` i **no** `import.meta.env`, perquè aquesta segona se substitueix en compilació i incrustaria el secret al paquet.
+Cap `.env` no alimenta res d'això: `src/config/site.mjs` llegeix `process.env` en compilació, que és on Vercel posa les variables.
 
 | Variable | Absent vol dir |
 |---|---|
 | `SITE_URL` | Cau al valor de [src/config/site.mjs](src/config/site.mjs). Únic punt del projecte que coneix el domini |
 | `FORM_ENDPOINT` | **El formulari de contacte no es dibuixa.** La secció es queda amb el correu directe, sense error |
-| `GITHUB_OAUTH_ID` / `_SECRET` / `_SCOPE` | L'entrada al CMS respon amb un text que nomena la variable que falta |
 
-Si es canvia de domini es mouen quatre coses alhora: `SITE_URL` a Vercel; `cmsUrl` a `src/config/site.mjs` amb les condicions d'amfitrió de `vercel.json`; els dos dominis del projecte a Vercel, amb el DNS; i l'adreça de retorn de l'aplicació OAuth de GitHub (exactament `<cmsUrl>/api/callback/`, amb barra final).
+Si es canvia de domini es mouen dues coses alhora: `SITE_URL` a Vercel i el domini del projecte a Vercel.
 
-## Dos orígens: el lloc i l'administració
+## No hi ha CMS
 
-Des del 13/11/2026 `/admin/` i `/api/*` es serveixen només a `https://cms.clm.cat` (`cmsUrl`), i el lloc al domini públic. El motiu és `/ruta/`: el rewrite fa córrer el JS d'un altre projecte a l'origen públic, i el testimoni de GitHub que Decap desa al `localStorage` no hi ha de viure. El README («Dos orígens») en dona les peces; el que no es dedueix del codi:
-
-- `cmsUrl` no surt de cap variable d'entorn perquè `vercel.json` escriu el mateix amfitrió i no en pot llegir cap. Si en canvies un, canvia l'altre: `verify headers` cau si no coincideixen.
-- La pàgina `/admin/` no pot portar guions en línia (la CSP no admet `'unsafe-inline'` a `script-src`): el codi va a `public/admin/*.js`. Si toques el guió o l'estil de la pàgina de tancament d'`_oauth.ts`, `verify headers` dona els hashes nous per a `vercel.json`.
-- Al CMS hi entra un compte de màquina que només col·labora a `MRwebperso/WebPerso` (D2). `public_repo` per si sol dona escriptura a tots els dipòsits públics del compte que autoritza; l'estretor la dona el compte, no el codi.
-- `local_backend` el posa la pàgina només a `astro dev`; no el tornis a `config.yml` (`verify decap` cau).
-
-## Trampes del servidor de desenvolupament
-
-- **`/admin/` respon amb el cos correcte i estat 404** a `astro dev`. Ve de l'encaminament i18n amb `prefixDefaultLocale`, el navegador el dibuixa igualment i a la sortida compilada respon 200. No és una regressió.
-- Per editar contingut en local sense OAuth: `npx decap-server` en un terminal i `npm run dev` a l'altre.
+Decap i les seves rutes d'autenticació van sortir del projecte el 13/11/2026 sense haver-se fet servir: els casos (`src/content/cases/*.json`) s'editen directament, i l'esquema de `src/content.config.ts` els valida a `check` i `build`. No hi tornis a afegir cap ruta a petició sense parlar-ne: el lloc és estàtic, i és el que manté curta la llista d'avisos de seguretat.

@@ -8,7 +8,7 @@ domaine: Personnel
 |---|---|---|---|---|---|
 | commiter-editorial-md | Commiter EDITORIAL.md et la section « Textos públics » ajoutée à CLAUDE.md | | Interne | À faire | |
 | configurer-form-endpoint | Configurer FORM_ENDPOINT sur Vercel pour afficher le formulaire de contact | | Interne | À faire | |
-| tester-cms-decap | Tester l'entrée au CMS Decap (/admin/) et la création d'un cas depuis le CMS | | Interne | À faire | |
+| tester-cms-decap | Tester l'entrée au CMS Decap (/admin/) et la création d'un cas depuis le CMS | | Interne | Abandonné : CMS retiré le 13/11/2026 | |
 | confirmer-langues-cas-recherche | Confirmer les langues des cas GRECS/OACU et MOVOKEUR et le territoire de MOVOKEUR | | Interne | À faire | |
 | audit-accessibilite | Faire l'audit d'accessibilité du site | | Interne | À faire | |
 | supprimer-la-travessa | Supprimer le prototype /la-travessa/, remplacé par /la-ruta/ | | Interne | À faire | |
