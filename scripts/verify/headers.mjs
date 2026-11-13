@@ -45,8 +45,9 @@
  */
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { fromRoot } from './lib.mjs';
+import { bundle, fromRoot } from './lib.mjs';
 
 const nodeRequire = createRequire(import.meta.url);
 
@@ -273,6 +274,8 @@ async function hosts(t, config, routes) {
     t.equal(csp.get('object-src'), "'none'", `${CMS_HOST}${pathname}: object-src 'none'`);
   }
 
+  await cmsPolicies(t, routes, CMS_HOST);
+
   for (const pathname of ['/ruta', '/ruta/', '/ruta/_astro/x.js', '/ruta/a/b/']) {
     const out = outcomeFor(routes, pathname, CMS_HOST);
     t.ok(!out.rewrite && !out.redirect, `${CMS_HOST}${pathname}: La Ruta no es reescriu a l'origen de l'administració (${out.rewrite ?? out.redirect})`);
@@ -287,4 +290,63 @@ async function hosts(t, config, routes) {
     t.equal(got['x-robots-tag'], 'noindex, nofollow', `${CMS_HOST}${pathname}: fora dels cercadors`);
     for (const [key, value] of Object.entries(REQUIRED)) t.equal(got[key], value, `${CMS_HOST}${pathname}: la capçalera ${key} no és la d'ara`);
   }
+}
+
+/*
+ * F3 (13/11/2026): CSP de càrrega a l'origen de l'administració, camí per camí.
+ *
+ * - `/admin/`: el que Decap 3.16.3 necessita, mesurat en un Edge sense
+ *   interfície (CDP) recorrent l'entrada, la llista de casos, l'editor d'un cas
+ *   amb la previsualització i un cas nou: zero violacions amb aquesta política.
+ *   Dues concessions, cadascuna amb el seu control fallit: `'unsafe-eval'`
+ *   (sense ell, la validació de `config.yml` crida `new Function` i Decap no
+ *   arrenca: «Error loading the CMS configuration … EvalError») i
+ *   `style-src 'unsafe-inline'` (sense ell, cinc violacions d'estils en línia,
+ *   que Decap injecta en temps d'execució). `api.github.com` i
+ *   `avatars.githubusercontent.com` són del rerefons `github`, que no es pot
+ *   recórrer sense entrar: es posen pel que el rerefons fa (API i avatar de qui
+ *   edita), no per una violació vista. L'script de Decap es nomena pel camí
+ *   sencer, el mateix de la pàgina, que a més el lliga amb `integrity`.
+ * - `/api/`: res a carregar (una redirecció i textos plans).
+ * - `/api/callback/`: el guió i l'estil de la pàgina de tancament, pel seu
+ *   hash, calculat aquí sobre el que serveix `_oauth.ts`.
+ */
+async function cmsPolicies(t, routes, CMS_HOST) {
+  const admin = fs.readFileSync(fromRoot('src/pages/admin/index.astro'), 'utf8');
+  const decapSrc = /<script[^>]*\ssrc="(https:\/\/unpkg\.com\/[^"]+)"/.exec(admin)?.[1];
+  t.ok(decapSrc !== undefined, "la pàgina d'administració no carrega Decap d'unpkg amb un camí exacte");
+  const scripts = [...admin.matchAll(/<script\b([^>]*)>/g)].map((m) => m[1]);
+  t.ok(scripts.length > 0 && scripts.every((attrs) => /\ssrc=/.test(attrs)), "la pàgina d'administració no pot portar cap guió en línia: la CSP de /admin/ no admet 'unsafe-inline'");
+
+  const ADMIN = {
+    'default-src': "'none'",
+    'script-src': `'self' 'unsafe-eval' ${decapSrc}`,
+    'style-src': "'self' 'unsafe-inline'",
+    'img-src': "'self' https://avatars.githubusercontent.com",
+    'connect-src': "'self' https://api.github.com",
+    'base-uri': "'none'",
+    'form-action': "'none'",
+    'object-src': "'none'",
+    'frame-ancestors': "'none'",
+  };
+  for (const pathname of ['/admin/', '/admin/config.yml', '/admin/init.js']) {
+    const csp = directivesOf(headersFor(routes, pathname, CMS_HOST));
+    t.equal(Object.fromEntries(csp), ADMIN, `${CMS_HOST}${pathname}: la CSP de l'administració no és la mesurada`);
+  }
+
+  for (const pathname of ['/api/auth/', '/api/callback/', '/api/x/']) {
+    const csp = directivesOf(headersFor(routes, pathname, CMS_HOST));
+    t.equal(csp.get('default-src'), "'none'", `${CMS_HOST}${pathname}: default-src 'none'`);
+    t.ok(!/'unsafe-|https?:|\*/.test([...csp.values()].join(' ')), `${CMS_HOST}${pathname}: cap 'unsafe-', origen de fora ni comodí`);
+  }
+
+  const oauth = await bundle('src/pages/api/_oauth.ts');
+  const page = await oauth.authSuccess('x', new URL(`https://${CMS_HOST}/`)).text();
+  const hash = (text) => `'sha256-${crypto.createHash('sha256').update(text ?? '', 'utf8').digest('base64')}'`;
+  const scriptHash = hash(/<script>([\s\S]*?)<\/script>/.exec(page)?.[1]);
+  const styleHash = hash(/<style>([\s\S]*?)<\/style>/.exec(page)?.[1]);
+  const callback = directivesOf(headersFor(routes, '/api/callback/', CMS_HOST));
+  t.equal(callback.get('script-src'), scriptHash, `/api/callback/: script-src ha de ser el hash del guió que serveix _oauth.ts (${scriptHash}); si s'ha tocat el guió, cal posar-lo a vercel.json`);
+  t.equal(callback.get('style-src'), styleHash, `/api/callback/: style-src ha de ser el hash de l'estil que serveix _oauth.ts (${styleHash})`);
+  t.equal(directivesOf(headersFor(routes, '/api/auth/', CMS_HOST)).has('script-src'), false, '/api/auth/: cap script');
 }

@@ -102,7 +102,7 @@ const SCRIPT_ESCAPES: Record<string, string> = {
   '\u2029': '\\u2029',
 };
 
-const forScript = (value: string): string =>
+const forScript = (value: unknown): string =>
   JSON.stringify(value).replace(
     /[<>&\u2028\u2029]/g,
     (char) => SCRIPT_ESCAPES[char] ?? char,
@@ -133,6 +133,15 @@ const forHtml = (value: string): string =>
  * El testimoni s'escriu al document, de manera que va escapat contra qualsevol
  * seqüència que en pugui tancar l'etiqueta. També hi ha text visible: si algú
  * arriba aquí sense finestra obridora, ha de saber què ha passat.
+ *
+ * El guió i l'estil són constants, i les dades (missatge i origen) viatgen en un
+ * bloc `application/json`, que el navegador no executa. És el que permet que la
+ * CSP de `/api/callback/` a `vercel.json` digui `default-src 'none'` i admeti
+ * només aquest guió i aquest estil pel seu hash (revisió de seguretat del
+ * 13/11/2026, F3): amb el testimoni escrit dins del guió, el hash canviaria a
+ * cada resposta. Si es toca una sola lletra del guió o de l'estil, els hashes
+ * de `vercel.json` s'han de recalcular; la comprovació `headers` de
+ * `npm run verify` ho detecta i dona els valors nous.
  */
 function handshake(
   message: string,
@@ -152,12 +161,14 @@ function handshake(
   </head>
   <body>
     <p>${forHtml(visible)}</p>
+    <script type="application/json" id="decap-oauth">${forScript({ message, origin: allowedOrigin })}</script>
     <script>
       (function () {
-        var message = ${forScript(message)};
+        var data = JSON.parse(document.getElementById('decap-oauth').textContent);
+        var message = data.message;
         if (!window.opener) return;
         function receive(event) {
-          if (event.origin !== ${forScript(allowedOrigin)}) return;
+          if (event.origin !== data.origin) return;
           if (event.data !== 'authorizing:${PROVIDER}') return;
           window.removeEventListener('message', receive, false);
           window.opener.postMessage(message, event.origin);

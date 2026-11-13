@@ -37,7 +37,7 @@ const siteUrl = Astro.site?.origin;
 ---
 
 <!doctype html>
-<html lang="ca">
+<html lang="ca" data-base-url={baseUrl} data-site-url={siteUrl}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -65,11 +65,15 @@ const siteUrl = Astro.site?.origin;
     {/*
       Arrencada manual perquè `base_url` i `site_url` no es poden escriure a
       `config.yml`: allà serien els dos orígens repetits en un segon lloc del
-      projecte. El que es passa aquí es fusiona damunt del que ve del fitxer.
+      projecte. Viatgen com a atributs de l'element arrel i els llegeix
+      `/admin/init.js`, que els fusiona damunt del que ve del fitxer.
+      Cap guió en línia (revisió de seguretat del 13/11/2026, F3): la CSP de
+      `/admin/` a vercel.json no admet `'unsafe-inline'` a `script-src`, i el
+      guió amb `define:vars` canviava amb `SITE_URL`, de manera que cap hash
+      escrit a vercel.json no l'hauria cobert. Els dos fitxers de `public/admin/`
+      són del mateix origen i entren per `'self'`.
     */}
-    <script is:inline>
-      window.CMS_MANUAL_INIT = true;
-    </script>
+    <script is:inline src="/admin/manual-init.js"></script>
     {/*
       Versió exacta i empremta, per decisió de l'usuari del 8/10/2026. Amb
       l'interval `^3.0.0`, qualsevol 3.x nova entrava a l'administració sense
@@ -88,19 +92,6 @@ const siteUrl = Astro.site?.origin;
     <script is:inline src="https://unpkg.com/decap-cms@3.16.3/dist/decap-cms.js"
       integrity="sha384-A/Gdn928CNLufmnGWGs9RM4Q9o8bSNLeJERqBFrBjwzL7FRpoLT3MPF8Tl0+Wd2p"
       crossorigin="anonymous"></script>
-    <script is:inline define:vars={{ baseUrl, siteUrl }}>
-      if (window.CMS) {
-        // El text d'espera diu «no s'ha pogut baixar el paquet», i aquest camí
-        // és justament el que demostra que sí que s'ha baixat: si es quedés a la
-        // pàgina, quedaria per damunt de l'administració contradient-la.
-        document.querySelector('.fallback')?.remove();
-        // `site_url` només si el lloc té domini: buit, Decap enllaçaria a res.
-        window.CMS.init({
-          config: siteUrl
-            ? { backend: { base_url: baseUrl }, site_url: siteUrl, display_url: siteUrl }
-            : { backend: { base_url: baseUrl } },
-        });
-      }
-    </script>
+    <script is:inline src="/admin/init.js"></script>
   </body>
 </html>

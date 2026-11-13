@@ -31,6 +31,9 @@ const HELLO = 'authorizing:github';
  */
 function run(html, echoes) {
   const script = /<script>([\s\S]*?)<\/script>/.exec(html)?.[1];
+  // Les dades viatgen en un bloc JSON que el navegador no executa (F3, 13/11/2026).
+  const data = /<script type="application\/json" id="decap-oauth">([\s\S]*?)<\/script>/.exec(html)?.[1];
+  const document = { getElementById: (id) => (id === 'decap-oauth' && data !== undefined ? { textContent: data } : null) };
   if (script === undefined) throw new Error('la pàgina de tancament no porta cap <script>');
   const sent = [];
   const listeners = [];
@@ -42,7 +45,7 @@ function run(html, echoes) {
       if (i !== -1) listeners.splice(i, 1);
     },
   };
-  vm.runInNewContext(script, { window });
+  vm.runInNewContext(script, { window, document });
   for (const echo of echoes) for (const fn of [...listeners]) fn(echo);
   return sent;
 }
@@ -93,7 +96,9 @@ export default async function (t) {
   // Escapada: un testimoni o un motiu no poden tancar l'etiqueta ni afegir-ne.
   const hostileToken = `</script><script>window.pwned=1</script>`;
   const escaped = await oauth.authSuccess(hostileToken, SITE).text();
-  t.equal(escaped.match(/<\/script>/g)?.length, 1, 'un testimoni amb `</script>` no tanca el <script> de la pàgina');
+  // Dues etiquetes legítimes: el bloc de dades i el guió.
+  t.equal(escaped.match(/<\/script>/g)?.length, 2, 'un testimoni amb `</script>` no tanca el bloc de dades ni el guió de la pàgina');
+  t.equal(escaped.match(/<script/g)?.length, 2, 'un testimoni amb `<script>` no obre cap etiqueta');
   t.equal(
     payloads(run(escaped, [hello(SITE.origin)]))[0]?.data,
     `authorization:github:success:${JSON.stringify({ token: hostileToken, provider: 'github' })}`,
@@ -101,7 +106,17 @@ export default async function (t) {
   );
   const reasoned = await oauth.authError('<img src=x onerror=alert(1)>', SITE).text();
   t.ok(!reasoned.includes('<img'), 'el motiu surt escapat al text visible');
-  t.equal(reasoned.match(/<\/script>/g)?.length, 1, 'el motiu no afegeix cap etiqueta <script>');
+  t.equal(reasoned.match(/<\/script>/g)?.length, 2, 'el motiu no afegeix cap etiqueta <script>');
+
+  // F3 (13/11/2026): el guió i l'estil són els mateixos a totes les respostes,
+  // perquè la CSP de `/api/callback/` els admet pel hash. Si depenguessin del
+  // testimoni, del motiu o de l'origen, el navegador els bloquejaria.
+  const parts = (html) => [/<script>([\s\S]*?)<\/script>/.exec(html)?.[1], /<style>([\s\S]*?)<\/style>/.exec(html)?.[1]];
+  const variants = [success, failure, escaped, reasoned, await oauth.authSuccess('altre', new URL('https://un-altre.example/')).text()];
+  for (const variant of variants.slice(1)) {
+    t.equal(parts(variant), parts(success), 'el guió i l\'estil de la pàgina de tancament no varien amb el testimoni, el motiu ni l\'origen');
+  }
+  t.ok(!/gho_|site\.example/.test(parts(success).join('')), 'ni el testimoni ni l\'origen no són dins del guió executable');
 
   await routes(t);
 }
