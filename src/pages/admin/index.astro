@@ -34,10 +34,18 @@ import { cmsUrl } from '../../config/site.mjs';
 
 const baseUrl = new URL(cmsUrl).origin;
 const siteUrl = Astro.site?.origin;
+
+/*
+ * Rerefons local (`npx decap-server`) només a `astro dev` (revisió de seguretat
+ * del 13/11/2026, F5). Abans era `local_backend: true` a `config.yml` i sortia
+ * també a producció; Decap el desatén fora de `localhost`, però no calia
+ * publicar-lo. A la compilació l'atribut no existeix i `init.js` no l'afegeix.
+ */
+const localBackend = import.meta.env.DEV ? 'true' : undefined;
 ---
 
 <!doctype html>
-<html lang="ca" data-base-url={baseUrl} data-site-url={siteUrl}>
+<html lang="ca" data-base-url={baseUrl} data-site-url={siteUrl} data-local-backend={localBackend}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

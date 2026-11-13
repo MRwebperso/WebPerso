@@ -22,12 +22,19 @@ backend:
 
 # Edició en local sense OAuth: `npx decap-server` en un terminal, `npm run dev`
 # a l'altre, i `/admin/` a localhost escriu directament als fitxers del disc.
-# Fora de localhost, Decap ignora aquesta línia.
-local_backend: true
+# `local_backend` ja no és aquí: el posa la pàgina només a `astro dev` (vegeu
+# `src/pages/admin/index.astro`), perquè la configuració publicada no el porti
+# (revisió de seguretat del 13/11/2026, F5).
 
-# Commits directes a `main`, que és el que desplega. Un flux editorial amb
-# pull requests no té sentit amb un sol editor, i afegiria una passa a cada
-# canvi de text.
+# Commits directes a `main`, que és el que desplega (decisió de Miquel del
+# 13/11/2026, D3). Un flux editorial amb pull requests no té sentit amb un sol
+# editor, i afegiria una passa a cada canvi de text. El risc que queda: qui
+# tingui el testimoni de la sessió del CMS escriu a `main` i publica sense cap
+# revisió. Des del 13/11/2026 el testimoni és d'un compte de màquina que només
+# col·labora a `MRwebperso/WebPerso` (D2) i viu a un origen sense codi de
+# tercers (`cms.clm.cat`), de manera que una filtració arriba a aquest dipòsit
+# i prou. L'alternativa més estricta és `editorial_workflow` amb la branca
+# `main` protegida, al preu d'una pull request per cada canvi.
 publish_mode: simple
 
 # Cap camp dels casos no pren imatges avui. Les dues línies hi són perquè Decap

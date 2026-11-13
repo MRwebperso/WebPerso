@@ -76,6 +76,15 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default async function decap(t) {
   const config = load(fs.readFileSync(fromRoot('public/admin/config.yml'), 'utf8'));
+
+  // F5 (13/11/2026): el rerefons local no es publica (el posa la pàgina només a
+  // `astro dev`), i `publish_mode` és `simple` per decisió (D3), amb el risc
+  // escrit al comentari del fitxer i al README. Si canvia, que sigui a posta.
+  t.ok(!('local_backend' in config), 'config.yml no porta `local_backend`: es publicaria; el posa la pàgina només a astro dev');
+  t.equal(config.publish_mode, 'simple', 'publish_mode és `simple` (D3, 13/11/2026); canviar-lo demana tocar també el README');
+  t.equal(config.backend?.base_url, undefined, 'config.yml no porta `base_url`: surt de cmsUrl, a la pàgina');
+  t.equal(config.site_url, undefined, 'config.yml no porta `site_url`: surt d\'Astro.site, a la pàgina');
+
   const collection = config.collections?.find((c) => c.name === 'cases');
   if (!t.ok(collection, 'config.yml té la col·lecció `cases`')) return;
   const form = collection.fields;

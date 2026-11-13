@@ -12,6 +12,8 @@
   if (fallback) fallback.remove();
   var data = document.documentElement.dataset;
   var config = { backend: { base_url: data.baseUrl } };
+  // Només el posa la pàgina a `astro dev`: vegeu `localBackend` a la pàgina.
+  if (data.localBackend === 'true') config.local_backend = true;
   // `site_url` només si el lloc té domini: buit, Decap enllaçaria a res.
   if (data.siteUrl) {
     config.site_url = data.siteUrl;
