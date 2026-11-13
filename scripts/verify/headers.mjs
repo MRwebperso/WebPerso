@@ -23,8 +23,9 @@
  *   a l'origen on viu la sessió del CMS, i la política és el que li impedeix
  *   parlar amb ningú de fora (`connect-src 'self'`, cap `eval`, cap marc, cap
  *   formulari, cap *worker*, scripts només del mateix origen). No tanca la
- *   mescla d'origens —això només ho fa un origen a part— però talla la sortida
- *   silenciosa i qualsevol injecció. Es va escriure després de llegir la seva
+ *   mescla d'origens —això ho fa l'origen a part de l'administració, des del
+ *   13/11/2026— i no talla tota sortida: no cobreix la navegació ni WebRTC. És
+ *   una barrera contra la injecció i la càrrega de codi de fora. Es va escriure després de llegir la seva
  *   pàgina compilada (29/10/2026) i es va provar en un Edge real recorrent-la
  *   sencera, amb les capçaleres que calcula Vercel: zero violacions, les mateixes
  *   sis peticions, totes al seu origen, i 204 violacions amb una política

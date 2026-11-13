@@ -537,7 +537,7 @@ commissioned, or a reduced scope (fewer poses, more reuse across stages)?
 
 ## Appendix · Repo facts for a fresh context
 
-**Path:** `C:\Users\samsu\Claude\Projects\web-perso` · **Branch:** `main` · Windows, PowerShell
+**Repo:** `web-perso` (repo root) · **Branch:** `main` · Windows, PowerShell
 primary, Bash available.
 
 **Stack:** Astro 5.18 · TypeScript strict · `@astrojs/vercel` · `@astrojs/sitemap`.
