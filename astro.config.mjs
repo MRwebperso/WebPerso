@@ -23,7 +23,11 @@ export default defineConfig({
    * preajust d'Astro. Si al projecte hi hagués un «Output Directory» fixat a
    * `dist` a mà, el desplegament quedaria buit i sense error visible.
    */
-  adapter: vercel(),
+  adapter: vercel({
+    webAnalytics: {
+      enabled: true,
+    },
+  }),
   /*
    * Cap pàgina no passa per `astro:assets` (cap `<Image>`, cap `getImage`): les
    * imatges són a `public/` i es serveixen tal com són. Amb el servei per

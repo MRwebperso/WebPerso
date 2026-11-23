@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import Analytics from '@vercel/analytics/astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import AlternateLinks from '../components/AlternateLinks.astro';
@@ -89,6 +90,7 @@ const canonical = alternates ? new URL(alternates[lang], Astro.site) : null;
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <ClientRouter />
+    <Analytics />
 
     {/* Abans del primer pintat: és el que autoritza els estats inicials de
         `.reveal`. Sense JS no s'afegeix i el contingut es veu tal qual. */}
