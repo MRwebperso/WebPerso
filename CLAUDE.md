@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 El [README.md](README.md) és la documentació de referència i és exhaustiu: contracte lingüístic, sistema de disseny, cronologia, casos, contacte i contingut dels casos, cadascun amb el perquè de les decisions. **Llegeix-lo abans de tocar qualsevol d'aquestes àrees.** Aquest fitxer no el repeteix: recull el que no es dedueix ni del codi ni del README.
 
 ## Textos públics
@@ -31,12 +29,9 @@ L'invariant central del projecte és que cap llengua va per davant de l'altra. N
 
 Afegir una tercera llengua al registre de `utils.ts` fa caure [src/data/cases.ts](src/data/cases.ts) fins que l'esquema de la col·lecció tingui la clau nova. És deliberat.
 
-## Prototips llençables
+## La Ruta
 
-`/hero-demo/`, `/la-travessa/` i `/la-ruta/` **no són el lloc**: van fora de la navegació i de l'i18n, són en català només, porten `noindex` i s'han d'esborrar quan hagin fet la seva feina. La paritat CA–FR no s'hi aplica encara, i duplicar-hi el text ara costaria més del que val.
-
-- [SPEC_LA_RUTA.md](SPEC_LA_RUTA.md) és l'especificació vigent de `/la-ruta/` i declara `/la-travessa/` superada i pendent d'esborrar. Si treballes en aquesta àrea, l'espec mana.
-- Aquests prototips carreguen `base.css` pel seu compte i **es queden en paper clar a posta**. El tema fosc del lloc viu a [src/styles/theme-dark.css](src/styles/theme-dark.css) i el carrega només `BaseLayout`; invertir-los els trauria el sentit. El selector és `:root:root` i no `:root` per una raó d'ordre d'emissió del bundler — no el simplifiquis.
+El codi de La Ruta és al dipòsit `MRwebperso/la-ruta`; el lloc el serveix a `/ruta/` pel rewrite de `vercel.json`, amb la seva CSP estreta (vegeu README). Els prototips `/hero-demo/`, `/la-ruta/` i `/la-travessa/` s'han esborrat (novembre 2026): no els recreïs.
 
 ## Convencions
 
