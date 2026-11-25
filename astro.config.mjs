@@ -50,17 +50,6 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      /*
-       * Els prototips llençables porten `noindex` a la pàgina i per tant no
-       * s'indexarien igualment, però anunciar-los al sitemap és contradir-se:
-       * el sitemap declara quines són les pàgines del lloc, i ells no ho són.
-       * Quan s'esborrin, aquesta llista se'n va amb ells.
-       */
-      filter: (page) => {
-        const { pathname } = new URL(page);
-        const prototips = ['/hero-demo/', '/la-travessa/', '/la-ruta/'];
-        return !prototips.includes(pathname);
-      },
       i18n: {
         defaultLocale: 'ca',
         locales: { ca: 'ca-ES', fr: 'fr-FR' },
